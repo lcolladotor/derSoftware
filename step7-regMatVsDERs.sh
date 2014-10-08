@@ -5,7 +5,7 @@
 # Define variables
 EXPERIMENT=$1
 PREFIX=$2
-SHORT="regMat-${EXPERIMENT}"
+SHORT="regVsDERs-${EXPERIMENT}"
 ncore=5
 cores="${ncore}cores"
 
