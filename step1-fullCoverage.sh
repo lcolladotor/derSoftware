@@ -16,7 +16,7 @@ ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/CoverageInfo
 
-if [[ "${EXPERIMENT}" == "stem"]]
+if [[ "${EXPERIMENT}" == "stem" ]]
 then
     DATADIR=/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat
     CUTOFF=5
@@ -31,7 +31,7 @@ fi
 
 # Construct shell file
 echo 'Creating script for loading the Coverage data'
-cat > ${WDIR}/.${SHORT}.sh <<EOF
+cat > ${ROOTDIR}/.${SHORT}.sh <<EOF
 #!/bin/bash
 #$ -cwd
 #$ -m e

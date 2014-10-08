@@ -19,7 +19,7 @@ WDIR=${MAINDIR}/derAnalysis
 outdir="${PREFIX}"
 sname="${SHORT}.${PREFIX}"
 echo "Creating script ${sname}"
-cat > ${WDIR}/.${sname}.sh <<EOF
+cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #!/bin/bash
 #$ -cwd
 #$ -m e

@@ -20,7 +20,7 @@ for chrnum in 22 21 Y 20 19 18 17 16 15 14 13 12 11 10 9 8 X 7 6 5 4 3 2 1
 do
 	echo "Creating script for chromosome ${chrnum}"
     
-    if [[ ${EXPERIMENT} == "stem"]]
+    if [[ ${EXPERIMENT} == "stem" ]]
     then
         CORES=8
     else        
@@ -35,7 +35,7 @@ do
 	chr="chr${chrnum}"
 	outdir="${PREFIX}/${chr}"
 	sname="${SHORT}.${PREFIX}.${chr}"
-	cat > ${WDIR}/.${sname}.sh <<EOF
+	cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #!/bin/bash
 #$ -cwd
 #$ -m e

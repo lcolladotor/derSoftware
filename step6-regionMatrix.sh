@@ -15,7 +15,7 @@ ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/regionMatrix
 
-if [[ "${EXPERIMENT}" == "stem"]]
+if [[ "${EXPERIMENT}" == "stem" ]]
 then
     CUTOFF=5
     RLENGTH=101
@@ -31,7 +31,7 @@ fi
 sname="${SHORT}.${PREFIX}"
 echo "Creating script ${sname}"
 
-cat > ${WDIR}/.${sname}.sh <<EOF
+cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #!/bin/bash	
 #$ -cwd
 #$ -m e

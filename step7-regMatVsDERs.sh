@@ -18,7 +18,7 @@ WDIR=${MAINDIR}/regionMatrix-vs-DERs
 sname="${SHORT}"
 echo "Creating script ${sname}"
 
-cat > ${WDIR}/.${sname}.sh <<EOF
+cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #!/bin/bash
 #$ -cwd
 #$ -m e
