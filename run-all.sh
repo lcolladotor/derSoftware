@@ -8,6 +8,11 @@
 EXPERIMENT=$1
 PREFIX=$2
 
+mkdir -p ${EXPERIMENT}/CoverageInfo
+mkdir -p ${EXPERIMENT}/derAnalysis
+mkdir -p ${EXPERIMENT}/regionMatrix
+mkdir -p ${EXPERIMENT}/regionMatrix-vs-DERs
+
 sh step1-fullCoverage.sh ${EXPERIMENT}
 sh step2-makeModels.sh ${EXPERIMENT} ${PREFIX}
 sh step3-analyzeChr.sh ${EXPERIMENT} ${PREFIX}
