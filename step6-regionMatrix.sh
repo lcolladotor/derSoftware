@@ -29,7 +29,7 @@ fi
 
 
 # Construct shell files
-sname="${SHORT}.${PREFIX}"
+sname="${SHORT}"
 echo "Creating script ${sname}"
 
 cat > ${ROOTDIR}/.${sname}.sh <<EOF

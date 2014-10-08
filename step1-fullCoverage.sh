@@ -51,12 +51,12 @@ module load R/3.1.x
 Rscript ${ROOTDIR}/step1-fullCoverage.R -d "${DATADIR}" -p "out$" -c "${CUTOFF}" -m ${CORES}
 
 ## Move log files into the logs directory
-mv ${SHORT}.* ${WDIR}/logs/
+mv ${ROOTDIR}/${SHORT}.* ${WDIR}/logs/
 
 echo '**** Job ends ****'
 date
 EOF
 
-call="qsub ${WDIR}/.${SHORT}.sh"
+call="qsub .${SHORT}.sh"
 echo $call
 $call
