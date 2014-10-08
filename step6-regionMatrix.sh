@@ -20,6 +20,7 @@ then
     CUTOFF=5
     RLENGTH=101
 elif [[ "${EXPERIMENT}" == "brainspan" ]]
+then
     CUTOFF=0.25
     RLENGTH=100
 else

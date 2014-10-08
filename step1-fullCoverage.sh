@@ -21,6 +21,7 @@ then
     DATADIR=/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat
     CUTOFF=5
 elif [[ "${EXPERIMENT}" == "brainspan" ]]
+then
     DATADIR=/nexsan2/disk3/ajaffe/BrainSpan/RNAseq/bigwig/
     CUTOFF=0.25
 else
