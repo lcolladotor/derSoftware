@@ -18,6 +18,17 @@ WDIR=${MAINDIR}/regionMatrix-vs-DERs
 sname="${SHORT}"
 echo "Creating script ${sname}"
 
+if [[ "${EXPERIMENT}" == "stem" ]]
+then
+    CUTOFF=5
+elif [[ "${EXPERIMENT}" == "brainspan" ]]
+then
+    CUTOFF=0.25
+else
+    echo "Specify a valid experiment: stem or brainspan"
+fi
+
+
 cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #!/bin/bash
 #$ -cwd
@@ -34,7 +45,7 @@ mkdir -p ${WDIR}/logs
 # Compare DERs vs regionMatrix
 cd ${WDIR}
 module load R/3.1.x
-Rscript -e "library(rmarkdown); library(knitrBootstrap); render('${ROOTDIR}/step7-regMatVsDERs.Rmd', output_file='${WDIR}/step7-regMatVsDERs.html')"
+Rscript -e "load('${MAINDIR}/regionMatrix/regionMat-cut${CUTOFF}.Rdata'); proc.time(); load('${MAINDIR}/derAnalysis/${PREFIX}/fullRegions.Rdata'); proc.time(); library(rmarkdown); library(knitrBootstrap); render('${ROOTDIR}/step7-regMatVsDERs.Rmd', output_file='${WDIR}/step7-regMatVsDERs.html')"
 
 # Move log files into the logs directory
 mv ${ROOTDIR}/${sname}.* ${WDIR}/logs/

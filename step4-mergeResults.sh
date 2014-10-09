@@ -34,7 +34,7 @@ mkdir -p ${WDIR}/${outdir}/logs
 # merge results
 cd ${WDIR}
 module load R/3.1.x
-Rscript -e "library(derfinder); load('/dcs01/lieber/ajaffe/Brain/derRuns/derfinderExample/derGenomicState/GenomicState.Hsapiens.UCSC.hg19.knownGene.Rdata'); load('${WDIR}/${PREFIX}/chr1/optionsStats.Rdata'); mergeResults(prefix = '${PREFIX}', genomicState = GenomicState.Hsapiens.UCSC.hg19.knownGene[['fullGenome']], optionsStats = optionsStats); Sys.time(); proc.time(); devtools::session_info()"
+Rscript -e "library(derfinder); load('/dcs01/lieber/ajaffe/Brain/derRuns/derfinderExample/derGenomicState/GenomicState.Hsapiens.UCSC.hg19.knownGene.Rdata'); load('${WDIR}/${PREFIX}/chr1/optionsStats.Rdata'); mergeResults(prefix = '${PREFIX}', genomicState = GenomicState.Hsapiens.UCSC.hg19.knownGene[['fullGenome']], optionsStats = optionsStats); Sys.time(); proc.time(); options(width = 90); devtools::session_info()"
 
 # Move log files into the logs directory
 mv ${ROOTDIR}/${sname}.* ${WDIR}/${outdir}/logs/

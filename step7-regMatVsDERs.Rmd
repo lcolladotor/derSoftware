@@ -401,5 +401,6 @@ Sys.time()
 
 ```{r reproducibility3, echo=FALSE}
 ## Session info
+options(width = 90)
 session_info()
 ```
