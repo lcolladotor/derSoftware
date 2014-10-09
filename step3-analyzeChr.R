@@ -66,7 +66,7 @@ if(opt$experiment == 'stem') {
         cutoffFstat = 1e-06, colsubset = colsubset, nPermute = 1000,
         seeds = seq_len(1000) + 20141008, maxClusterGap = 3000,
         groupInfo = groupInfo, mc.cores = opt$mcores, 
-        lowMemDir = paste0("chr", opt$chr, "/chunksDir"), chunksize = 1e5,
+        lowMemDir = file.path(opt$chr, 'chunksDir'), chunksize = 1e5,
         scalefac = 1)
 }
 
