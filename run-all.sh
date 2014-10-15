@@ -1,11 +1,11 @@
 #!/bin/sh
 
 ## Usage
-# sh run-all.sh brainspan run1-v0.99.6
-# sh run-all.sh stem run1-v0.99.6
+# sh run-all.sh brainspan run1-v1.1.2
+# sh run-all.sh stem run1-v1.1.2
 
 ## Skip fulLCov but run regionMatrix:
-# sh run-all.sh brainspan run1-v0.99.6 TRUE FALSE
+# sh run-all.sh brainspan run1-v1.1.2 TRUE FALSE
 
 # Define variables
 EXPERIMENT=$1

@@ -1,8 +1,8 @@
 #!/bin/sh
 
 ## Usage
-# sh step4-mergeResults.sh brainspan run1-v0.99.6
-# sh step4-mergeResults.sh stem run1-v0.99.6
+# sh step4-mergeResults.sh brainspan run1-v1.1.2
+# sh step4-mergeResults.sh stem run1-v1.1.2
 
 # Define variables
 EXPERIMENT=$1
