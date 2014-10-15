@@ -28,8 +28,8 @@ stopifnot(opt$experiment %in% c('stem', 'brainspan'))
 
 if(opt$experiment == 'stem') {
     ## Load the coverage information
-    load(file.path('..', '..', opt$experiment, 'CoverageInfo', 'fullCov.Rdata'))
-    load(file.path('..', '..', opt$experiment, 'CoverageInfo', 'chrYCovInfo.Rdata'))
+    load(file.path('..', '..', 'CoverageInfo', 'fullCov.Rdata'))
+    load(file.path('..', '..', 'CoverageInfo', 'chrYCovInfo.Rdata'))
 
     ## Identify the samplefiles
     files <- colnames(chrYCovInfo$coverage)
