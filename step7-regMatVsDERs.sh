@@ -15,7 +15,7 @@ MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/regionMatrix-vs-DERs
 
 # Construct shell files
-sname="${SHORT}"
+sname="${SHORT}.${PREFIX}"
 echo "Creating script ${sname}"
 
 if [[ "${EXPERIMENT}" == "stem" ]]
