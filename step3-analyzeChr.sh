@@ -64,5 +64,5 @@ echo "**** Job ends ****"
 date
 EOF
 	call="qsub .${sname}.sh"
-	$call
+#	$call
 done
