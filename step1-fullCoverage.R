@@ -12,7 +12,7 @@ library('devtools')
 spec <- matrix(c(
 	'datadir', 'd', 1, 'character', 'Data directory, matched with rawFiles(datadir)',
 	'pattern', 'p', 1, 'character', 'Sample pattern',
-	'cutoff', 'c', 1, 'integer', 'Filtering cutoff used',
+	'cutoff', 'c', 1, 'numeric', 'Filtering cutoff used',
 	'mcores', 'm', 1, 'integer', 'Number of cores',
     'fileStyle', 'f', 2, 'character', 'FileStyle used for naming the chromosomes',
 	'help' , 'h', 0, 'logical', 'Display help'
@@ -72,8 +72,8 @@ myFilt <- function(chr, rawData, cutoff) {
 	return(invisible(NULL))
 }
 
-message(paste(Sys.time(), 'Filtering and saving the data'))
-filteredCov <- bpmapply(myFilt, names(fullCov), fullCov, BPPARAM = SnowParam(opt$mcores), MoreArgs = list(cutoff = opt$cutoff))
+message(paste(Sys.time(), 'Filtering and saving the data with cutoff', opt$cutoff))
+filteredCov <- bpmapply(myFilt, names(fullCov), fullCov, BPPARAM = SnowParam(opt$mcores, outfile = Sys.getenv('SGE_STDERR_PATH')), MoreArgs = list(cutoff = opt$cutoff))
 
 ## Done!
 proc.time()

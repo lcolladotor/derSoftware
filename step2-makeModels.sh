@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ## Usage
-# sh step2-makeModels.sh brainspan run1-v1.1.2
+# sh step2-makeModels.sh brainspan run3-v1.0.6
 # sh step2-makeModels.sh stem run1-v1.1.2
 
 # Define variables

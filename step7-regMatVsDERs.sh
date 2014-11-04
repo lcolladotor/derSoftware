@@ -1,5 +1,5 @@
 ## Usage
-# sh step7-regMatVsDERs.sh brainspan run1-v1.1.2
+# sh step7-regMatVsDERs.sh brainspan run3-v1.0.6
 # sh step7-regMatVsDERs.sh stem run1-v1.1.2
 
 # Define variables
