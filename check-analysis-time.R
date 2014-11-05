@@ -60,7 +60,7 @@ if(study == 'stem') {
 }
 names(nCores) <- chrs
 
-df$nRounds <- round(nChunks / nCores + 0.5)
+df$nRound <- round(nChunks / nCores + 0.5)
 
 
 
