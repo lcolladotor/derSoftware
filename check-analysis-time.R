@@ -62,7 +62,7 @@ names(nCores) <- chrs
 
 df$nChunks <- nChunks
 df$nCores <- nCores
-df$nRound <- factor(round(nChunks / nCores + 0.5))
+df$nRound <- factor(ceiling(nChunks / nCores))
 
 ## Print info
 df
