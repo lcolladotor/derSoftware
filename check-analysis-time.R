@@ -49,6 +49,8 @@ if(!file.exists(file.path(study, 'derAnalysis', run, 'nChunks.Rdata'))) {
         max(prep$mclapply) 
     })
     save(nChunks, file = file.path(study, 'derAnalysis', run, 'nChunks.Rdata'))
+} else {
+    load(file.path(study, 'derAnalysis', run, 'nChunks.Rdata'))
 }
 
 if(study == 'stem') {
