@@ -74,7 +74,7 @@ print(df)
 
 ## Make plot
 pdf(file.path(study, 'derAnalysis', run, paste0('permuteTime-', study, '-', run, '.pdf')))
-ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)\nMean +- SE') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run))
+ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)\nMean +- SE') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run)) + scale_y_continuous(breaks=seq(0, ceiling(max(df$mean + df$se)), 1))
 dev.off()
 
 print('Expected total number of days per chr and days remaining')
