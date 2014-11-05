@@ -63,6 +63,7 @@ names(nCores) <- chrs
 df$nChunks <- nChunks
 df$nCores <- nCores
 df$nRound <- factor(ceiling(nChunks / nCores))
+df$se <- df$sd / sqrt(sapply(timediff, length))
 
 ## Print info
 rownames(df) <- NULL
@@ -71,7 +72,7 @@ print(df)
 
 ## Make plot
 pdf(file.path(study, 'derAnalysis', run, paste0('permuteTime-', study, '-', run, '.pdf')))
-ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run))
+ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)\nMean +- SE') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run))
 dev.off()
 
 print('Expected total number of days per chr and days remaining')
