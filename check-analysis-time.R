@@ -36,14 +36,40 @@ timediff <- lapply(chrs, function(chr) {
 names(timediff) <- chrs
 
 
+## Organize time information
 chrnum <- gsub('chr', '', chrs)
 df <- data.frame(chr = factor(chrnum, levels = chrnum), mean = sapply(timediff, mean), sd = sapply(timediff, sd))
 
+## Group by number of rounds per permutation given the number of chunks & cores used
+if(!file.exists(file.path(study, 'derAnalysis', run, 'nChunks.Rdata'))) {
+    nChunks <- sapply(chrs, function(chr) { 
+        if(!file.exists(file.path(study, 'derAnalysis', run, chr, 'coveragePrep.Rdata')))
+            return(NA)
+        load(file.path(study, 'derAnalysis', run, chr, 'coveragePrep.Rdata'))
+        max(prep$mclapply) 
+    })
+    save(nChunks, file = file.path(study, 'derAnalysis', run, 'nChunks.Rdata'))
+}
+
+if(study == 'stem') {
+    nCores <- rep(8, 24)
+} else if (study == 'brainspan') {
+    nCores <- c(40, 32, 27, rep(20, 20), 2)
+}
+names(nCores) <- chrs
+
+df$nRounds <- round(nChunks / nCores + 0.5)
+
+
+
+## Make plot
 pdf(file.path(study, 'derAnalysis', run, paste0('permuteTime-', study, run, '.pdf')))
-ggplot(df, aes(x = chr, y = mean)) + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run))
+ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run))
 dev.off()
 
 days <- round(df$mean * 1001 / 60 / 24, 1)
 names(days) <- chrs
 print('Expected number of days per chr')
 print(days)
+
+
