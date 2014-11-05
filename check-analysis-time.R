@@ -60,10 +60,12 @@ if(study == 'stem') {
 }
 names(nCores) <- chrs
 
+df$n <- sapply(timediff, length)
+df$se <- df$sd / sqrt(df$n)
 df$nChunks <- nChunks
 df$nCores <- nCores
 df$nRound <- factor(ceiling(nChunks / nCores))
-df$se <- df$sd / sqrt(sapply(timediff, length))
+
 
 ## Print info
 rownames(df) <- NULL
@@ -76,7 +78,7 @@ ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = me
 dev.off()
 
 print('Expected total number of days per chr and days remaining')
-days <- data.frame(chr = chrnum, total = round(df$mean * 1001 / 60 / 24, 1), remaining = round(df$mean * (1001 - sapply(timediff, length) - 2 ) / 60 / 24, 1))
+days <- data.frame(chr = chrnum, total = round(df$mean * 1001 / 60 / 24, 1), remaining = round(df$mean * (1001 - df$n - 2 ) / 60 / 24, 1))
 rownames(days) <- NULL
 print(days)
 
