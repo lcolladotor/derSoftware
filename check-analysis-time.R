@@ -21,7 +21,6 @@ study <- opt$experiment
 run <- opt$run
 
 timediff <- lapply(chrs, function(chr) {
-    print(chr)
     info <- tryCatch(system(paste0('grep permutation *', study, '*', run, '*', chr, '.e*'), intern = TRUE), warning = function(w) { 'no data'})
     if(info[1] == 'no data') {
         info <- tryCatch(system(paste0('grep permutation ', file.path(study, 'derAnalysis', run, chr, 'logs'), '/*', chr, '.e*'), intern = TRUE), warning = function(w) { 'no data'})
@@ -41,7 +40,7 @@ chrnum <- gsub('chr', '', chrs)
 df <- data.frame(chr = factor(chrnum, levels = chrnum), mean = sapply(timediff, mean), sd = sapply(timediff, sd))
 
 pdf(file.path(study, 'derAnalysis', run, paste0('permuteTime-', study, run, '.pdf')))
-ggplot(df, aes(x = chr, y = mean)) + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)') + xlab('Chromosome') + ggtitle(paste('TIme info for', study, run))
+ggplot(df, aes(x = chr, y = mean)) + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.1) + geom_line() + geom_point() + ylab('Time per permutation (minutes)') + xlab('Chromosome') + ggtitle(paste('Time info for', study, run))
 dev.off()
 
 days <- round(df$mean * 1001 / 60 / 24, 1)
