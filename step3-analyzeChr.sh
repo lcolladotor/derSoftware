@@ -27,6 +27,15 @@ do
         if [[ ${chrnum} == "Y" ]]
         then
         	CORES=2
+        elif [[ ${chrnum} == "1" ]]
+        then
+            CORES=40
+        elif [[ ${chrnum} == "2" ]]
+        then
+            CORES=32
+        elif [[ ${chrnum} == "3" ]]
+        then
+            CORES=27
         else
         	CORES=20
         fi
@@ -64,5 +73,5 @@ echo "**** Job ends ****"
 date
 EOF
 	call="qsub .${sname}.sh"
-	$call
+#	$call
 done
