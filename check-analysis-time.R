@@ -65,7 +65,8 @@ df$nCores <- nCores
 df$nRound <- factor(ceiling(nChunks / nCores))
 
 ## Print info
-df
+rownames(df) <- NULL
+print(df)
 
 
 ## Make plot
@@ -74,7 +75,8 @@ ggplot(df, aes(x = chr, y = mean, color = nRound)) + geom_errorbar(aes(ymin = me
 dev.off()
 
 print('Expected total number of days per chr and days remaining')
-days <- data.frame(chr = chrs, total = round(df$mean * 1001 / 60 / 24, 1), remaining = round(df$mean * (1001 - sapply(timediff, length) - 2 ) / 60 / 24, 1))
+days <- data.frame(chr = chrnum, total = round(df$mean * 1001 / 60 / 24, 1), remaining = round(df$mean * (1001 - sapply(timediff, length) - 2 ) / 60 / 24, 1))
+rownames(days) <- NULL
 print(days)
 
 
