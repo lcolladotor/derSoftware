@@ -48,7 +48,7 @@ do
 #!/bin/bash
 #$ -cwd
 #$ -m e
-#$ -l mem_free=2G,h_vmem=10G,h_fsize=10G,h=!044
+#$ -l mem_free=2G,h_vmem=10G,h_fsize=10G,h="!(044|043)"
 #$ -N ${sname}
 #$ -pe local ${CORES}
 #$ -hold_jid derMod-${EXPERIMENT}.${PREFIX}
