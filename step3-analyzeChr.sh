@@ -36,6 +36,9 @@ do
         elif [[ ${chrnum} == "3" ]]
         then
             CORES=27
+        elif [[ ${chrnum} == "19" ]]
+        then
+            CORES=29
         else
         	CORES=20
         fi
@@ -48,7 +51,7 @@ do
 #!/bin/bash
 #$ -cwd
 #$ -m e
-#$ -l mem_free=2G,h_vmem=10G,h_fsize=10G,h="!(044|043)"
+#$ -l mem_free=2G,h_vmem=10G,h_fsize=10G,h=h=\!compute-04[3-5]*
 #$ -N ${sname}
 #$ -pe local ${CORES}
 #$ -hold_jid derMod-${EXPERIMENT}.${PREFIX}

@@ -56,7 +56,7 @@ if(!file.exists(file.path(study, 'derAnalysis', run, 'nChunks.Rdata'))) {
 if(study == 'stem') {
     nCores <- rep(8, 24)
 } else if (study == 'brainspan') {
-    nCores <- c(40, 32, 27, rep(20, 20), 2)
+    nCores <- c(40, 32, 27, rep(20, 16), 29, rep(20, 3), 2)
 }
 names(nCores) <- chrs
 
