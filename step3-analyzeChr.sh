@@ -51,7 +51,7 @@ do
 #!/bin/bash
 #$ -cwd
 #$ -m e
-#$ -l mem_free=2G,h_vmem=10G,h_fsize=10G,h=h=\!compute-04[3-5]*
+#$ -l mem_free=2G,h_vmem=10G,h_fsize=10G,h=\!compute-04[3-5]*
 #$ -N ${sname}
 #$ -pe local ${CORES}
 #$ -hold_jid derMod-${EXPERIMENT}.${PREFIX}
