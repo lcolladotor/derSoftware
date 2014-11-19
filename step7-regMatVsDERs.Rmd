@@ -8,7 +8,6 @@ output:
 Compare output from regionMatrix() with DERs
 ============================================
 
-
 # Setup
 
 ## Libraries
@@ -28,7 +27,7 @@ opts_chunk$set(bootstrap.show.code = FALSE, dev = 'CairoPNG')
 
 ```{r 'data', bootstrap.show.output = FALSE}
 ## Check that data was loaded
-stopifnot(all(c('fullRegions', 'regionMat') %in% ls()))
+stopifnot(all(c('fullRegions', 'regionMat', 'analysisPath') %in% ls()))
 
 ## Fix DERs
 ders <- fullRegions
@@ -51,8 +50,8 @@ regs <- sort(regs)
 identical(seqlengths(regs), seqlengths(ders))
 
 ## Save the raw data
-save(ders, file = 'dersOriginal.Rdata')
-save(regs, file = 'regsOriginal.Rdata')
+save(ders, file = file.path(analysisPath, 'dersOriginal.Rdata'))
+save(regs, file = file.path(analysisPath, 'regsOriginal.Rdata'))
 
 ## Filter out those with less than 3bp
 c('# ders under 3bp' = sum(width(ders) < 3), '# regs under 3bp' = sum(width(regs) < 3))
@@ -60,8 +59,8 @@ ders <- ders[width(ders) >= 3]
 regs <- regs[width(regs) >= 3]
 
 ## Save data used
-save(ders, file = 'ders.Rdata')
-save(regs, file = 'regs.Rdata')
+save(ders, file = file.path(analysisPath, 'ders.Rdata'))
+save(regs, file = file.path(analysisPath, 'regs.Rdata'))
 ```
 
 Construct logical indexes for DERs and regionMatrix regions.
@@ -371,7 +370,7 @@ ggplot(data = nOverlap1, aes(x = nOverlap, y = cumPerc, colour = match, linetype
 # Save results
 
 ```{r 'save'}
-save(index.all, index.num, index.seg, index.width, nOverlap20, ov20, nOverlap1, ov1, overallInfo, file = "compare-results.Rdata")
+save(index.all, index.num, index.seg, index.width, nOverlap20, ov20, nOverlap1, ov1, overallInfo, file = file.path(analysisPath, "comparison-results.Rdata"))
 ```
 
 
@@ -379,6 +378,8 @@ save(index.all, index.num, index.seg, index.width, nOverlap20, ov20, nOverlap1, 
 
 
 # Reproducibility
+
+Analysis path: `r  analysisPath`
 
 Re-make the report
 

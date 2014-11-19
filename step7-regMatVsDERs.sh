@@ -12,7 +12,6 @@ cores="${ncore}cores"
 # Directories
 ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
-WDIR=${MAINDIR}/regionMatrix-vs-DERs
 
 # Construct shell files
 sname="${SHORT}.${PREFIX}"
@@ -28,6 +27,7 @@ else
     echo "Specify a valid experiment: stem or brainspan"
 fi
 
+WDIR=${MAINDIR}/regionMatrix-vs-DERs/cut${CUTOFF}-vs-${PREFIX}
 
 cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #!/bin/bash
@@ -45,7 +45,7 @@ mkdir -p ${WDIR}/logs
 # Compare DERs vs regionMatrix
 cd ${WDIR}
 module load R/3.1.x
-Rscript -e "load('${MAINDIR}/regionMatrix/regionMat-cut${CUTOFF}.Rdata'); proc.time(); load('${MAINDIR}/derAnalysis/${PREFIX}/fullRegions.Rdata'); proc.time(); library(rmarkdown); library(knitrBootstrap); render('${ROOTDIR}/step7-regMatVsDERs.Rmd', output_file='${WDIR}/step7-regMatVsDERs.html')"
+Rscript -e "analysisPath <- '${WDIR}'; load('${MAINDIR}/regionMatrix/regionMat-cut${CUTOFF}.Rdata'); proc.time(); load('${MAINDIR}/derAnalysis/${PREFIX}/fullRegions.Rdata'); proc.time(); library(rmarkdown); library(knitrBootstrap); render('${ROOTDIR}/step7-regMatVsDERs.Rmd', output_file='${WDIR}/step7-regMatVsDERs.html')"
 
 # Move log files into the logs directory
 mv ${ROOTDIR}/${sname}.* ${WDIR}/logs/
