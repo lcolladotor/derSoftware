@@ -3,7 +3,7 @@
 ## Load libraries
 library('getopt')
 
-## Available at https://github.com/lcolladotor/derfinder
+## Available at http://www.bioconductor.org/packages/release/bioc/html/derfinder.html
 library('derfinder')
 library('BiocParallel')
 library('devtools')
@@ -38,7 +38,7 @@ if(opt$datadir == '/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
     ## For example, they could end with _out
     names(files) <- gsub('_out', '', names(files))
 } else if(opt$datadir == '/dcs01/lieber/ajaffe/Snyder/RNAseq/TopHat') {
-    files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern, bamterm="accepted_hits.bam")
+    files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern, fileterm="accepted_hits.bam")
     names(files) <- gsub('_out', '', names(files))
 } else if(opt$datadir == '/dcs01/lieber/ajaffe/Hippo/TopHat') {
     files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern)

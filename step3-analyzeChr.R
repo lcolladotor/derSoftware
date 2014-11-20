@@ -3,14 +3,14 @@
 ## Load libraries
 library('getopt')
 
-## Available at https://github.com/lcolladotor/derfinder
+## Available at http://www.bioconductor.org/packages/release/bioc/html/derfinder.html
 library('derfinder')
 library('devtools')
 library('GenomeInfoDb')
 
 ## Specify parameters
 spec <- matrix(c(
-    'experiment', 'e', 1, 'character', 'Experiment. Either stem or brainspan',
+    'experiment', 'e', 1, 'character', 'Experiment. Either stem, brainspan, snyder, or hippo',
 	'CovFile', 'd', 1, 'character', 'path to the .Rdata file with the results from loadCoverage() with cutoff >= 0',
 	'chr', 'c', 1, 'character', 'Chromosome under analysis',
 	'mcores', 'm', 1, 'integer', 'Number of cores',

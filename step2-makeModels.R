@@ -3,13 +3,13 @@
 ## Load libraries
 library('getopt')
 
-## Available at https://github.com/lcolladotor/derfinder
+## Available at http://www.bioconductor.org/packages/release/bioc/html/derfinder.html
 library('derfinder')
 library('devtools')
 
 ## Specify parameters
 spec <- matrix(c(
-	'experiment', 'e', 1, 'character', 'Experiment. Either stem or brainspan',
+	'experiment', 'e', 1, 'character', 'Experiment. Either stem, brainspan, snyder, or hippo',
 	'help' , 'h', 0, 'logical', 'Display help'
 ), byrow=TRUE, ncol=5)
 opt <- getopt(spec)
