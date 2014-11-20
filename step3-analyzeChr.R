@@ -65,7 +65,7 @@ if(opt$experiment == 'stem') {
     } else {
         analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
             cutoffFstat = 0.005, colsubset = colsubset, adjustF = 1,
-            nPermute = 10, seeds = seq_len(10) + 20131212, maxClusterGap = 3000,
+            nPermute = 100, seeds = seq_len(100) + 20131212, maxClusterGap = 3000,
             groupInfo = groupInfo, mc.cores = opt$mcores,
             lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
     }
@@ -80,13 +80,13 @@ if(opt$experiment == 'stem') {
 } else if (opt$experiment == 'snyder') {
     analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
         cutoffFstat = 1e-05, colsubset = colsubset,
-        nPermute = 10, seeds = seq_len(10) + 20131212, maxClusterGap = 3000,
+        nPermute = 100, seeds = seq_len(100) + 20131212, maxClusterGap = 3000,
         groupInfo = groupInfo, mc.cores = opt$mcores,
         lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
 } else if (opt$experiment == 'hippo') {
     analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
         cutoffFstat = 1e-04, colsubset = colsubset, cutoffPre = 3,
-        nPermute = 10, seeds = seq_len(10) + 20131212, maxClusterGap = 3000,
+        nPermute = 100, seeds = seq_len(100) + 20131212, maxClusterGap = 3000,
         groupInfo = groupInfo, mc.cores = opt$mcores,
         lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
 }
