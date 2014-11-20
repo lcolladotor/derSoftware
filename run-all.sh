@@ -20,6 +20,7 @@ mkdir -p ${EXPERIMENT}/CoverageInfo
 mkdir -p ${EXPERIMENT}/derAnalysis
 mkdir -p ${EXPERIMENT}/regionMatrix
 mkdir -p ${EXPERIMENT}/regionMatrix-vs-DERs
+mkdir -p ${EXPERIMENT}/coverageToExon
 
 if [[ $SKIP1 == "FALSE" ]]
 then  
