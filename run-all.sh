@@ -6,6 +6,9 @@
 # sh run-all.sh stem run2-v1.0.8 TRUE TRUE
 # sh run-all.sh snyder run1-v1.0.8
 # sh run-all.sh hippo run1-v1.0.8
+# sh run-all.sh stem run3-v1.0.9 TRUE TRUE TRUE
+# sh run-all.sh snyder run2-v1.0.9 TRUE TRUE TRUE
+# sh run-all.sh hippo run2-v1.0.9 TRUE TRUE TRUE
 
 ## Skip fulLCov but run regionMatrix:
 # sh run-all.sh brainspan run3-v1.0.6 TRUE FALSE
@@ -15,6 +18,7 @@ EXPERIMENT=$1
 PREFIX=$2
 SKIP1=${3-"FALSE"}
 SKIP6=${4-"FALSE"}
+SKIP8=${5-"FALSE"}
 
 mkdir -p ${EXPERIMENT}/CoverageInfo
 mkdir -p ${EXPERIMENT}/derAnalysis
@@ -36,4 +40,9 @@ then
     sh step6-regionMatrix.sh ${EXPERIMENT}
 fi
 sh step7-regMatVsDERs.sh ${EXPERIMENT} ${PREFIX}
-sh step8-coverageToExon.sh ${EXPERIMENT}
+
+if [[ $SKIP8 == "FALSE" ]]
+then  
+    sh step8-coverageToExon.sh ${EXPERIMENT}
+fi
+
