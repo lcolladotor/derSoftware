@@ -44,7 +44,7 @@ do
 #$ -m e
 #$ -l mem_free=50G,h_vmem=100G,h_fsize=30G
 #$ -N ${sname}
-#$ -pe local 2
+#$ -pe local 4
 #$ -hold_jid fullCov-${EXPERIMENT}
 
 echo "**** Job starts ****"

@@ -45,7 +45,7 @@ if(opt$annotation == 'ensembl') {
 
 ## get table
 message(paste(Sys.time(), 'running coverageToExon'))
-covToEx <- coverageToExon(fullCov, anno, L=opt$readlen, mc.cores = 2)
+covToEx <- coverageToExon(fullCov, anno, L=opt$readlen, strandCores = 1, mc.cores = 4)
 
 ## Save results
 message(paste(Sys.time(), paste0("saving covToEx-", opt$annotation, ".Rdata")))
