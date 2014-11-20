@@ -35,7 +35,7 @@ if(opt$experiment != 'brainspan') {
 }
 
  ## Calculate the library adjustments and build the models
-buildModels <- function(fullCov, testvars) {
+buildModels <- function(fullCov, testvars, colsubset = NULL) {
     ## Determine sample size adjustments
     if(file.exists("sampleDepths.Rdata")) {
     	load("sampleDepths.Rdata")
@@ -44,7 +44,7 @@ buildModels <- function(fullCov, testvars) {
     		load("collapsedFull.Rdata")
     	} else {
     		## Collapse
-    		collapsedFull <- collapseFullCoverage(fullCov, save=TRUE)
+    		collapsedFull <- collapseFullCoverage(fullCov, colsubset = colsubset, save=TRUE)
     	}
 
     	## Get the adjustments
@@ -135,7 +135,7 @@ if(opt$experiment == 'stem') {
     groupInfo <- groupInfo[!is.na(groupInfo)]
     
     ## Build models
-    models <- buildModels(fullCov, groupInfo)
+    models <- buildModels(fullCov, groupInfo, colsubset)
 }
 
 ## Save models
