@@ -35,3 +35,4 @@ then
     sh step6-regionMatrix.sh ${EXPERIMENT}
 fi
 sh step7-regMatVsDERs.sh ${EXPERIMENT} ${PREFIX}
+sh step8-coverageToExon.sh ${EXPERIMENT}
