@@ -4,6 +4,8 @@
 ## Usage
 # sh step1-fullCoverage.sh brainspan
 # sh step1-fullCoverage.sh stem
+# sh step1-fullCoverage.sh snyder
+# sh step1-fullCoverage.sh hippo
 
 
 # Define variables
@@ -24,8 +26,16 @@ elif [[ "${EXPERIMENT}" == "brainspan" ]]
 then
     DATADIR=/nexsan2/disk3/ajaffe/BrainSpan/RNAseq/bigwig/
     CUTOFF=0.25
+elif [[ "${EXPERIMENT}" == "snyder" ]]
+then
+    DATADIR=/dcs01/lieber/ajaffe/Snyder/RNAseq/TopHat
+    CUTOFF=5
+elif [[ "${EXPERIMENT}" == "hippo" ]]
+then
+    DATADIR=/dcs01/lieber/ajaffe/Hippo/TopHat
+    CUTOFF=3
 else
-    echo "Specify a valid experiment: stem or brainspan"
+    echo "Specify a valid experiment: stem, brainspan, snyder, or hippo"
 fi
 
 

@@ -23,35 +23,19 @@ if (!is.null(opt$help)) {
 }
 
 ## Check experiment input
-stopifnot(opt$experiment %in% c('stem', 'brainspan'))
+stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo'))
 
-
-if(opt$experiment == 'stem') {
+if(opt$experiment != 'brainspan') {
     ## Load the coverage information
     load(file.path('..', '..', 'CoverageInfo', 'fullCov.Rdata'))
     load(file.path('..', '..', 'CoverageInfo', 'chrYCovInfo.Rdata'))
 
     ## Identify the samplefiles
     files <- colnames(chrYCovInfo$coverage)
+}
 
-    ##### Note that this whole section is for defining the models using makeModels()
-    ##### You can alternatively define them manually and/or use packages such as splines if needed.
-    
-    ## Load the information table
-     load("/home/epi/ajaffe/Lieber/Projects/RNAseq/UCSD_samples/UCSD_stemcell_pheno.rda")
-    info <- pd
-    ## Match files with actual rows in the info table
-    match <- sapply(files, function(x) { which(info$sample == x)})
-    info <- info[match, ]
-
-    ## Define the groups
-    groupInfo <- factor(info$Condition)
-
-    ## Set h1 to be the reference group
-    groupInfo <- relevel(groupInfo, "h1")
-    
-    ## Calculate the library adjustments and build the models
-
+ ## Calculate the library adjustments and build the models
+buildModels <- function(fullCov, testvars) {
     ## Determine sample size adjustments
     if(file.exists("sampleDepths.Rdata")) {
     	load("sampleDepths.Rdata")
@@ -68,11 +52,33 @@ if(opt$experiment == 'stem') {
             nonzero = TRUE, scalefac = 32, center = FALSE)
     	save(sampleDepths, file="sampleDepths.Rdata")
     }
-    
-    
     ## Build the models
-    models <- makeModels(sampleDepths = sampleDepths, testvars = groupInfo,
+    models <- makeModels(sampleDepths = sampleDepths, testvars = testvars,
         adjustvars = NULL, testIntercept = FALSE)
+    
+    return(models)
+}
+
+
+if(opt$experiment == 'stem') {
+    ##### Note that this whole section is for defining the models using makeModels()
+    ##### You can alternatively define them manually and/or use packages such as splines if needed.
+    
+    ## Load the information table
+     load("/home/epi/ajaffe/Lieber/Projects/RNAseq/UCSD_samples/UCSD_stemcell_pheno.rda")
+    info <- pd
+    ## Match files with actual rows in the info table
+    match <- sapply(files, function(x) { which(info$sample == x)})
+    info <- info[match, ]
+
+    ## Define the groups
+    groupInfo <- factor(info$Condition)
+
+    ## Set h1 to be the reference group
+    groupInfo <- relevel(groupInfo, "h1")
+    
+    ## Build models
+    models <- buildModels(fullCov, groupInfo)
 } else if(opt$experiment == 'brainspan') {
     ## Define the groups
     load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
@@ -88,6 +94,48 @@ if(opt$experiment == 'stem') {
     # First 11 are neocortical, next four are not, last is cerebellum
     groupInfo <- factor(paste(ifelse(pdSpan$structure_acronym %in% c("DFC", "VFC", "MFC", "OFC", "M1C", "S1C", "IPC", "A1C", "STC", "ITC", "V1C"), "Neo", ifelse(pdSpan$structure_acronym %in% c("HIP", "AMY", "STR", "MD"), "notNeo", "CBC")), toupper(substr(fetal, 1, 1)), sep="."), levels=paste(rep(c("Neo", "notNeo", "CBC"), each=2), toupper(substr(unique(fetal), 1, 1)), sep="."))
     
+} else if(opt$experiment == 'snyder') {
+    ## The information table
+    info <- read.csv("/home/epi/ajaffe/Lieber/Projects/Timecourse_RNAseq/Profile/phenotype.csv")
+    info$shortBAM <- gsub(".*/", "", info$bamFile)
+
+    ## Match dirs with actual rows in the info table
+    match <- sapply(files, function(x) { which(info$GEO_ID == x)})
+    info <- info[match, ]
+
+    ## Test a spline on days
+    library("splines")
+    testvars <- bs(info$Day, df=5)
+
+    ## Define the groups for plotting
+    library("Hmisc")
+    groupInfo <- cut2(info$Day, g=4)
+    tmp <- groupInfo
+    groupInfo <- factor(gsub(",", "to", gsub("\\[| |)|\\]", "", groupInfo)))
+    names(groupInfo) <- tmp
+    
+    ## Build models
+    models <- buildModels(fullCov, testvars)
+} else if(opt$experiment == 'hippo') {
+    ## Define the groups
+    load("/home/epi/ajaffe/Lieber/Projects/RNAseq/HippoPublic/sra_phenotype_file.rda")
+    info <- sra
+    info <- info[complete.cases(info),]
+    ## Match dirs with actual rows in the info table
+    match <- sapply(files, function(x) { which(info$SampleID == x)})
+    info <- info[match, ]
+    ## Set the control group as the reference
+    groupInfo <- factor(info$Pheno, levels=c("CT", "CO", "ETOH"))
+
+    ## Define colsubset
+    colsubset <- which(!is.na(groupInfo))
+    save(colsubset, file="colsubset.Rdata")
+    
+    ## Update the group labels
+    groupInfo <- groupInfo[!is.na(groupInfo)]
+    
+    ## Build models
+    models <- buildModels(fullCov, groupInfo)
 }
 
 ## Save models

@@ -37,6 +37,12 @@ if(opt$datadir == '/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
     ## These names specify the column names used in the DataFrame objects.
     ## For example, they could end with _out
     names(files) <- gsub('_out', '', names(files))
+} else if(opt$datadir == '/dcs01/lieber/ajaffe/Snyder/RNAseq/TopHat') {
+    files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern, bamterm="accepted_hits.bam")
+    names(files) <- gsub('_out', '', names(files))
+} else if(opt$datadir == '/dcs01/lieber/ajaffe/Hippo/TopHat') {
+    files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern)
+    names(files) <- gsub('_out', '', names(files))
 } else {
     load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
     files <- pdSpan$wig

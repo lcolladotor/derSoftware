@@ -27,7 +27,7 @@ if (!is.null(opt$help)) {
 }
 
 ## Check experiment input
-stopifnot(opt$experiment %in% c('stem', 'brainspan'))
+stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo'))
 
 ## Format chromosome name appropriately
 opt$chr <- mapSeqlevels(opt$chr, 'UCSC')
@@ -77,6 +77,18 @@ if(opt$experiment == 'stem') {
         groupInfo = groupInfo, mc.cores = opt$mcores, 
         lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'), chunksize = 1e5,
         scalefac = 1)
+} else if (opt$experiment == 'snyder') {
+    analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
+        cutoffFstat = 1e-05, colsubset = colsubset,
+        nPermute = 10, seeds = seq_len(10) + 20131212, maxClusterGap = 3000,
+        groupInfo = groupInfo, mc.cores = opt$mcores,
+        lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
+} else if (opt$experiment == 'hippo') {
+    analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
+        cutoffFstat = 1e-04, colsubset = colsubset, cutoffPre = 3,
+        nPermute = 10, seeds = seq_len(10) + 20131212, maxClusterGap = 3000,
+        groupInfo = groupInfo, mc.cores = opt$mcores,
+        lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
 }
 
 

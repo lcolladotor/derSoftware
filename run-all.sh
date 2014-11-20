@@ -3,6 +3,9 @@
 ## Usage
 # sh run-all.sh brainspan run3-v1.0.6
 # sh run-all.sh stem run1-v1.1.2
+# sh run-all.sh stem run2-v1.0.8 TRUE TRUE
+# sh run-all.sh snyder run1-v1.0.8
+# sh run-all.sh hippo run1-v1.0.8
 
 ## Skip fulLCov but run regionMatrix:
 # sh run-all.sh brainspan run3-v1.0.6 TRUE FALSE

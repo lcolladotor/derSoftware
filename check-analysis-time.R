@@ -16,6 +16,9 @@ if (!is.null(opt$help)) {
 	q(status=1)
 }
 
+## Check experiment input
+stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo'))
+
 chrs <- paste0('chr', c(1:22, 'X', 'Y'))
 study <- opt$experiment
 run <- opt$run
@@ -57,6 +60,10 @@ if(study == 'stem') {
     nCores <- rep(8, 24)
 } else if (study == 'brainspan') {
     nCores <- c(40, 32, 27, rep(20, 15), 29, rep(20, 4), 2)
+} else if (study == 'snyder') {
+    nCores <- rep(4, 24)
+} else if (study == 'hippo') {
+    nCores <- rep(2, 24)
 }
 names(nCores) <- chrs
 
