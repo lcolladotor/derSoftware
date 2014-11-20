@@ -3,6 +3,7 @@
 ## Usage
 # sh step3-analyzeChr.sh brainspan run3-v1.0.6
 # sh step3-analyzeChr.sh stem run1-v1.1.2
+# sh step3-analyzeChr.sh stem run2-v1.0.8
 
 # Define variables
 EXPERIMENT=$1
@@ -76,5 +77,5 @@ echo "**** Job ends ****"
 date
 EOF
 	call="qsub .${sname}.sh"
-#	$call
+	$call
 done
