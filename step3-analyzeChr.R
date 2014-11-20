@@ -56,11 +56,20 @@ if(file.exists('colsubset.Rdata')) {
 
 ## Run the analysis
 if(opt$experiment == 'stem') {
-    analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
-        cutoffFstat = 0.005, colsubset = colsubset, adjustF = 1,
-        nPermute = 1000, seeds = seq_len(1000) + 20141008, maxClusterGap = 3000,
-        groupInfo = groupInfo, mc.cores = opt$mcores,
-        lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
+    if(gsub(".*/", "", getwd()) == "run1-v1.1.2") {
+        analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
+            cutoffFstat = 0.005, colsubset = colsubset, adjustF = 1,
+            nPermute = 1000, seeds = seq_len(1000) + 20141008, maxClusterGap = 3000,
+            groupInfo = groupInfo, mc.cores = opt$mcores,
+            lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
+    } else {
+        analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
+            cutoffFstat = 0.005, colsubset = colsubset, adjustF = 1,
+            nPermute = 10, seeds = seq_len(10) + 20131212, maxClusterGap = 3000,
+            groupInfo = groupInfo, mc.cores = opt$mcores,
+            lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
+    }
+    
 } else if (opt$experiment == 'brainspan') {
     analyzeChr(chr = opt$chr, coverageInfo = covData, models = models,
         cutoffFstat = 1e-06, colsubset = colsubset, nPermute = 1000,
