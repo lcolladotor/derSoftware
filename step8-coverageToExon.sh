@@ -9,6 +9,7 @@
 # Define variables
 EXPERIMENT=$1
 SHORT="covToEx-${EXPERIMENT}"
+CORES=1
 
 # Directories
 ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
@@ -42,9 +43,9 @@ do
 #!/bin/bash	
 #$ -cwd
 #$ -m e
-#$ -l mem_free=50G,h_vmem=100G,h_fsize=30G
+#$ -l mem_free=60G,h_vmem=120G,h_fsize=30G
 #$ -N ${sname}
-#$ -pe local 4
+#$ -pe local ${CORES}
 #$ -hold_jid fullCov-${EXPERIMENT}
 
 echo "**** Job starts ****"
@@ -56,7 +57,7 @@ mkdir -p ${WDIR}/logs
 # Run coverageToExon()
 cd ${WDIR}
 module load R/3.1.x
-Rscript ${ROOTDIR}/step8-coverageToExon.R -e "${EXPERIMENT}" -a "${anno}" -r ${RLENGTH}
+Rscript ${ROOTDIR}/step8-coverageToExon.R -e "${EXPERIMENT}" -a "${anno}" -r ${RLENGTH} -c ${CORES}
 
 ## Move log files into the logs directory
 mv ${ROOTDIR}/${sname}.* ${WDIR}/logs/

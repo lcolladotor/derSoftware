@@ -11,6 +11,7 @@ spec <- matrix(c(
     'experiment', 'e', 1, 'character', 'Experiment. Either stem, brainspan, snyder, or hippo',
     'annotation', 'a', 1, 'character', 'Annotation to use. Either ensembl or ucsc',
     'readlen', 'r', 1, 'integer', 'Read length',
+    'mc.cores', 'c', 1, 'integer', 'Number of cores to use',
 	'help' , 'h', 0, 'logical', 'Display help'
 ), byrow=TRUE, ncol=5)
 opt <- getopt(spec)
@@ -45,7 +46,7 @@ if(opt$annotation == 'ensembl') {
 
 ## get table
 message(paste(Sys.time(), 'running coverageToExon'))
-covToEx <- coverageToExon(fullCov, anno, L=opt$readlen, strandCores = 1, mc.cores = 4)
+covToEx <- coverageToExon(fullCov, anno, L=opt$readlen, strandCores = 1, mc.cores = opt$mc.cores)
 
 ## Save results
 message(paste(Sys.time(), paste0("saving covToEx-", opt$annotation, ".Rdata")))
