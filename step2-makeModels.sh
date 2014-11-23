@@ -1,11 +1,10 @@
 #!/bin/sh
 
 ## Usage
-# sh step2-makeModels.sh brainspan run3-v1.0.6
-# sh step2-makeModels.sh stem run1-v1.1.2
-# sh step2-makeModels.sh stem run2-v1.0.8
-# sh step2-makeModels.sh snyder run1-v1.0.8
-# sh step2-makeModels.sh hippo run1-v1.0.8
+# sh step2-makeModels.sh brainspan run4-v1.0.10
+# sh step2-makeModels.sh stem run4-v1.0.10
+# sh step2-makeModels.sh snyder run3-v1.0.10
+# sh step2-makeModels.sh hippo run3-v1.0.10
 
 # Define variables
 EXPERIMENT=$1
