@@ -172,5 +172,7 @@ round(totalTime, digits=3)
 
 ```{r "reproducibility3", bootstrap.show.code = FALSE}
 ## Session info
+getOption('width')
+options(width=90)
 devtools::session_info()
 ```
