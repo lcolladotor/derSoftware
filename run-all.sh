@@ -42,3 +42,4 @@ then
     sh step8-coverageToExon.sh ${EXPERIMENT}
 fi
 
+sh step9-summaryInfo.sh ${EXPERIMENT} ${PREFIX}
