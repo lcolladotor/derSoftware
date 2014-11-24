@@ -12,7 +12,7 @@ Summary info
 ## Options
 opt$example <- eval(parse(text=opt$example))
 example <- opt$example
-names(opt$example) <- NULL
+names(example) <- NULL
 
 
 ## Required libs
