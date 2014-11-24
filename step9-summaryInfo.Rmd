@@ -30,7 +30,7 @@ Summary information for `r opt$short` data set, analysis `r paste(opt$run, colla
 
 ```{r "filtered", bootstrap.show.code = FALSE}
 ## Extract data from log files
-reads <- system(paste0('grep ', file.path(rootdir, opt$short, 'CoverageInfo', 'logs'), '/fullCov-*.e* | grep -v "that 0 percent"'), intern=TRUE)
+reads <- system(paste0('grep filterData ', file.path(rootdir, opt$short, 'CoverageInfo', 'logs'), '/fullCov-*.e* | grep -v "that 0 percent"'), intern=TRUE)
 filt <- data.frame(original=as.integer(gsub("were | rows", "", regmatches(reads, regexpr("were [0-9]* rows", reads)))), filtered=as.integer(gsub("are | rows", "", regmatches(reads, regexpr("are [0-9]* rows", reads)))))
 
 ## How many were filtered?
