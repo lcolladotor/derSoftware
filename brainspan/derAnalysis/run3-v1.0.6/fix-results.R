@@ -7,6 +7,6 @@ source_https <- function(url, ...) {
   })
 }
 
-source_https('https://gist.githubusercontent.com/lcolladotor/bf85e2c7d5d1f8197707/raw/adf184dd1ba5377b16d8b68b038ca7341b63e750/fix-calculatePvalues.R')
+source_https('https://gist.githubusercontent.com/lcolladotor/bf85e2c7d5d1f8197707/raw/4bd174f373b3d84f6ff8af16995335c7c0b6809a/fix-calculatePvalues.R')
 
-fixChrs('chr', maxClusterGap = 3000)
+fixChrs('chr', maxClusterGap = 3000, lowMemDir = tempdir())
