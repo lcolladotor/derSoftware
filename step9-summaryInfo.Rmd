@@ -9,6 +9,8 @@ Summary info
 ===========
 
 ```{r "options", bootstrap.show.code = FALSE}
+opts_knit$set(width = 90)
+
 ## Options
 opt$example <- eval(parse(text=opt$example))
 example <- opt$example
