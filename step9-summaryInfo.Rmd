@@ -28,7 +28,7 @@ Summary information for `r opt$short` data set, analysis `r paste(opt$run, colla
 
 ## Number of filtered bases
 
-```{r "filtered"}
+```{r "filtered", bootstrap.show.code = FALSE}
 ## Extract data from log files
 reads <- system(paste0('grep ', file.path(rootdir, opt$short, 'CoverageInfo', 'logs'), '/fullCov-*.e* | grep -v "that 0 percent"'), intern=TRUE)
 filt <- data.frame(original=as.integer(gsub("were | rows", "", regmatches(reads, regexpr("were [0-9]* rows", reads)))), filtered=as.integer(gsub("are | rows", "", regmatches(reads, regexpr("are [0-9]* rows", reads)))))
@@ -47,7 +47,7 @@ summ
 
 ## Number of candidate regions
 
-```{r "nCandidate"}
+```{r "nCandidate", bootstrap.show.code = FALSE}
 ## Load regions data
 load(file.path(rootdir, opt$short, 'derAnalysis', opt$run, 'fullRegions.Rdata'))
 
@@ -61,7 +61,7 @@ nRegs
 
 As determined by q-value < 0.10
 
-```{r "regionsDEqval"}
+```{r "regionsDEqval", bootstrap.show.code = FALSE}
 ## How many regions DE? Judged by q-value
 ## What is the percent of regions DE among the candidate ones?
 qval <- c(
@@ -73,7 +73,7 @@ qval
 
 As determined by FWER adjusted p-value < 0.05
 
-```{r "regionsDEfwer"}
+```{r "regionsDEfwer", bootstrap.show.code = FALSE}
 ## How many regions DE? Judged by FWER adjusted p-value
 ## What is the percent of regions DE among the candidate ones?
 fwer <- c(
@@ -90,7 +90,7 @@ save(summ, nRegs, qval, fwer, file=file.path(resdir, "summaryResults.Rdata"))
 
 ## Example regions from each case
 
-```{r "exampleRegions", message=FALSE, fig.width=20, fig.height=10, dev="CairoPNG"}
+```{r "exampleRegions", message=FALSE, fig.width=20, fig.height=10, dev="CairoPNG", bootstrap.show.code = FALSE}
 ## Load full coverage data
 load(file.path(rootdir, opt$short, 'CoverageInfo', 'fullCov.Rdata'))
 
@@ -137,7 +137,7 @@ regionClusterPlot <- function(idx, tUse="fwer") {
 	save(p, file=file.path(resdir, paste0("exampleRegion", idx, ".Rdata")) )
 	
 	## Save as pdf
-	pdf(file= file=file.path(resdir, paste0("exampleRegion", idx, ".pdf")), width=20, height=10)
+	pdf(file=file.path(resdir, paste0("exampleRegion", idx, ".pdf")), width=20, height=10)
 	print(p)
 	dev.off()
 	rm(p.ideo, covInfo)
@@ -170,7 +170,7 @@ round(totalTime, digits=3)
 
 `R` session information.
 
-```{r "reproducibility3", echo=FALSE}
+```{r "reproducibility3", bootstrap.show.code = FALSE}
 ## Session info
 devtools::session_info()
 ```
