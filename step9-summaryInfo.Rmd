@@ -9,8 +9,6 @@ Summary info
 ===========
 
 ```{r "options", bootstrap.show.code = FALSE}
-opts_knit$set(width = 90)
-
 ## Options
 opt$example <- eval(parse(text=opt$example))
 example <- opt$example
@@ -157,7 +155,7 @@ for(idx in opt$example) {
 
 Date the report was generated.
 
-```{r "reproducibility1", echo=FALSE}
+```{r "reproducibility1", echo=FALSE, width = 90}
 ## Date the report was generated
 Sys.time()
 ```
