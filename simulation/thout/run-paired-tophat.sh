@@ -35,6 +35,8 @@ cat paired.txt | while read x
 echo "**** Job starts ****"
 date
 
+
+module load tophat/2.0.13
 # run tophat
 # defaults for polyester::simulate_experiment() are 100 bp paired reads from 250bp fragments with 25bp sd
 tophat -p ${P} --transcriptome-index=${TRANSINDEX} --mate-inner-dis=50 --mate-std-dev=25 -o ${libname} ${GENOMEINDEX} ${DATADIR}/${file1} ${DATADIR}/${file2}
