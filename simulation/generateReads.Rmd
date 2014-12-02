@@ -141,7 +141,24 @@ for(i in seq_len(30)) {
 save(chosen, readmat, file = 'simulation_info.Rdata')
 
 ## Run simulation
-simulate_experiment_countmat(fasta = 'chr22_chosen.fa', readmat = readmat, outdir = 'simulated_reads', fraglen = 250, fragsd = 25, readlen = 100, error_rate = 0.005, paired = TRUE, seed = '20141202')
+outdir <- 'simulated_reads'
+simulate_experiment_countmat(fasta = 'chr22_chosen.fa', readmat = readmat, outdir = outdir, fraglen = 250, fragsd = 25, readlen = 100, error_rate = 0.005, paired = TRUE, seed = '20141202')
+
+## gzip fasta files
+for(i in seq_len(30)) {
+	for(j in 1:2) {
+		system(paste('gzip', file.path(outdir, paste0("sample_", sprintf('%02d', i), "_", j, ".fasta"))))
+	}
+}
+
+## Generated pairs info file for running Tophat
+{
+sink(file.path(outdir, "paired.txt"))
+for(i in seq_len(30)) {
+	cat(paste0("sample_", sprintf('%02d', i), "_1.fasta.gz\tsample_", sprintf('%02d', i), "_2.fasta.gz\tsample", i, "\n"))
+}
+sink()
+}
 
 ## Reproducibility info
 Sys.time()

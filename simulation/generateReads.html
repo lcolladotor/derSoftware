@@ -240,14 +240,31 @@ for(i in seq_len(30)) {
 save(chosen, readmat, file = 'simulation_info.Rdata')
 
 ## Run simulation
-simulate_experiment_countmat(fasta = 'chr22_chosen.fa', readmat = readmat, outdir = 'simulated_reads', fraglen = 250, fragsd = 25, readlen = 100, error_rate = 0.005, paired = TRUE, seed = '20141202')
+outdir &lt;- 'simulated_reads'
+simulate_experiment_countmat(fasta = 'chr22_chosen.fa', readmat = readmat, outdir = outdir, fraglen = 250, fragsd = 25, readlen = 100, error_rate = 0.005, paired = TRUE, seed = '20141202')
+
+## gzip fasta files
+for(i in seq_len(30)) {
+    for(j in 1:2) {
+        system(paste('gzip', file.path(outdir, paste0(&quot;sample_&quot;, sprintf('%02d', i), &quot;_&quot;, j, &quot;.fasta&quot;))))
+    }
+}
+
+## Generated pairs info file for running Tophat
+{
+sink(file.path(outdir, &quot;paired.txt&quot;))
+for(i in seq_len(30)) {
+    cat(paste0(&quot;sample_&quot;, sprintf('%02d', i), &quot;_1.fasta.gz\tsample_&quot;, sprintf('%02d', i), &quot;_2.fasta.gz\tsample&quot;, i, &quot;\n&quot;))
+}
+sink()
+}
 
 ## Reproducibility info
 Sys.time()</code></pre>
-<pre><code>## [1] &quot;2014-12-02 15:48:16 EST&quot;</code></pre>
+<pre><code>## [1] &quot;2014-12-02 16:15:08 EST&quot;</code></pre>
 <pre class="r"><code>proc.time()</code></pre>
 <pre><code>##    user  system elapsed 
-## 135.474  22.149 166.707</code></pre>
+## 227.913  23.917 258.404</code></pre>
 <pre class="r"><code>session_info()</code></pre>
 <pre><code>## Session info--------------------------------------------------------------</code></pre>
 <pre><code>##  setting  value                                             
