@@ -1,0 +1,150 @@
+---
+output:
+  html_document:
+    toc: true
+    theme: united
+  knitrBootstrap::bootstrap_document:
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+---
+
+Simulate reads
+==============
+
+Simulate reads using [polyester](http://www.bioconductor.org/packages/release/bioc/html/polyester.html).
+
+## Setup
+
+Using chr22, a total of 60 genes were selected with reads simulated for 3 groups each with 10 biological replicates. Reads are simulated with a 40x coverage in mind and taking into account the transcript length. Fold changes are set to 1/8 when a group has low expression and 8 when a group has high expression. Reads are 100bp long and come from paired-end reads with mean fragment lengths of 250bp (25bp sd) and a uniform error rate of 0.005. The `size` is set to 1/3 of the mean in the negative binomial model.
+
+24 of the genes have only one transcript and are setup in the following way.
+
+* 4 are differentially expressed in group 1: 2 low, 2 high
+* 4 are differentially expressed in group 2: 2 low, 2 high
+* 4 are differentially expressed in group 3: 2 low, 2 high
+* 12 are not differentially expressed across the 3 groups
+
+36 genes have 2 transcripts and are setup in the following way. 
+
+* 12 of them are differentially expressed in both transcripts.
+    * 4 are differentially expressed in group 1: 2 low, 2 high
+    * 4 are differentially expressed in group 2: 2 low, 2 high
+    * 4 are differentially expressed in group 3: 2 low, 2 high
+* 12 of them are differentially expressed in one transcript.
+    * 4 are differentially expressed in group 1: 2 low, 2 high
+    * 4 are differentially expressed in group 2: 2 low, 2 high
+    * 4 are differentially expressed in group 3: 2 low, 2 high
+* 12 are not differentially expressed across the 3 groups in both transcripts
+
+## Code
+
+```{r 'code'}
+library('TxDb.Hsapiens.UCSC.hg19.knownGene')
+library('org.Hs.eg.db')
+library('polyester')
+library('Biostrings')
+library('devtools')
+
+
+txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+tx <- transcriptsBy(txdb, 'gene')
+txs <- sapply(tx, length)
+
+fasta_file <- system.file('extdata', 'chr22.fa', package='polyester')
+fasta <- readDNAStringSet(fasta_file)
+
+## Find 24 genes with only 1 transcript, 36 with 2
+n1 <- 24
+n2 <- 36
+chosen <- data.frame(tx_idx = c(which(txs == 1)[1:n1], rep(which(txs == 2), each = 2)), tx_n = rep(c(1, 2), c(n1, 109 * 2)), tx_i = c(rep(1, n1), rep(1:2, 109)))
+
+## Add gene id, refseq info
+chosen$gene_id <- names(tx)[chosen$tx_idx]
+chosen$ucsckg_id <- mapply(function(i, tx_idx) {
+    tx[[tx_idx]]$tx_name[i]
+}, chosen$tx_i, chosen$tx_idx)
+
+ref <- select(org.Hs.eg.db, keys = chosen$gene_id, columns = 'REFSEQ', keytype = 'ENTREZID')
+chosen$fasta_i <- mapply(function(i, gene_id) {
+    reftx <- ref$REFSEQ[ref$ENTREZID == gene_id]
+    if(all(sapply(reftx, is.na))) return(NA)
+    fasta_i <- unlist(sapply(reftx, grep, x = names(fasta)))
+    fasta_i[i]
+}, chosen$tx_i, chosen$gene_id)
+
+## Drop down to 30 genes with 2 txs where annotation map worked
+toKeep <- tapply(chosen$fasta_i[chosen$tx_n == 2], chosen$gene_id[chosen$tx_n == 2], function(x) { 
+    !any(sapply(x, is.na))
+})
+
+## Final selection
+chosen <- subset(chosen, gene_id %in% c(chosen$gene_id[1:n1], names(which(toKeep)[1:36])))
+
+writeXStringSet(fasta[chosen$fasta_i], 'chr22_chosen.fa')
+
+
+#txinfo <- select(txdb, keys = tx[[6]]$tx_name, columns = columns(txdb), keytype = 'TXNAME')
+#txinfo$EXONEND - txinfo$EXONSTART + 1
+
+## Select txs to be DE
+chosen$DE <- FALSE
+de <- sample(1:n1, n1/2)
+chosen$DE[de] <- TRUE
+x <- sample(1:n2, n2 * 2 / 3) ## DE with only 1 tx
+y <- sample(x, n2 / 3) ## DE all txs in gene
+de.all <- unlist(sapply((y - 1) * 2, function(x) {x + n1 + 1:2}, simplify = FALSE))
+chosen$DE[ de.all ] <- TRUE
+z <- x[!x %in% y] ## DE only 1 tx in gene
+de.one <- sapply((z - 1) * 2, function(x) {x + sample(n1 + 1:2, 1)} )
+chosen$DE[ de.one ] <- TRUE
+
+## DE type
+chosen$group1 <- 'normal'
+chosen$group1[ de[1:4] ] <- rep(c('low', 'high'), 2)
+chosen$group1[ de.all[1:8] ] <- rep(rep(c('low', 'high'), each = 2), 2)
+chosen$group1[ de.one[1:4] ] <- rep(c('low', 'high'), 2)
+
+chosen$group2 <- 'normal'
+chosen$group2[ de[5:8] ] <- rep(c('low', 'high'), 2)
+chosen$group2[ de.all[9:16] ] <- rep(rep(c('low', 'high'), each = 2), 2)
+chosen$group2[ de.one[5:8] ] <- rep(c('low', 'high'), 2)
+
+chosen$group3 <- 'normal'
+chosen$group3[ de[9:12] ] <- rep(c('low', 'high'), 2)
+chosen$group3[ de.all[17:24] ] <- rep(rep(c('low', 'high'), each = 2), 2)
+chosen$group3[ de.one[9:12] ] <- rep(c('low', 'high'), 2)
+
+
+## Determine reads per transcript (40x coverage, 100bp reads)
+chosen$width <- width(fasta[chosen$fasta_i])
+chosen$readspertx <- round(chosen$width / 100 * 40)
+
+## Base means
+chosen$mean1 <- round(chosen$readspertx * ifelse(chosen$group1 == 'normal', 1, ifelse(chosen$group1 == 'high', 8, 1/8)))
+chosen$mean2 <- round(chosen$readspertx * ifelse(chosen$group2 == 'normal', 1, ifelse(chosen$group2 == 'high', 8, 1/8)))
+chosen$mean3 <- round(chosen$readspertx * ifelse(chosen$group3 == 'normal', 1, ifelse(chosen$group3 == 'high', 8, 1/8)))
+
+## Generate count matrix
+readmat <- matrix(NA, nrow = nrow(chosen), ncol = 3 * 10)
+for(i in seq_len(30)) {
+    if(i <= 10) {
+        means <- chosen$mean1
+    } else if (i <= 20) {
+        means <- chosen$mean2    
+    } else {
+        means <- chosen$mean3
+    }
+    readmat[, i] <- mapply(polyester:::NB, means, means / 3)
+}
+
+## Save parameters
+save(chosen, readmat, file = 'simulation_info.Rdata')
+
+## Run simulation
+simulate_experiment_countmat(fasta = 'chr22_chosen.fa', readmat = readmat, outdir = 'simulated_reads', fraglen = 250, fragsd = 25, readlen = 100, error_rate = 0.005, paired = TRUE, seed = '20141202')
+
+## Reproducibility info
+Sys.time()
+proc.time()
+session_info()
+```
