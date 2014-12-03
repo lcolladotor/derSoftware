@@ -19,10 +19,10 @@ WDIR=${MAINDIR}/derAnalysis
 DATADIR=${MAINDIR}/CoverageInfo
 
 # Construct shell files
-if [[ ${EXPERIMENT} == "simulation"]]
+if [[ ${EXPERIMENT} == "simulation" ]]
 then
     CHRNUMS="22"
-else 
+else
     CHRNUMS="22 21 Y 20 19 18 17 16 15 14 13 12 11 10 9 8 X 7 6 5 4 3 2 1"
 fi
 
