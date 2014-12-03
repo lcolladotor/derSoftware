@@ -6,6 +6,7 @@
 # sh step1-fullCoverage.sh stem
 # sh step1-fullCoverage.sh snyder
 # sh step1-fullCoverage.sh hippo
+# sh step1-fullCoverage.sh simulation
 
 
 # Define variables
@@ -34,8 +35,12 @@ elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
     DATADIR=/dcs01/lieber/ajaffe/Hippo/TopHat
     CUTOFF=3
+elif [[ "${EXPERIMENT}" == "simulation" ]]
+then
+    DATADIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware/simulation/thout
+    CUTOFF=0
 else
-    echo "Specify a valid experiment: stem, brainspan, snyder, or hippo"
+    echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi
 
 

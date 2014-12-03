@@ -5,6 +5,7 @@
 # sh step4-mergeResults.sh stem run4-v1.0.10
 # sh step4-mergeResults.sh snyder run3-v1.0.10
 # sh step4-mergeResults.sh hippo run3-v1.0.10
+# sh step4-mergeResults.sh simulation run1-v1.0.10
 
 # Define variables
 EXPERIMENT=$1

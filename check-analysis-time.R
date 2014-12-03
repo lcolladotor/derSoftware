@@ -17,7 +17,7 @@ if (!is.null(opt$help)) {
 }
 
 ## Check experiment input
-stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo'))
+stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo', 'simulation'))
 
 chrs <- paste0('chr', c(1:22, 'X', 'Y'))
 study <- opt$experiment

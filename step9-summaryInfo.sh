@@ -3,6 +3,7 @@
 # sh step9-summaryInfo.sh stem run4-v1.0.10
 # sh step9-summaryInfo.sh snyder run3-v1.0.10
 # sh step9-summaryInfo.sh hippo run3-v1.0.10
+# sh step9-summaryInfo.sh simulation run1-v1.0.10
 
 # Define variables
 EXPERIMENT=$1
@@ -29,8 +30,12 @@ then
 elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
     EXAMPLES='c("a coverage dip" = 3, "the complex relationship with annotation" = 4, "and a potentially extended UTR" = 8)'
+elif [[ "${EXPERIMENT}" == "simulation" ]]
+then
+    ## TODO: update for this dataset
+    EXAMPLES='c("a coverage dip" = 3, "the complex relationship with annotation" = 4, "and a potentially extended UTR" = 8)'
 else
-    echo "Specify a valid experiment: stem, brainspan, snyder, or hippo"
+    echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi
 
 WDIR=${MAINDIR}/summaryInfo/${PREFIX}

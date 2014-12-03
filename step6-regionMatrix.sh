@@ -5,6 +5,7 @@
 # sh step6-regionMatrix.sh stem
 # sh step6-regionMatrix.sh snyder
 # sh step6-regionMatrix.sh hippo
+# sh step6-regionMatrix.sh simulation
 
 # Define variables
 EXPERIMENT=$1
@@ -33,8 +34,12 @@ elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
     CUTOFF=3
     RLENGTH=36
+elif [[ "${EXPERIMENT}" == "simulation" ]]
+then
+    CUTOFF=0
+    RLENGTH=100
 else
-    echo "Specify a valid experiment: stem, brainspan, snyder, or hippo"
+    echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi
 
 

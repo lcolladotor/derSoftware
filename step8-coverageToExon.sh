@@ -5,6 +5,7 @@
 # sh step8-coverageToExon.sh stem
 # sh step8-coverageToExon.sh snyder
 # sh step8-coverageToExon.sh hippo
+# sh step8-coverageToExon.sh simulation
 
 # Define variables
 EXPERIMENT=$1
@@ -28,8 +29,11 @@ then
 elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
     RLENGTH=36
+elif [[ "${EXPERIMENT}" == "simulation" ]]
+then
+    RLENGTH=100
 else
-    echo "Specify a valid experiment: stem, brainspan, snyder, or hippo"
+    echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi
 
 

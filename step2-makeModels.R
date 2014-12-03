@@ -9,7 +9,7 @@ library('devtools')
 
 ## Specify parameters
 spec <- matrix(c(
-	'experiment', 'e', 1, 'character', 'Experiment. Either stem, brainspan, snyder, or hippo',
+	'experiment', 'e', 1, 'character', 'Experiment. Either stem, brainspan, snyder, hippo, or simulation',
 	'help' , 'h', 0, 'logical', 'Display help'
 ), byrow=TRUE, ncol=5)
 opt <- getopt(spec)
@@ -23,15 +23,15 @@ if (!is.null(opt$help)) {
 }
 
 ## Check experiment input
-stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo'))
+stopifnot(opt$experiment %in% c('stem', 'brainspan', 'snyder', 'hippo', 'simulation'))
 
 if(opt$experiment != 'brainspan') {
     ## Load the coverage information
     load(file.path('..', '..', 'CoverageInfo', 'fullCov.Rdata'))
-    load(file.path('..', '..', 'CoverageInfo', 'chrYCovInfo.Rdata'))
+    load(file.path('..', '..', 'CoverageInfo', 'chr22CovInfo.Rdata'))
 
     ## Identify the samplefiles
-    files <- colnames(chrYCovInfo$coverage)
+    files <- colnames(chr22CovInfo$coverage)
 }
 
  ## Calculate the library adjustments and build the models
@@ -136,6 +136,11 @@ if(opt$experiment == 'stem') {
     
     ## Build models
     models <- buildModels(fullCov, groupInfo, colsubset)
+} else if (opt$experiment == 'simulation'){
+    groupInfo <- factor(rep(toupper(letters[1:3]), each = 10))
+    
+    ## Build models
+    models <- buildModels(fullCov, groupInfo)
 }
 
 ## Save models

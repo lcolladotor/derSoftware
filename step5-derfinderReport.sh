@@ -5,6 +5,7 @@
 # sh step5-derfinderReport.sh stem run4-v1.0.10
 # sh step5-derfinderReport.sh snyder run3-v1.0.10
 # sh step5-derfinderReport.sh hippo run3-v1.0.10
+# sh step5-derfinderReport.sh simulation run1-v1.0.10
 
 # Define variables
 EXPERIMENT=$1
