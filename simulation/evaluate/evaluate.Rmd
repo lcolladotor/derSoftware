@@ -1,0 +1,198 @@
+---
+output:
+  html_document:
+    toc: true
+    theme: united
+  knitrBootstrap::bootstrap_document:
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+---
+
+Evaluate simulation
+==============
+
+This report evaluates the simulation results.
+
+```{r 'setup'}
+library('GenomicRanges')
+library('TxDb.Hsapiens.UCSC.hg19.knownGene')
+library('knitr')
+library('devtools')
+load('../simulation_info.Rdata')
+load('../derAnalysis/run1-v1.0.10/fullRegions.Rdata')
+```
+
+# Results
+
+```{r 'txsetup'}
+## Classify txs
+chosen$case <- sapply(chosen$gene_id, function(gene) {
+    s <- subset(chosen, gene_id == gene)
+    if( nrow(s) == 2) {
+        res <- ifelse(all(s$DE), 'bothDE', ifelse(any(s$DE), 'oneDE', 'noneDE'))
+    } else {
+        res<- ifelse(s$DE, 'singleDE', 'singleNotDE')    
+    }
+    return(res)
+})
+
+## Find exons
+txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+txinfo <- select(txdb, keys = chosen$ucsckg_id, columns = columns(txdb), keytype = 'TXNAME')
+
+## Buiild GRangesList with exons grouped by transcript
+tx <- split(GRanges(seqnames = txinfo$EXONCHROM, IRanges(start = txinfo$EXONSTART, end = txinfo$EXONEND), strand = txinfo$EXONSTRAND), txinfo$TXNAME)
+tx <- tx[match(chosen$ucsckg_id, names(tx))]
+
+## Find overlaps with DERs
+ctov <- countOverlaps(tx, fullRegions)
+
+## Same result with FWER sig 
+fwer <-  fullRegions[fullRegions$significantFWER == 'TRUE']
+min.ov <- min(min(width(fwer)), min(width(tx)))
+ctov.fwer <- countOverlaps(tx, fwer, minoverlap =  min.ov)
+```
+
+
+## Overview
+
+Table showing the results between whether the transcript was set to be differentially expressed (DE) and if it overlaps (minimum 1 bp) any candidate DER.
+
+```{r 'mainres', results = 'asis'}
+kable(table('DE status' = chosen$DE, 'Overlaps DER' = ctov > 0), format = 'html')
+```
+
+The results are the same using a minimum overlap of `r min.ov` bp between transcripts and candidate DERs with a FWER adjusted p-value < 0.05.
+
+
+```{r 'stricter', results = 'asis'}
+kable(table('DE status' = chosen$DE, 'Overlaps DER (sig FWER)' = ctov.fwer > 0), format = 'html')
+```
+
+At a finer level, there is a difference in the number of exons per transcript overlapping all candidate DERs vs the DERs with FWER adjusted p-value < 0.05.
+
+```{r 'detaildiff'}
+## Verify things are working properly
+# table(countOverlaps(tx, fullRegions, minoverlap = min.ov) - ctov.fwer)
+
+## Difference in overlaps found
+table(ctov - ctov.fwer)
+```
+
+## By case
+
+We can separate the transcripts by their experiment setup case. That is, whether its from a gene with:
+
+* a single transcript
+    * set to be DE: _singleDE_
+    * set not to be DE: _singleNotDe_
+* two transcripts
+    * with both set to be DE: _bothDE_
+    * with only one transcript set to be DE: _oneDE_
+    * with both set not to be DE: _noneDE_
+
+Then compare against the results where
+
+* _success.DE_ means that the transcript was set to be DE and overlaps a DER (true positive)
+* _failed.DE_ means that the transcript was set to be DE and doesn't overlap a DER (false negative)
+* _success.DER_ means that the transcript was set not to de DE and doesn't overlap a DER (true negative)
+* _failed.DER_ means that the transcript was set not to be DE and does overlap a DER (false positive)
+
+
+```{r 'bycase', results = 'asis'}
+## Indexes
+idx <- list(success = list(de = chosen$DE & ctov > 0, der = !chosen$DE & !ctov > 0), failed = list(de = chosen$DE & !ctov > 0, der = !chosen$DE & ctov > 0))
+idx <- lapply(idx, function(x) { lapply(x, which) })
+
+## Classify results
+chosen$result <- 'Success.DE'
+chosen$result[ idx$success$der ] <- 'Success.DER'
+chosen$result[ idx$failed$de ] <- 'Failed.DE'
+chosen$result[ idx$failed$der ] <- 'Failed.DER'
+
+## Overall summary
+kable(table(chosen$case, chosen$result), format = 'html')
+```
+
+## Failed.DE (false negative)
+
+The 2 _Failed.DE_ cases (false negatives) are short single transcript genes (one exon only) and were set to have low expression on one group, normal on the other two.
+
+```{r 'failed.de', results = 'asis'}
+## Successful cases
+success.de <- tx[ idx$success$de  ]
+success.der <- tx[  idx$success$der ]
+
+## What happened with the 2 txs set to be DE that were not picked up?
+failed.de <- tx[ idx$failed$de  ]
+
+## They are short transcripts
+kable(chosen[idx$failed$de, ], format = 'html')
+```
+
+However, similar cases were successfully detected. So it's likely that a lower F-stat cutoff would have picked up these two cases.
+
+```{r 'success.de.short', results = 'asis'}
+## However there are other short transcripts that were picked up
+kable(chosen[ idx$success$de[sum(width(success.de)) <= max(max(width(failed.de)))], ], format = 'html')
+```
+
+More info:
+
+```{r 'failed.de.extra'}
+width(failed.de)
+width(tx[ idx$success$de[sum(width(success.de)) < max(max(width(failed.de)))] ])
+```
+
+
+## Failed.DER (false positive)
+
+Out of the 16 _Failed.DER_ transcripts (false positives), 12 of them are from the _oneDE_ case. You could then argue that they are really not false positives. However, 4 transcripts are from the _noneDE_ case and those really are false positives.
+
+```{r 'failed.der', results = 'asis'}
+## What happened with those set to be not DE but overlap DERs?
+failed.der <- tx[ idx$failed$der ]
+
+kable(chosen[idx$failed$der, ], format = 'html')
+```
+
+```{r}
+## None of the 4 truly false positive transcripts overlap other transcripts
+i <- intersect(idx$failed$der, which(chosen$case == 'noneDE'))
+countOverlaps(tx[i], tx[-i])
+
+## They are not short
+width(tx[i])
+
+## To explore regions with derfinderReport
+findOverlaps(tx[i], fullRegions)
+
+## DERs
+# fullRegions[subjectHits(findOverlaps(tx[i], fullRegions))]
+```
+
+After exploring with the report, it turns out that all the DERs these 4 transcripts overlap have exons on both the positive and negative strands.
+
+As it can be seen below, these 4 transcripts overlap (when strand is not taken into account) genes where at least one of two transcripts was set to be DE.
+
+```{r 'failed.der.strand', results = 'asis'}
+kable(chosen[ subjectHits(findOverlaps(tx[i], tx[-i], ignore.strand = TRUE)), ], format = 'html')
+```
+
+# Conclusions
+
+The results from the simulation are promising as most transcripts were correctly classified as differentially expressed or not by `derfinder`. The exceptions are two false negative and false positive cases.
+
+The false negative cases involved short single transcript genes with one group having low expression relative to the other two. These cases could potentially be eliminated by lowering the F-statistic threshold used in the `derfinder` analysis. 
+
+The false positives were due to transcripts on one strand set not to be DE overlapping transcripts from the other strand set to be DE. This situation could be solved with strand-specific RNA-seq data and running `derfinder` for each strand separately.
+
+
+# Reproducibility
+
+```{r 'reproduc'}
+## Reproducibility info
+Sys.time()
+proc.time()
+session_info()
+```
