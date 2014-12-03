@@ -61,7 +61,7 @@ do
         CORES=2
     elif [[ "${EXPERIMENT}" == "simulation" ]]
     then
-        CORES=2
+        CORES=1
     else
         echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
     fi
