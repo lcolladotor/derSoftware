@@ -29,7 +29,7 @@ cat paired.txt | while read x
 #!/bin/bash
 #$ -cwd
 #$ -m e
-#$ -l mem_free=100G,h_vmem=30G,h_fsize=10G
+#$ -l mem_free=3G,h_vmem=10G,h_fsize=10G
 #$ -pe local $P
 #$ -N ${sname}
 echo "**** Job starts ****"
