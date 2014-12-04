@@ -15,7 +15,8 @@ Simulate reads using [polyester](http://www.bioconductor.org/packages/release/bi
 
 ## Setup
 
-Using chr22, a total of 60 genes were selected with reads simulated for 3 groups each with 10 biological replicates. Reads are simulated with a 40x coverage in mind and taking into account the transcript length. Fold changes are set to 1/8 when a group has low expression and 8 when a group has high expression. Reads are 100bp long and come from paired-end reads with mean fragment lengths of 250bp (25bp sd) and a uniform error rate of 0.005. The `size` is set to 1/3 of the mean in the negative binomial model.
+
+Using chr22, a total of 60 genes were selected with reads simulated for 3 groups each with 10 biological replicates. Reads are simulated with a 40x coverage in mind and taking into account the transcript length. Fold changes are set to 1/2 when a group has low expression and 2 when a group has high expression. Reads are 100bp long and come from paired-end reads with mean fragment lengths of 250bp (25bp sd) and a uniform error rate of 0.005. The `size` is set to 1/3 of the mean in the negative binomial model.
 
 24 of the genes have only one transcript and are setup in the following way.
 
@@ -45,11 +46,15 @@ library('polyester')
 library('Biostrings')
 library('devtools')
 
+## Fold changes
+foldChange <- list(high = 2, low = 1/2)
 
+## Find transcripts
 txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
 tx <- transcriptsBy(txdb, 'gene')
 txs <- sapply(tx, length)
 
+## Fasta file to use
 fasta_file <- system.file('extdata', 'chr22.fa', package='polyester')
 fasta <- readDNAStringSet(fasta_file)
 
@@ -120,14 +125,14 @@ chosen$width <- width(fasta[chosen$fasta_i])
 chosen$readspertx <- round(chosen$width / 100 * 40)
 
 ## Base means
-chosen$mean1 <- round(chosen$readspertx * ifelse(chosen$group1 == 'normal', 1, ifelse(chosen$group1 == 'high', 8, 1/8)))
-chosen$mean2 <- round(chosen$readspertx * ifelse(chosen$group2 == 'normal', 1, ifelse(chosen$group2 == 'high', 8, 1/8)))
-chosen$mean3 <- round(chosen$readspertx * ifelse(chosen$group3 == 'normal', 1, ifelse(chosen$group3 == 'high', 8, 1/8)))
+chosen$mean1 <- round(chosen$readspertx * ifelse(chosen$group1 == 'normal', 1, ifelse(chosen$group1 == 'high', foldChange$high, foldChange$low)))
+chosen$mean2 <- round(chosen$readspertx * ifelse(chosen$group2 == 'normal', 1, ifelse(chosen$group2 == 'high', foldChange$high, foldChange$low)))
+chosen$mean3 <- round(chosen$readspertx * ifelse(chosen$group3 == 'normal', 1, ifelse(chosen$group3 == 'high', foldChange$high, foldChange$low)))
 
 ## Generate count matrix
 readmat <- matrix(NA, nrow = nrow(chosen), ncol = 3 * 10)
 for(i in seq_len(30)) {
-    if(i <= 10) {
+    if (i <= 10) {
         means <- chosen$mean1
     } else if (i <= 20) {
         means <- chosen$mean2    
@@ -137,8 +142,20 @@ for(i in seq_len(30)) {
     readmat[, i] <- mapply(polyester:::NB, means, means / 3)
 }
 
+## Classify txs
+chosen$case <- sapply(chosen$gene_id, function(gene) {
+    s <- subset(chosen, gene_id == gene)
+    if( nrow(s) == 2) {
+        res <- ifelse(all(s$DE), 'bothDE', ifelse(any(s$DE), 'oneDE', 'noneDE'))
+    } else {
+        res<- ifelse(s$DE, 'singleDE', 'singleNotDE')    
+    }
+    return(res)
+})
+
+
 ## Save parameters
-save(chosen, readmat, file = 'simulation_info.Rdata')
+save(chosen, readmat, foldChange, file = 'simulation_info.Rdata')
 
 ## Run simulation
 outdir <- 'simulated_reads'

@@ -5,7 +5,7 @@
 # sh step3-analyzeChr.sh stem run4-v1.0.10
 # sh step3-analyzeChr.sh snyder run3-v1.0.10
 # sh step3-analyzeChr.sh hippo run3-v1.0.10
-# sh step3-analyzeChr.sh simulation run1-v1.0.10
+# sh step3-analyzeChr.sh simulation run2-v1.0.10
 
 # Define variables
 EXPERIMENT=$1

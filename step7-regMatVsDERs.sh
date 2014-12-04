@@ -3,7 +3,7 @@
 # sh step7-regMatVsDERs.sh stem run4-v1.0.10
 # sh step7-regMatVsDERs.sh snyder run3-v1.0.10
 # sh step7-regMatVsDERs.sh hippo run3-v1.0.10
-# sh step7-regMatVsDERs.sh simulation run1-v1.0.10
+# sh step7-regMatVsDERs.sh simulation run2-v1.0.10
 
 # Define variables
 EXPERIMENT=$1

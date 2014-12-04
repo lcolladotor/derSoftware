@@ -91,7 +91,7 @@ if(opt$experiment == 'stem') {
         lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))
 } else if (opt$experiment == 'simulation') {
     analyzeChr(chr = opt$chr, coverageInfo = covData, models = models, 
-        cutoffFstat = 1e-04, colsubset = colsubset, cutoffPre = 0,
+        cutoffFstat = 1e-03, colsubset = colsubset, cutoffPre = 0,
         nPermute = 100, seeds = seq_len(100) + 20141202, maxClusterGap = 3000,
         groupInfo = groupInfo, mc.cores = opt$mcores,
         lowMemDir = file.path(tempdir(), opt$chr, 'chunksDir'))

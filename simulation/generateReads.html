@@ -65,7 +65,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>Simulate reads using <a href="http://www.bioconductor.org/packages/release/bioc/html/polyester.html">polyester</a>.</p>
 <div id="setup" class="section level2">
 <h2>Setup</h2>
-<p>Using chr22, a total of 60 genes were selected with reads simulated for 3 groups each with 10 biological replicates. Reads are simulated with a 40x coverage in mind and taking into account the transcript length. Fold changes are set to 1/8 when a group has low expression and 8 when a group has high expression. Reads are 100bp long and come from paired-end reads with mean fragment lengths of 250bp (25bp sd) and a uniform error rate of 0.005. The <code>size</code> is set to 1/3 of the mean in the negative binomial model.</p>
+<p>Using chr22, a total of 60 genes were selected with reads simulated for 3 groups each with 10 biological replicates. Reads are simulated with a 40x coverage in mind and taking into account the transcript length. Fold changes are set to 1/2 when a group has low expression and 2 when a group has high expression. Reads are 100bp long and come from paired-end reads with mean fragment lengths of 250bp (25bp sd) and a uniform error rate of 0.005. The <code>size</code> is set to 1/3 of the mean in the negative binomial model.</p>
 <p>24 of the genes have only one transcript and are setup in the following way.</p>
 <ul>
 <li>4 are differentially expressed in group 1: 2 low, 2 high</li>
@@ -144,11 +144,15 @@ library('Biostrings')</code></pre>
 <pre><code>## Loading required package: XVector</code></pre>
 <pre class="r"><code>library('devtools')
 
+## Fold changes
+foldChange &lt;- list(high = 2, low = 1/2)
 
+## Find transcripts
 txdb &lt;- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
 tx &lt;- transcriptsBy(txdb, 'gene')
 txs &lt;- sapply(tx, length)
 
+## Fasta file to use
 fasta_file &lt;- system.file('extdata', 'chr22.fa', package='polyester')
 fasta &lt;- readDNAStringSet(fasta_file)
 
@@ -219,14 +223,14 @@ chosen$width &lt;- width(fasta[chosen$fasta_i])
 chosen$readspertx &lt;- round(chosen$width / 100 * 40)
 
 ## Base means
-chosen$mean1 &lt;- round(chosen$readspertx * ifelse(chosen$group1 == 'normal', 1, ifelse(chosen$group1 == 'high', 8, 1/8)))
-chosen$mean2 &lt;- round(chosen$readspertx * ifelse(chosen$group2 == 'normal', 1, ifelse(chosen$group2 == 'high', 8, 1/8)))
-chosen$mean3 &lt;- round(chosen$readspertx * ifelse(chosen$group3 == 'normal', 1, ifelse(chosen$group3 == 'high', 8, 1/8)))
+chosen$mean1 &lt;- round(chosen$readspertx * ifelse(chosen$group1 == 'normal', 1, ifelse(chosen$group1 == 'high', foldChange$high, foldChange$low)))
+chosen$mean2 &lt;- round(chosen$readspertx * ifelse(chosen$group2 == 'normal', 1, ifelse(chosen$group2 == 'high', foldChange$high, foldChange$low)))
+chosen$mean3 &lt;- round(chosen$readspertx * ifelse(chosen$group3 == 'normal', 1, ifelse(chosen$group3 == 'high', foldChange$high, foldChange$low)))
 
 ## Generate count matrix
 readmat &lt;- matrix(NA, nrow = nrow(chosen), ncol = 3 * 10)
 for(i in seq_len(30)) {
-    if(i &lt;= 10) {
+    if (i &lt;= 10) {
         means &lt;- chosen$mean1
     } else if (i &lt;= 20) {
         means &lt;- chosen$mean2    
@@ -236,8 +240,20 @@ for(i in seq_len(30)) {
     readmat[, i] &lt;- mapply(polyester:::NB, means, means / 3)
 }
 
+## Classify txs
+chosen$case &lt;- sapply(chosen$gene_id, function(gene) {
+    s &lt;- subset(chosen, gene_id == gene)
+    if( nrow(s) == 2) {
+        res &lt;- ifelse(all(s$DE), 'bothDE', ifelse(any(s$DE), 'oneDE', 'noneDE'))
+    } else {
+        res&lt;- ifelse(s$DE, 'singleDE', 'singleNotDE')    
+    }
+    return(res)
+})
+
+
 ## Save parameters
-save(chosen, readmat, file = 'simulation_info.Rdata')
+save(chosen, readmat, foldChange, file = 'simulation_info.Rdata')
 
 ## Run simulation
 outdir &lt;- 'simulated_reads'
@@ -261,10 +277,10 @@ sink()
 
 ## Reproducibility info
 Sys.time()</code></pre>
-<pre><code>## [1] &quot;2014-12-02 16:15:08 EST&quot;</code></pre>
+<pre><code>## [1] &quot;2014-12-04 13:45:28 EST&quot;</code></pre>
 <pre class="r"><code>proc.time()</code></pre>
 <pre><code>##    user  system elapsed 
-## 227.913  23.917 258.404</code></pre>
+## 148.180  12.774 163.927</code></pre>
 <pre class="r"><code>session_info()</code></pre>
 <pre><code>## Session info--------------------------------------------------------------</code></pre>
 <pre><code>##  setting  value                                             
