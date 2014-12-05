@@ -161,26 +161,38 @@ makePlots <- function(reg, gs) {
     ## Actually make the plots with F-stat track
     prev.name <- ''
     def.par <- par()
+    def.par <- def.par[-which(names(def.par) %in% c('cin', 'cra', 'csi', 'cxy', 'din', 'page'))]
     for(reg.i in seq_len(length(reg))) {
-        range <- start(reg[reg.i]):end(reg[reg.i])
-        dat <- fullCov$chr22[range, ]
-        for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
         
-        
-        fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
-    
         if(prev.name != names(reg)[reg.i]) {
             par(def.par)
             plot.new()
             text(0.5, 0.5, names(reg)[reg.i], cex = 5)
         }
         prev.name <- names(reg)[reg.i]
+        
+        
+        range <- start(reg[reg.i]):end(reg[reg.i])
+        dat <- fullCov$chr22[range, ]
+        
+        ## Skip plot if there is no coverage data
+        if(max(sapply(dat, max)) == 0) {
+            par(def.par)
+            plot.new()
+            text(0.5, 0.5, paste('No data\nReg', reg.i), cex = 5)
+            next
+        }
+        
+        ## Log2 transform
+        for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+        
+        ## Calculate f-stats
+        fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
     
-    
-    
-    
+        ## Make plot
         plotRegionCoverage(reg, regCov, groupInfo, annoNear, annoReg, txdb, reg.i, ask = FALSE, verbose = FALSE)
     
+        ## Add F-stat track
         par(fig = c(0, 1, 0.075, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
         plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1))
         abline(h = optionsStats$cutoffFstatUsed, col = 'red')
@@ -284,9 +296,9 @@ summary(apply(readmat, 2, min))
 
 The minimum number of reads per transcript for a given sample is `r min(readmat)`.
 
-## DERs vs segments
+## Exonic segments
 
-Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DERs overlap such segments. We would expect that the DERs with a FWER adjusted p-value < 0.05 would only overlap segments that were set to be DE.
+Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DERs overlap such segments and viceversa. We would expect that the DERs with a FWER adjusted p-value < 0.05 would only overlap segments that were set to be DE.
 
 
 ```{r 'segments', bootstrap.show.code = FALSE}
@@ -318,10 +330,56 @@ fullRegions$overlap <- sapply(seq_len(length(fullRegions)), function(x) {
 })
 ```
 
+### Segments vs DERs
 
-### Segments per DER
 
-We can check how many segments each DER overlaps. Ideally they should all overlap at least one segment, but there are some cases where this could not happen (`r sum(is.na(fullRegions$overlap))` in this case). Mostly because of small mismatches between the transcripts and the actual mRNA used in the simulation.
+We can check the if the exonic segments overlap one or more DERs similarly to what we did earlier at the transcript and gene level. The results change depending on whether only the DERs with significant FWER adjusted p-value or all of the DERs are used.
+
+
+```{r, 'segsvsders', bootstrap.show.code = FALSE}
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FWER)' = countOverlaps(segs, fwer) > 0))
+
+addmargins(table('DE status' = segs$DE, 'Overlaps DER' = countOverlaps(segs, fullRegions) > 0))
+```
+
+
+Using the DERs with significant FWER adjusted p-values, there are `r sum(segs$DE & !countOverlaps(segs, fwer) > 0)` false negative cases. From the exploration shown below, half of them seem short. Most of the false negative segments correspond to genes from the _oneDE_ scenario. Thus revealing that the complexity of that scenario makes it challenging to identify significant DERs.
+
+
+```{r 'seg.fn'}
+## Explore false negative segments using DERs with sig FWER
+seg.fn <- which(segs$DE & !countOverlaps(segs, fwer) > 0)
+
+## Around half of these segments are short
+summary(width(segs[seg.fn]))
+chosen[chosen$gene_id == '6523', ]
+
+## 11 of the 37 segments are from gene with id 6523
+tail(sort(table(names(segs[seg.fn]))))
+
+## Cases of the genes with at least one FN segment
+table(tapply(subset(chosen, gene_id %in% names(seg.fn))$case, subset(chosen, gene_id %in% names(seg.fn))$gene_id, unique))
+
+## Type of gene where the segments come from. Mostly oneDE genes
+table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_id == x]) }))
+```
+
+
+#### Plots
+
+Coverage plots with F-statistics shown at the bottom for the false negative exonic segments grouped by their gene.
+
+```{r 'segplots', bootstrap.show.code = FALSE, warning = FALSE}
+makePlots(segs[seg.fn], gs)
+```
+
+
+
+
+
+### DERs vs segments
+
+We can check how many segments each DER overlaps. Ideally they should all overlap at least one segment, but there are some cases where this could not happen (`r sum(is.na(fullRegions$overlap))` in this case). Possibly because of small mismatches between the transcripts and the actual mRNA used in the simulation. Alternatively, alignment problems could explain such cases.
 
 ```{r 'segsperder'}
 ## Do DERs overlap at least one segment?
