@@ -18,8 +18,16 @@ library('GenomicRanges')
 library('TxDb.Hsapiens.UCSC.hg19.knownGene')
 library('knitr')
 library('devtools')
+library('derfinder')
+library('derfinderHelper')
+library('derfinderPlot')
+library('bumphunter')
 load('../simulation_info.Rdata')
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
+load('../derAnalysis/run2-v1.0.10/groupInfo.Rdata')
+load('../derAnalysis/run2-v1.0.10/models.Rdata')
+load('../derAnalysis/run2-v1.0.10/chr22/optionsStats.Rdata')
+load('../CoverageInfo/fullCov.Rdata')
 names(fullRegions) <- seq_len(length(fullRegions))
 ```
 
@@ -139,6 +147,53 @@ width(failed.de)
 width(tx[ idx$success$de[sum(width(success.de)) <= 110] ])
 ```
 
+#### Plots
+
+```{r 'plotsFun', bootstrap.show.code = FALSE}
+gs <- makeGenomicState(txdb, chrs = '22', verbose = FALSE)
+makePlots <- function(reg, gs) {
+    ## Prep
+    strand(reg) <- '*'
+    regCov <- getRegionCoverage(fullCov = fullCov, regions = reg, verbose = FALSE)
+    annoReg <- annotateRegions(reg, gs$fullGenome, verbose = FALSE)
+    annoNear <- annotateNearest(reg, 'hg19')
+
+    ## Actually make the plots with F-stat track
+    prev.name <- ''
+    def.par <- par()
+    for(reg.i in seq_len(length(reg))) {
+        range <- start(reg[reg.i]):end(reg[reg.i])
+        dat <- fullCov$chr22[range, ]
+        for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+        
+        
+        fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
+    
+        if(prev.name != names(reg)[reg.i]) {
+            par(def.par)
+            plot.new()
+            text(0.5, 0.5, names(reg)[reg.i], cex = 5)
+        }
+        prev.name <- names(reg)[reg.i]
+    
+    
+    
+    
+        plotRegionCoverage(reg, regCov, groupInfo, annoNear, annoReg, txdb, reg.i, ask = FALSE, verbose = FALSE)
+    
+        par(fig = c(0, 1, 0.075, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
+        plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1))
+        abline(h = optionsStats$cutoffFstatUsed, col = 'red')
+    }
+}
+```
+
+Coverage plots with F-statistics shown at the bottom for the false negative cases. One plot it shown for each exon that compose these transcripts.
+
+```{r 'plotFalseNeg', bootstrap.show.code = FALSE, eval = length(failed.de) > 0, warning = FALSE}
+makePlots(unlist(failed.de), gs)
+```
+
 
 ### Failed.DER (false positive)
 
@@ -151,20 +206,30 @@ failed.der <- tx[ idx$failed$der ]
 kable(chosen[idx$failed$der, ], format = 'html')
 ```
 
+#### Plots
+
+Coverage plots with F-statistics shown at the bottom for the false positive cases. One plot it shown for each exon that compose these transcripts. For the `r table(chosen$case, chosen$result)['oneDE', 'Failed.DER']` transcripts from the _oneDE_ case, it can be seen how at least one plot contains a DER overlapping an exon set to be DE. `r ifelse(length(failed.der) > 0, '', '(Skipped as such cases were not present in this simulation)')`.
+
+Some complex situations where there are exons on both strands can be observed.
+
+```{r 'plotsFalsePositive', eval = length(failed.der) > 0, bootstrap.show.code = FALSE, warning = FALSE}
+makePlots(unlist(failed.der), gs)
+```
+
 #### Other strand
 
 In some simulations, we found what seemed to be false positive transcripts but turned out to overlap DERs in regions where there are exons on both the positive and negative strands and at least one of the exons was set to be DE.
 
 ```{r 'otherstrand', bootstrap.show.code = FALSE}
 ## Most of the truly false positive transcripts don't overlap other transcripts
-i <- intersect(idx$failed$der, which(chosen$case == 'noneDE'))
-table(countOverlaps(tx[i], tx[-i]))
+inter <- intersect(idx$failed$der, c(which(chosen$case == 'noneDE'), which(chosen$case == 'singleNotDE')))
+table(countOverlaps(tx[inter], tx[-inter]))
 
 ## They are not short
-width(tx[i])
+width(tx[inter])
 
 ## To explore regions with derfinderReport
-sort(subjectHits(findOverlaps(tx[i], fullRegions)))
+sort(subjectHits(findOverlaps(tx[inter], fullRegions)))
 
 ## DERs
 # fullRegions[subjectHits(findOverlaps(tx[i], fullRegions))]
@@ -175,8 +240,11 @@ sort(subjectHits(findOverlaps(tx[i], fullRegions)))
 As it can be seen below, `r table(chosen$case, chosen$result)['noneDE', 'Failed.DER']` apparent false positive transcripts from the _noneDE_ case overlap (when strand is not taken into account) genes where at least one of two transcripts was set to be DE. 
 
 ```{r 'failed.der.strand', results = 'asis', bootstrap.show.code = FALSE}
-kable(chosen[ subjectHits(findOverlaps(tx[i], tx[-i], ignore.strand = TRUE)), ], format = 'html')
+kable(chosen[ subjectHits(findOverlaps(tx[inter], tx[-inter], ignore.strand = TRUE)), ], format = 'html')
 ```
+
+
+
 
 ### Gene level
 
@@ -197,7 +265,7 @@ addmargins(table('DE status' = gene$DE, 'Overlaps DER' = gene$overlap))
 
 The results from the simulation are promising as most transcripts were correctly classified as differentially expressed or not by `derfinder`.
 
-The majority of the false negative cases involved short single transcript genes with one group having low expression relative to the other two. These cases could potentially be eliminated by lowering the F-statistic threshold used in the `derfinder` analysis. 
+The majority of the false negative cases involved short single transcript genes with one group having low expression relative to the other two. These cases could potentially be mitigated by lowering the F-statistic threshold used in the `derfinder` analysis. 
 
 In some simulations there are some apparent false positives which are due to transcripts on one strand set not to be DE overlapping transcripts from the other strand set to be DE. This situation could be solved with strand-specific RNA-seq data and running `derfinder` for each strand separately.
 
