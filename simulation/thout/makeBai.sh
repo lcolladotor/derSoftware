@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 #$ -cwd
 #$ -m e
 #$ -N makeBai-Sim
