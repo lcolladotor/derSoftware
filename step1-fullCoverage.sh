@@ -15,7 +15,7 @@ SHORT="fullCov-${EXPERIMENT}"
 CORES=10
 
 # Directories
-ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
+ROOTDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/CoverageInfo
 
@@ -37,7 +37,7 @@ then
     CUTOFF=3
 elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
-    DATADIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware/simulation/thout
+    DATADIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout
     CUTOFF=0
 else
     echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"

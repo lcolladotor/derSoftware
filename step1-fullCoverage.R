@@ -43,7 +43,7 @@ if(opt$datadir == '/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
 } else if(opt$datadir == '/dcs01/lieber/ajaffe/Hippo/TopHat') {
     files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern)
     names(files) <- gsub('_out', '', names(files))
-} else if(opt$datadir == '/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware/simulation/thout') {
+} else if(opt$datadir == '/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout') {
     files <- rawFiles(datadir=opt$datadir, samplepatt='sample')
     files <- files[match(paste0('sample', 1:30), names(files))]
 } else {
