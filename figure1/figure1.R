@@ -161,14 +161,15 @@ matplot(pos, covDat.log, yaxt="n",
 	col=as.numeric(groupInfo), lty=1, type="l",
 	xlab=chr, ylab="", cex.axis=1.4, cex.lab=1.8)
 axis(2, at = log2(y.axis.sample + scalefac), labels = y.axis.sample, cex.axis = 1.3)
-m = max(covDat.log)
+#m = max(covDat.log)
+m <- log2(8 + scalefac)
 for(i in seq(along=sl)) {
 	Ind = start(sl)[i]:end(sl)[i]
 	rect(xleft=min(pos[Ind]), xright = max(pos[Ind]),
 		ybot = 0, ytop =m, col=pl[i], density=10)
 }
 palette(group.pl)
-legend("topright", levels(groupInfo), col=seq_len(length(levels(groupInfo))), cex=1.4,pch=15)
+legend("topright", levels(groupInfo), col=seq_len(length(levels(groupInfo))), cex=1.4,pch=15, ncol = 6)
 dev.off()
 
 
