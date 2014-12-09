@@ -98,37 +98,12 @@ print(p.cluster)
 dev.off()
 save(p.cluster, file = paste0('plotCluster-', s, '.Rdata'))
 
-## Panel 1
-bpInd <- start(ders[s]) + 100:103
-ind <- start(ders[s]) - start(selected) + 100:103
+## Misc
 covDat <- as.data.frame(cov$coverage[pos, ])
 covDat.log <- as.data.frame(cov.log)
-ylim <- log2(c(0, ceiling(max(covDat[ind + 1, ]))) + scalefac)
 y.axis <- c(0, 0.5, 2^(0:3))
 
-group.pl <- brewer.pal(6, "Dark2")
-
-for(i in seq(along=ind)) {
-	pdf(paste0("cov_part", i,".pdf"), h=6, w=4.75)
-	palette(group.pl)
-
-	y <- as.numeric(log2(covDat[ind[i] + 1,] + scalefac))
-	boxplot(y ~ groupInfo, outline=FALSE, yaxt="n", main="", ylim = ylim,
-        xaxt="n")
-	mtext(paste0(chr, ":", bpInd[i]), line=0.5, cex=1.6)
-	axis(2, at = log2(y.axis + scalefac), labels = y.axis, cex.axis = 1.3)
-	points(y ~ jitter(as.numeric(groupInfo), amount=0.15),
-		pch = 21, bg = as.numeric(groupInfo), cex=0.8)
-    legend("topright", paste0("F=", round(fstats.num[ind[i] + 1], 2)), cex=1.3)
-    if(i <= 3) {
-        par(xpd = TRUE)
-        legend("bottom", levels(groupInfo)[c(2 * i - 1, 2 * i)], col = group.pl[c(2 * i - 1, 2 * i)], cex=1.7, inset = -0.13, ncol = 2, bty = 'n', pch = 16)
-    }	
-	dev.off()
-}
-
-
-## panel 2
+## F-stat panel
 pdf("fstat_panel.pdf", h= 6,w=14)
 plot(fstats.num ~ pos, type="l", xlab=chr, ylab="", cex.axis=1.4, cex.lab=1.8)
 cutoff=2.86420435076022
