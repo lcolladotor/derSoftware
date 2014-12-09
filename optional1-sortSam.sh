@@ -10,7 +10,7 @@ EXPERIMENT=$1
 SHORT="sortSam-${EXPERIMENT}"
 
 # Directories
-ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
+ROOTDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/sortSam
 

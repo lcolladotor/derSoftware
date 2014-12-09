@@ -13,7 +13,7 @@ ncore=5
 cores="${ncore}cores"
 
 # Directories
-ROOTDIR=/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware
+ROOTDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 
 # Construct shell files

@@ -13,7 +13,7 @@ library("GenomicFeatures")
 ## Define paths
 mainPath <- '/dcs01/lieber/ajaffe/Brain/derRuns/derSoftware/'
 covPath <- file.path(mainPath, 'brainspan/CoverageInfo/')
-resPath <- file.path(mainPath, 'brainspan/derAnalysis/run3-v1.0.6')
+resPath <- file.path(mainPath, 'brainspan/derAnalysis/run4-v1.0.10')
 dataPath <- '/nexsan2/disk3/ajaffe/BrainSpan/RNAseq/bigwig/'
 
 ## Load data
@@ -26,9 +26,15 @@ ders <- fullRegions
 load(file.path(resPath, 'groupInfo.Rdata'))
 load(file.path(resPath, 'models.Rdata'))
 
+## Use same names as Jaffe
+rename <- data.frame(ori = c('Neo.F', 'Neo.A', 'notNeo.F', 'notNeo.A', 'CBC.F', 'CBC.A'), new = c('NCX.F', 'NCX.P', 'NonNCX.F', 'NonNCX.P', 'CBC.F', 'CBC.P'))
+levels(groupInfo) <- sapply(levels(groupInfo), function(x) { rename$new[rename$ori == x]})
+# levels(groupInfo) <- gsub('notNeo', '-Neo', gsub('\\.', '-', levels(groupInfo)))
+
+
 ## Some options
 scalefac <- 1
-pad <- 3000
+pad <- 600
 
 ## Get best cluster of ders
 cluster <- data.frame(area = ders$area,
@@ -55,17 +61,12 @@ if(!skip) {
         readline('Continue?')
         mgr$navigate(as.character(seqnames(ders[i.cluster])), start(r.cluster) - pad, end(r.cluster) + pad)
     }
-    # Some notes
-    ## 4 is quite clean
-    ## 11 looks super clean, only 1 DER, longer than the known gene (it's SOX11)
-    ## 15 looks pretty good too, multiple exons. It's gene IL17RD
-    ## 18 is complex but overall pretty good. Several genes are included.
 }
 
 
 
 ## Selected DER
-s <- bestArea[15]
+s <- bestArea[16]
 s.cluster <- range(ders[which(cluster$clusterChr == names(s))])
 selected <- resize(s.cluster, width(s.cluster) + 2 * pad, fix = 'center')
 
@@ -83,7 +84,6 @@ cov.log <- cov$coverage[pos, ]
 for(i in seq_len(ncol(cov.log))) {
     cov.log[[i]] <- log2(cov.log[[i]] + scalefac)
 }
-cov.log[, 1:6]
 
 ## Calculate F-stats
 fstats <- fstats.apply(data = cov.log, mod = models$mod, mod0 = models$mod0, scalefac = scalefac)
@@ -97,11 +97,6 @@ pdf(paste0('plotCluster-', s, '.pdf'))
 print(p.cluster)
 dev.off()
 save(p.cluster, file = paste0('plotCluster-', s, '.Rdata'))
-
-
-## Group names
-levels(groupInfo) <- gsub('notNeo', '-Neo', gsub('\\.', '-', levels(groupInfo)))
-
 
 ## Panel 1
 bpInd <- start(ders[s]) + 100:103
@@ -118,13 +113,17 @@ for(i in seq(along=ind)) {
 	palette(group.pl)
 
 	y <- as.numeric(log2(covDat[ind[i] + 1,] + scalefac))
-	boxplot(y ~ groupInfo, outline=FALSE, yaxt="n",
-		cex.axis=0.7, main="", ylim = ylim)
+	boxplot(y ~ groupInfo, outline=FALSE, yaxt="n", main="", ylim = ylim,
+        xaxt="n")
 	mtext(paste0(chr, ":", bpInd[i]), line=0.5, cex=1.6)
 	axis(2, at = log2(y.axis + scalefac), labels = y.axis, cex.axis = 1.3)
 	points(y ~ jitter(as.numeric(groupInfo), amount=0.15),
 		pch = 21, bg = as.numeric(groupInfo), cex=0.8)
-	legend("topright", paste0("F=", round(fstats.num[ind[i] + 1], 2)), cex=1.3)
+    legend("topright", paste0("F=", round(fstats.num[ind[i] + 1], 2)), cex=1.3)
+    if(i <= 3) {
+        par(xpd = TRUE)
+        legend("bottom", levels(groupInfo)[c(2 * i - 1, 2 * i)], col = group.pl[c(2 * i - 1, 2 * i)], cex=1.7, inset = -0.13, ncol = 2, bty = 'n', pch = 16)
+    }	
 	dev.off()
 }
 
@@ -135,7 +134,7 @@ plot(fstats.num ~ pos, type="l", xlab=chr, ylab="", cex.axis=1.4, cex.lab=1.8)
 cutoff=2.86420435076022
 abline(h=cutoff, lty=2)
 
-pl = c(rep('white', 4), brewer.pal(9, "Paired"))
+pl = brewer.pal(9, "Paired")
 palette(pl)
 sl = slice(fstats.num, lower = cutoff)
 for(i in seq(along=sl)) {
