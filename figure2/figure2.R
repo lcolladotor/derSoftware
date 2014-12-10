@@ -1,8 +1,7 @@
-## Adapted from /home/epi/ajaffe/Lieber/Projects/derfinderPaper/figure1_stem.R
+## Adapted from /dcs01/ajaffe/Brain/derRuns/derSoftware/figure1/figure1.R
 
 library('derfinder')
 library('derfinderHelper')
-library('derfinderPlot')
 library('GenomicRanges')
 library('TxDb.Hsapiens.UCSC.hg19.knownGene')
 library('RColorBrewer')
@@ -11,70 +10,37 @@ library('GenomeInfoDb')
 library("GenomicFeatures")
 
 ## Define paths
-mainPath <- '/dcs01/ajaffe/Brain/derRuns/derSoftware/'
-covPath <- file.path(mainPath, 'brainspan/CoverageInfo/')
+mainPath <- '/dcs01/ajaffe/Brain/derRuns/derSoftware'
+covPath <- file.path(mainPath, 'brainspan/CoverageInfo')
 resPath <- file.path(mainPath, 'brainspan/derAnalysis/run4-v1.0.10')
-dataPath <- '/nexsan2/disk3/ajaffe/BrainSpan/RNAseq/bigwig/'
+dataPath <- '/nexsan2/disk3/ajaffe/BrainSpan/RNAseq/bigwig'
 
 ## Load data
 load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
 files <- pdSpan$wig
 names(files) <- pdSpan$lab
 
-load(file.path(resPath, 'fullRegions.Rdata'))
-ders <- fullRegions
+load(file.path(mainPath, 'brainspan', 'regionMatrix', 'regionMat-cut0.25.Rdata'))
 load(file.path(resPath, 'groupInfo.Rdata'))
 load(file.path(resPath, 'models.Rdata'))
 
 ## Use same names as Jaffe
 rename <- data.frame(ori = c('Neo.F', 'Neo.A', 'notNeo.F', 'notNeo.A', 'CBC.F', 'CBC.A'), new = c('NCX.F', 'NCX.P', 'NonNCX.F', 'NonNCX.P', 'CBC.F', 'CBC.P'))
 levels(groupInfo) <- sapply(levels(groupInfo), function(x) { rename$new[rename$ori == x]})
-# levels(groupInfo) <- gsub('notNeo', '-Neo', gsub('\\.', '-', levels(groupInfo)))
-
 
 ## Some options
+pad <- 30
 scalefac <- 1
-pad <- 600
 
-## Get best cluster of ders
-cluster <- data.frame(area = ders$area,
-    clusterChr = paste0(as.integer(ders$cluster),
-    chr = as.character(seqnames(ders))))
-regionClustAreas <- tapply(cluster$area, cluster$clusterChr, sum)
-bestArea <- sapply(names(head(sort(regionClustAreas, decreasing=TRUE),
-    20)), function(y) { which(cluster$clusterChr == y)[[1]]})
-    
-## Explore some clusters
-skip <- TRUE
-if(!skip) {
-    library('epivizr')
-    mgr <- startEpiviz()
-    ders_dev <- mgr$addDevice(ders[!as.logical(ders$significantFWER)], "DERs no sig FWER")
-    ders_sig_dev <- mgr$addDevice(ders[as.logical(ders$significantFWER)], "DERs sig FWER")
+## Selected region
+selected <- range(regionMat$chr5$regions[subjectHits(findOverlaps(GRanges('chr5', IRanges(161110000, 161129000), '*'), regionMat$chr5$regions))])
+selected <- resize(selected, width(selected) + 2 * pad, fix = 'center')
 
-    ## Explore some clusters
-    for(i in seq_len(20)) {
-        i.cluster <- bestArea[i]
-        r.cluster <- range(ders[which(cluster$clusterChr == names(i.cluster))])
-        print(i)
-        print(width(r.cluster))
-        readline('Continue?')
-        mgr$navigate(as.character(seqnames(ders[i.cluster])), start(r.cluster) - pad, end(r.cluster) + pad)
-    }
-}
-
-
-
-## Selected DER
-s <- bestArea[16]
-s.cluster <- range(ders[which(cluster$clusterChr == names(s))])
-selected <- resize(s.cluster, width(s.cluster) + 2 * pad, fix = 'center')
-
-## Load coverage and annotation
+## Load coverage
 chr <- as.character(seqnames(selected))
 chr
 cov <- loadCoverage(files = files, which = selected, chr = chr)
-load(file.path(resPath, chr, 'annotation.Rdata'))
+
 
 ## Bases
 pos <- start(selected):end(selected)
@@ -90,18 +56,10 @@ fstats <- fstats.apply(data = cov.log, mod = models$mod, mod0 = models$mod0, sca
 fstats.num <- as.numeric(fstats)
 summary(fstats)
 
-
-## Plot cluster
-p.cluster <- plotCluster(idx = s, regions = ders, annotation = annotation, titleUse = 'fwer', groupInfo = groupInfo, coverageInfo = cov$coverage, txdb = TxDb.Hsapiens.UCSC.hg19.knownGene, maxExtend = pad)
-pdf(paste0('plotCluster-', s, '.pdf'))
-print(p.cluster)
-dev.off()
-save(p.cluster, file = paste0('plotCluster-', s, '.Rdata'))
-
 ## Misc
 covDat <- as.data.frame(cov$coverage[pos, ])
 covDat.log <- as.data.frame(cov.log)
-y.axis <- c(0, 0.5, 2^(0:3))
+
 
 ## F-stat panel
 pdf("fstat_panel.pdf", h= 6,w=14)
@@ -109,21 +67,47 @@ plot(fstats.num ~ pos, type="l", xlab=chr, ylab="", cex.axis=1.4, cex.lab=1.8)
 cutoff=2.86420435076022
 abline(h=cutoff, lty=2)
 
-pl = brewer.pal(9, "Paired")
-palette(pl)
-sl = slice(fstats.num, lower = cutoff)
+fstat.pl <- brewer.pal(3, "Greys")
+sl <- slice(fstats.num, lower = cutoff)
 for(i in seq(along=sl)) {
 	Ind = start(sl)[i]:end(sl)[i]
 	polygon(x = c(pos[Ind], rev(pos[Ind])),
 		y = c(fstats.num[Ind], rep(cutoff, length(Ind))),
-		col = i, density =60)
+		col = fstat.pl[3], density =60)
 }
-abline(v=range(bpInd), col="red")
 dev.off()
 
 
+## Calculate overall mean
+mean.ov <- log2(rowMeans(covDat) + scalefac)
+y.axis <- 0:7/10
+
+## Mean panel
+pdf("mean_panel.pdf", h= 6,w=14)
+plot(mean.ov ~ pos, type="l", xlab=chr, ylab="", cex.axis=1.4, cex.lab=1.8, yaxt="n")
+axis(2, at = log2(y.axis + scalefac), labels = y.axis, cex.axis = 1.2)
+mean.cutoff <- log2(0.25 + scalefac)
+abline(h= mean.cutoff, lty=2)
+
+mean.sl <- slice(mean.ov, lower = mean.cutoff)
+pl <- brewer.pal(length(mean.sl), "Paired")
+palette(pl)
+for(i in seq(along = mean.sl)) {
+	Ind = start(mean.sl)[i]:end(mean.sl)[i]
+	polygon(x = c(pos[Ind], rev(pos[Ind])),
+		y = c(mean.ov[Ind], rep(mean.cutoff, length(Ind))),
+		col = i, density =60)
+}
+dev.off()
+
+
+
+
 ## coverage panel
-y.axis.sample <- c(y.axis, 2^4)
+y.axis.sample <- c(0, 0.5, 2^(0:6))
+group.pl <- brewer.pal(6, "Dark2")
+
+
 pdf("fullCov_panel.pdf", h= 6,w=14)
 
 sample.pl <- mapply(function(col, n) {
@@ -137,14 +121,14 @@ matplot(pos, covDat.log, yaxt="n",
 	xlab=chr, ylab="", cex.axis=1.4, cex.lab=1.8)
 axis(2, at = log2(y.axis.sample + scalefac), labels = y.axis.sample, cex.axis = 1.3)
 #m = max(covDat.log)
-m <- log2(8 + scalefac)
-for(i in seq(along=sl)) {
-	Ind = start(sl)[i]:end(sl)[i]
+m <- log2(32 + scalefac)
+for(i in seq(along=mean.sl)) {
+	Ind = start(mean.sl)[i]:end(mean.sl)[i]
 	rect(xleft=min(pos[Ind]), xright = max(pos[Ind]),
-		ybot = 0, ytop =m, col=pl[i], density=10)
+		ybot = 0, ytop = m, col=pl[i], density=10)
 }
 palette(group.pl)
-legend("topright", levels(groupInfo), col=seq_len(length(levels(groupInfo))), cex=1.4,pch=15, ncol = 6)
+legend("top", levels(groupInfo), col=seq_len(length(levels(groupInfo))), cex=1.4,pch=15, ncol = 6, bty = 'n')
 dev.off()
 
 
@@ -176,7 +160,8 @@ g = unlist(e$symbol)
 g[is.na(g)] = ""
 if (length(g) > 0) {
 	text(x = e$start + e$width/2, y = s2 * 0.8, g,
-	  font = 2, pos = s2 + 2, cex = rep(c(1.2, 0.5, 1.2, 0.01), c(3, 3, 1, 1)))
+	  font = 2, pos = s2 + 2,
+      cex = c(1.2, 0.01, 0.5, 0.5, 0.5, 0.01, 1.2, 1.2, 1.2, 0.01, 0.01))
 }
 dev.off()
 
@@ -188,25 +173,37 @@ seqlevelsStyle(txdb) <- 'UCSC'
 tx=exonsBy(txdb)
 eList = tx[subjectHits(findOverlaps(selected, tx) )]
 
-pdf("trans_anno.pdf", h=2.5,w=14)
-plot(0,0, type="n", xlim=range(pos),ylim=c(0.5,length(eList)+0.5),
-	yaxt="n",ylab="", xlab=paste("Chromosome", mapSeqlevels(chr, 'NCBI')), cex.axis = 1.5, cex.lab =1.8)
+e.strand <- unlist(unique(strand(eList)))
+e.n.neg <- sum(e.strand == '-')
+e.n.pos <- sum(e.strand == '+')
+ylim <- c(-1 * e.n.neg + ifelse(e.n.neg > 0, -0.5, 0.5), e.n.pos + 0.5)
+
+pdf("trans_anno.pdf", h=4.5,w=14)
+plot(0,0, type="n", xlim=range(pos), ylim=ylim,
+	yaxt="n",ylab="", xlab=paste("Chromosome", mapSeqlevels(chr, 'NCBI'), '(161.1 mb)'), xaxt='n', cex.lab = 1.8)
+axis(1, at = c(161115000, 161120000, 161125000, 161130000), labels = c('+15k', '+20k', '+25k', '+30k'), cex.axis = 1.5)
+axis(2, c(- ifelse(e.n.neg, median(seq_len(e.n.neg)), NA), ifelse(e.n.pos, median(seq_len(e.n.pos)), NA)), c(ifelse(e.n.neg, '-', NA), ifelse(e.n.pos, "+", NA)), tick=FALSE,las=1,cex.axis = 3)
+abline(h=0,lty=3)
 for(i in seq(along=eList)) {
 	a = as.data.frame(eList[[i]])
+    i.strand <- sum(e.strand[ seq_len(length(e.strand)) <= i] == e.strand[i]) * ifelse(e.strand[i] == "+", 1, -1)
 	for (j in seq_len(nrow(a))) {
 		polygon(c(a$start[j], a$end[j], a$end[j], a$start[j]), 
-			c(i-0.25, i-0.25, i+0.25, i+0.25), col="blue")
+			c(i.strand - 0.25, i.strand -0.25, i.strand +0.25, i.strand +0.25), col="blue")
 	}
 	
 	int = gaps(eList[[i]])
 	int = int[seqnames(int) == unique(seqnames(eList[[i]]))]
+    int <- int[ end(int) < seqlengths(int) & start(int) > 1]
 	end(int) = end(int)+1
 	int = as.data.frame(int[start(int) != 1])
 	
+    
 	for (j in seq_len(nrow(int))) {
 		polygon(c(int$start[j], int$end[j], int$end[j], int$start[j]), 
-			c(i-0.15, i-0.15, i+0.15, i+0.15), col="lightblue")
+			c(i.strand - 0.15, i.strand -0.15, i.strand + 0.15, i.strand +0.15), col="lightblue")
 	}
+    
 }
 dev.off()
 

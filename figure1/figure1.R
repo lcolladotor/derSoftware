@@ -225,6 +225,7 @@ for(i in seq(along=eList)) {
 	
 	int = gaps(eList[[i]])
 	int = int[seqnames(int) == unique(seqnames(eList[[i]]))]
+    int <- int[ end(int) < seqlengths(int) & start(int) > 1]
 	end(int) = end(int)+1
 	int = as.data.frame(int[start(int) != 1])
 	
