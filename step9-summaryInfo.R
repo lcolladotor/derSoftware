@@ -40,6 +40,7 @@ suppressMessages(library("derfinderPlot"))
 suppressMessages(library("TxDb.Hsapiens.UCSC.hg19.knownGene"))
 
 library('Cairo')
+options(bitmapType='cairo')
 
 ## Specify parameters
 spec <- matrix(c(
