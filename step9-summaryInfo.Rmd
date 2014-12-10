@@ -107,7 +107,7 @@ rm(tmp)
 ## Select clusters by cluster area
 df <- data.frame(area=fullRegions$area, clusterChr=paste0(as.integer(fullRegions$cluster), chr=as.character(seqnames(fullRegions))))
 regionClustAreas <- tapply(df$area, df$clusterChr, sum)
-bestArea <- sapply(names(head(sort(regionClustAreas, decreasing=TRUE), 20)), function(y) { which(df$clusterChr == y)[[1]]})
+bestArea <- sapply(names(head(sort(regionClustAreas, decreasing=TRUE), 70)), function(y) { which(df$clusterChr == y)[[1]]})
 
 ## Graphical setup: ideograms 
 ## Load ideogram info

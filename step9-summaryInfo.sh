@@ -22,9 +22,8 @@ if [[ "${EXPERIMENT}" == "stem" ]]
 then
     EXAMPLES='c("potentially new alternative transcript" = 1, "coverage dips" = 4, "and a long region matching DERs with known exons" = 5)'
 elif [[ "${EXPERIMENT}" == "brainspan" ]]
-    EXAMPLES='c("the complexity induced by alternative transcription" = 5, "coverage dips" = 16, "and coverage variability even on long single exon regions" = 18)'
 then
-    EXAMPLES=''
+    EXAMPLES='c("the complexity induced by alternative transcription" = 5, "coverage dips" = 16, "and coverage variability even on long single exon regions" = 18)'
 elif [[ "${EXPERIMENT}" == "snyder" ]]
 then
     EXAMPLES='c("coverage dips" = 1, "alternative splicing" = 7, "and less pronounced coverage dips" = 13)'
