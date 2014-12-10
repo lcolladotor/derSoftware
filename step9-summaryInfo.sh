@@ -22,6 +22,7 @@ if [[ "${EXPERIMENT}" == "stem" ]]
 then
     EXAMPLES='c("potentially new alternative transcript" = 1, "coverage dips" = 4, "and a long region matching DERs with known exons" = 5)'
 elif [[ "${EXPERIMENT}" == "brainspan" ]]
+    EXAMPLES='c("the complexity induced by alternative transcription" = 5, "coverage dips" = 16, "and coverage variability even on long single exon regions" = 18)'
 then
     EXAMPLES=''
 elif [[ "${EXPERIMENT}" == "snyder" ]]
@@ -32,8 +33,7 @@ then
     EXAMPLES='c("a coverage dip" = 3, "the complex relationship with annotation" = 4, "and a potentially extended UTR" = 8)'
 elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
-    ## TODO: update for this dataset
-    EXAMPLES='c("a coverage dip" = 3, "the complex relationship with annotation" = 4, "and a potentially extended UTR" = 8)'
+    EXAMPLES='c("a two transcript gene with both differentially expressed" = 1, "a candidate DER overlapping exons from both strand" = 13, "a two transcript gene with only one differentially expressed" = 32)'
 else
     echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi
