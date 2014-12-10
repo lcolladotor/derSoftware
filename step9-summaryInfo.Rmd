@@ -95,7 +95,7 @@ save(summ, nRegs, qval, fwer, file=file.path(resdir, "summaryResults.Rdata"))
 load(file.path(rootdir, opt$short, 'CoverageInfo', 'fullCov.Rdata'))
 
 ## Load options
-load(file.path(rootdir, opt$short, 'derAnalysis', opt$run, 'chr1', 'optionsStats.Rdata'))
+load(file.path(rootdir, opt$short, 'derAnalysis', opt$run, 'chr22', 'optionsStats.Rdata'))
 
 ## For ggplot
 tmp <- fullRegions

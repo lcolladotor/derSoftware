@@ -39,6 +39,8 @@ suppressMessages(library("derfinderPlot"))
 # biocLite("TxDb.Hsapiens.UCSC.hg19.knownGene")
 suppressMessages(library("TxDb.Hsapiens.UCSC.hg19.knownGene"))
 
+library('Cairo')
+
 ## Specify parameters
 spec <- matrix(c(
 	'short', 's', 1, "character", "Short name of project, for example 'Hippo'",
