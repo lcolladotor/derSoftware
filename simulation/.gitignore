@@ -2,3 +2,6 @@ simulated_reads/*fasta
 *.fa
 derAnalysis
 CoverageInfo
+bw
+thout
+simulated_reads

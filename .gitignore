@@ -1,2 +1,9 @@
 ## Script files
 .*sh
+*/derAnalysis
+*/summaryInfo
+*/CoverageInfo
+*/coverageToExon
+*/regionMatrix
+*/regionMatrix-vs-DERs
+gff
