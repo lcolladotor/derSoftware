@@ -84,16 +84,16 @@ anno <- lapply(exps, function(exp) {
         names(fullAnnotatedRegions$countTable)[names(fullAnnotatedRegions$countTable) == 'intragenic'] <- 'intergenic'
         
         ## Fix annotation list
-        fullAnnotatedRegions$annotationList <- GRangesList(lapply(fullAnnotatedRegions$annotationList, function(x) {
-            idx <- x$theRegion == 'intragenic'
-            if(sum(idx) > 0) {
-                x$theRegion[idx] <- 'intergenic'
-            }
-            return(x)
-        }))
-        
-        save(fullAnnotatedRegions, file = file.path('..', exp, 'derAnalysis',
-            run[exp], 'fullAnnotatedRegions.Rdata'))
+#        fullAnnotatedRegions$annotationList <- GRangesList(lapply(fullAnnotatedRegions$annotationList, function(x) {
+#            idx <- x$theRegion == 'intragenic'
+#            if(sum(idx) > 0) {
+#                x$theRegion[idx] <- 'intergenic'
+#            }
+#            return(x)
+#        }))
+#        
+#        save(fullAnnotatedRegions, file = file.path('..', exp, 'derAnalysis',
+#            run[exp], 'fullAnnotatedRegions.Rdata'))
     }
     res <- fullAnnotatedRegions
     return(res)
