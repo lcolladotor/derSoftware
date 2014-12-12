@@ -886,7 +886,7 @@ suppressMessages(library("derfinderPlot"))</code></pre></div>
 reads <- system(paste0('grep filterData ', file.path(rootdir, opt$short, 'CoverageInfo', 'logs'), '/fullCov-*.e* | grep -v "that 0 percent"'), intern=TRUE)</code></pre><button class="warning R toggle btn btn-xs btn-warning">
 <span class="glyphicon glyphicon-chevron-down"></span> R warning
 </button><pre style=""><code class="warning r">## Warning: running command 'grep filterData
-## /dcs01/lieber/ajaffe/Brain/derRuns/derSoftware/stem/CoverageInfo/logs/fullCov-*.e*
+## /dcs01/ajaffe/Brain/derRuns/derSoftware/stem/CoverageInfo/logs/fullCov-*.e*
 ## | grep -v "that 0 percent"' had status 1
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -968,7 +968,7 @@ save(summ, nRegs, qval, fwer, file=file.path(resdir, "summaryResults.Rdata"))</c
 load(file.path(rootdir, opt$short, 'CoverageInfo', 'fullCov.Rdata'))
 
 ## Load options
-load(file.path(rootdir, opt$short, 'derAnalysis', opt$run, 'chr1', 'optionsStats.Rdata'))
+load(file.path(rootdir, opt$short, 'derAnalysis', opt$run, 'chr22', 'optionsStats.Rdata'))
 
 ## For ggplot
 tmp <- fullRegions
@@ -980,7 +980,7 @@ rm(tmp)
 ## Select clusters by cluster area
 df <- data.frame(area=fullRegions$area, clusterChr=paste0(as.integer(fullRegions$cluster), chr=as.character(seqnames(fullRegions))))
 regionClustAreas <- tapply(df$area, df$clusterChr, sum)
-bestArea <- sapply(names(head(sort(regionClustAreas, decreasing=TRUE), 20)), function(y) { which(df$clusterChr == y)[[1]]})
+bestArea <- sapply(names(head(sort(regionClustAreas, decreasing=TRUE), 70)), function(y) { which(df$clusterChr == y)[[1]]})
 
 ## Graphical setup: ideograms 
 ## Load ideogram info
@@ -1040,14 +1040,14 @@ for(idx in opt$example) {
 <p>Date the report was generated.</p>
 <div class="row"><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## [1] "2014-11-24 16:39:03 EST"
+</button><pre style=""><code class="output r">## [1] "2014-12-12 12:38:54 EST"
 </code></pre></div>
 
 <p>Wallclock time spent generating the report.</p>
 <div class="row">
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## Time difference of 4.549 mins
+</button><pre style=""><code class="output r">## Time difference of 10.024 mins
 </code></pre></div>
 
 <p><code>R</code> session information.</p>
@@ -1100,7 +1100,7 @@ devtools::session_info()</code></pre><button class="message R toggle btn btn-xs 
 ##  derfinderPlot                     * 1.0.3    2014-11-05 Github (lcolladotor/derfinderPlot@8d076e3)  
 ##  devtools                            1.6.1    2014-10-07 CRAN (R 3.1.1)                              
 ##  dichromat                           2.0.0    2013-01-24 CRAN (R 3.1.0)                              
-##  digest                              0.6.4    2013-12-03 CRAN (R 3.1.0)                              
+##  digest                              0.6.6    2014-12-10 CRAN (R 3.1.1)                              
 ##  doRNG                               1.6      2014-03-07 CRAN (R 3.1.0)                              
 ##  evaluate                            0.5.5    2014-04-29 CRAN (R 3.1.0)                              
 ##  fail                                1.2      2013-09-19 CRAN (R 3.1.0)                              
@@ -1114,10 +1114,10 @@ devtools::session_info()</code></pre><button class="message R toggle btn btn-xs 
 ##  GenomicFiles                        1.2.0    2014-10-15 Bioconductor                                
 ##  GenomicRanges                     * 1.18.3   2014-11-20 Bioconductor                                
 ##  getopt                            * 1.20.0   2013-08-30 CRAN (R 3.1.1)                              
-##  GGally                              0.4.8    2014-08-26 CRAN (R 3.1.1)                              
+##  GGally                              0.5.0    2014-12-02 CRAN (R 3.1.1)                              
 ##  ggbio                             * 1.14.0   2014-11-04 Bioconductor                                
 ##  ggplot2                           * 1.0.0    2014-05-21 CRAN (R 3.1.0)                              
-##  graph                               1.44.0   2014-10-15 Bioconductor                                
+##  graph                               1.44.1   2014-12-10 Bioconductor                                
 ##  gridExtra                           0.9.1    2012-08-09 CRAN (R 3.1.1)                              
 ##  gtable                              0.1.2    2012-12-05 CRAN (R 3.1.0)                              
 ##  Hmisc                               3.14.6   2014-11-22 CRAN (R 3.1.1)                              
@@ -1133,7 +1133,7 @@ devtools::session_info()</code></pre><button class="message R toggle btn btn-xs 
 ##  markdown                            0.7.4    2014-08-24 CRAN (R 3.1.1)                              
 ##  MASS                                7.3.35   2014-09-30 CRAN (R 3.1.1)                              
 ##  Matrix                              1.1.4    2014-06-15 CRAN (R 3.1.1)                              
-##  matrixStats                         0.10.3   2014-10-15 CRAN (R 3.1.1)                              
+##  matrixStats                         0.12.2   2014-12-07 CRAN (R 3.1.1)                              
 ##  mime                                0.2      2014-09-26 CRAN (R 3.1.1)                              
 ##  munsell                             0.4.2    2013-07-11 CRAN (R 3.1.0)                              
 ##  nnet                                7.3.8    2014-03-28 CRAN (R 3.1.1)                              
@@ -1143,12 +1143,12 @@ devtools::session_info()</code></pre><button class="message R toggle btn btn-xs 
 ##  proto                               0.3.10   2012-12-22 CRAN (R 3.1.0)                              
 ##  qvalue                              1.40.0   2014-10-15 Bioconductor                                
 ##  RBGL                                1.42.0   2014-10-15 Bioconductor                                
-##  RColorBrewer                        1.0.5    2011-06-17 CRAN (R 3.1.0)                              
+##  RColorBrewer                        1.1.2    2014-12-07 CRAN (R 3.1.1)                              
 ##  Rcpp                                0.11.3   2014-09-29 CRAN (R 3.1.1)                              
-##  RCurl                               1.95.4.3 2014-07-29 CRAN (R 3.1.1)                              
+##  RCurl                               1.95.4.5 2014-12-06 CRAN (R 3.1.1)                              
 ##  registry                            0.2      2012-01-24 CRAN (R 3.1.0)                              
 ##  reshape                             0.8.5    2014-04-23 CRAN (R 3.1.0)                              
-##  reshape2                            1.4      2014-04-23 CRAN (R 3.1.0)                              
+##  reshape2                            1.4.1    2014-12-06 CRAN (R 3.1.1)                              
 ##  rmarkdown                         * 0.3.3    2014-09-17 CRAN (R 3.1.1)                              
 ##  R.methodsS3                         1.6.1    2014-01-05 CRAN (R 3.1.0)                              
 ##  rngtools                            1.2.4    2014-03-06 CRAN (R 3.1.0)                              
@@ -1163,7 +1163,7 @@ devtools::session_info()</code></pre><button class="message R toggle btn btn-xs 
 ##  stringr                             0.6.2    2012-12-06 CRAN (R 3.1.0)                              
 ##  survival                            2.37.7   2014-01-22 CRAN (R 3.1.1)                              
 ##  TxDb.Hsapiens.UCSC.hg19.knownGene * 3.0.0    2014-09-29 Bioconductor                                
-##  VariantAnnotation                   1.12.4   2014-11-16 Bioconductor                                
+##  VariantAnnotation                   1.12.6   2014-12-07 Bioconductor                                
 ##  XML                                 3.98.1.1 2013-06-20 CRAN (R 3.1.0)                              
 ##  xtable                              1.7.4    2014-09-12 CRAN (R 3.1.1)                              
 ##  XVector                           * 0.6.0    2014-10-15 Bioconductor                                

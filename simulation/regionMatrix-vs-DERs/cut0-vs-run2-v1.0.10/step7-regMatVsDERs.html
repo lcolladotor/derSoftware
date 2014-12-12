@@ -998,7 +998,30 @@ build_index <- function(gr) {
     return(res)
 }
 index.ders <- build_index(ders)
-index.regs <- build_index(regs)</code></pre></div>
+index.regs <- build_index(regs)
+
+## Add info for chrs where there are no regs
+miss <- !paste0('chr', c(1:22, 'X', 'Y')) %in% names(index.regs)
+names(miss) <- paste0('chr', c(1:22, 'X', 'Y'))
+if(any(miss)) {
+    miss.add <- lapply(names(miss)[miss], function(x) { 
+        Rle(FALSE, seqlengths(hg19Ideogram)[x]) 
+    })
+    names(miss.add) <- names(miss)[miss]
+    index.regs <- c(index.regs, miss.add)
+    index.regs <- index.regs[match(names(miss), names(index.regs))]
+}
+
+## Add info for chrs where there are no DERs
+miss <- !names(index.regs) %in% names(index.ders)
+if(any(miss)) {
+    miss.add <- lapply(names(index.regs)[miss], function(x) { 
+        Rle(FALSE, length(index.regs[[x]])) 
+    })
+    names(miss.add) <- names(index.regs)[miss]
+    index.ders <- c(index.ders, miss.add)
+    index.ders <- index.ders[match(names(index.regs), names(index.ders))]
+}</code></pre></div>
 
 <h1>Compare</h1>
 <h2>Visually explore</h2>
@@ -1077,149 +1100,50 @@ index.all <- mapply(function(der, reg) {
     res <- list('both' = both, 'only.der' = only.der, 'only.reg' = only.reg,
         'none' = none, 'all.der' = der, 'all.reg' = reg)
     return(list(res))
-}, index.ders, index.regs)</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in !der & !reg: longer object length is not a multiple of shorter
-## object length
-</code></pre><button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-up"></span> R source
-</button><pre style="display:none"><code class="source r">## Find number of base-pairs in each index
-index.num <- data.frame(do.call(rbind, lapply(index.all, function(x) { sapply(x, sum)})))</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in data.row.names(row.names, rowsi, i): some row.names duplicated:
-## 3,4,5,6,7 --> row.names NOT used
-</code></pre><button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-up"></span> R source
-</button><pre style="display:none"><code class="source r">index.num$chrLen <- seqlengths(ders)
+}, index.ders, index.regs)
+
+## Find number of base-pairs in each index
+index.num <- data.frame(do.call(rbind, lapply(index.all, function(x) { sapply(x, sum)})))
+index.num$chrLen <- seqlengths(ders)
 index.num$chr <- rownames(index.num)
 rownames(index.num) <- NULL
 
 ## Print info
 summary(index.num)</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">##       both          only.der         only.reg            none          
-##  Min.   :    0   Min.   :     0   Min.   :   80.0   Min.   : 51189984  
-##  1st Qu.:    0   1st Qu.: 50685   1st Qu.:  100.0   1st Qu.: 57114258  
-##  Median :    0   Median :101370   Median :  100.0   Median :115068408  
-##  Mean   : 7241   Mean   : 85848   Mean   : 9211.1   Mean   : 98594325  
-##  3rd Qu.:    0   3rd Qu.:129618   3rd Qu.:  100.5   3rd Qu.:134299498  
-##  Max.   :50685   Max.   :138957   Max.   :63897.0   Max.   :141074374  
-##     all.der         all.reg             chrLen             chr           
-##  Min.   :50685   Min.   :    80.0   Min.   :51304566   Length:7          
-##  1st Qu.:50685   1st Qu.:   100.0   1st Qu.:51304566   Class :character  
-##  Median :50685   Median :   100.0   Median :51304566   Mode  :character  
-##  Mean   :50685   Mean   : 16451.9   Mean   :51304566                     
-##  3rd Qu.:50685   3rd Qu.:   100.5   3rd Qu.:51304566                     
-##  Max.   :50685   Max.   :114582.0   Max.   :51304566
+</button><pre style=""><code class="output r">##       both          only.der    only.reg          none          
+##  Min.   :    0   Min.   :0   Min.   :    0   Min.   : 48129795  
+##  1st Qu.:    0   1st Qu.:0   1st Qu.:    0   1st Qu.: 80415720  
+##  Median :    0   Median :0   Median :    0   Median :134429116  
+##  Mean   : 2112   Mean   :0   Mean   : 2687   Mean   :128981760  
+##  3rd Qu.:    0   3rd Qu.:0   3rd Qu.:   85   3rd Qu.:162132764  
+##  Max.   :50685   Max.   :0   Max.   :63897   Max.   :249250621  
+##     all.der         all.reg           chrLen             chr           
+##  Min.   :    0   Min.   :     0   Min.   :51304566   Length:24         
+##  1st Qu.:    0   1st Qu.:     0   1st Qu.:51304566   Class :character  
+##  Median :    0   Median :     0   Median :51304566   Mode  :character  
+##  Mean   : 2112   Mean   :  4798   Mean   :51304566                     
+##  3rd Qu.:    0   3rd Qu.:    85   3rd Qu.:51304566                     
+##  Max.   :50685   Max.   :114582   Max.   :51304566
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button><pre style="display:none"><code class="source r">## Overall info
 overallInfo <- colSums(index.num[, -ncol(index.num)])
 overallInfo</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">##      both  only.der  only.reg      none   all.der   all.reg    chrLen 
-##     50685    600933     64478 690160276    354795    115163 359131962
+</button><pre style=""><code class="output r">##       both   only.der   only.reg       none    all.der    all.reg 
+##      50685          0      64478 3095562249      50685     115163 
+##     chrLen 
+## 1231309584
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button><pre style="display:none"><code class="source r">## Overall info in percent
 overallInfo / sum(as.numeric(index.num$chrLen)) * 100</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button><pre style=""><code class="output r">##         both     only.der     only.reg         none      all.der 
-##   0.01411320   0.16732930   0.01795385 192.17456229   0.09879238 
+## 4.116349e-03 0.000000e+00 5.236538e-03 2.514041e+02 4.116349e-03 
 ##      all.reg       chrLen 
-##   0.03206704 100.00000000
+## 9.352887e-03 1.000000e+02
 </code></pre></div>
 
 <link rel="stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css" />
@@ -1242,71 +1166,236 @@ t1$print("bases", cdn=TRUE)</code></pre>
  [
  1,
 0,
-138957,
-100,
-141074374,
-50685,
-100,
+0,
+0,
+249250621,
+0,
+0,
 51304566,
-"1" 
+"chr1" 
 ],
 [
  2,
 0,
-129618,
-100,
-134876798,
-50685,
-100,
+0,
+0,
+243199373,
+0,
+0,
 51304566,
-"2" 
+"chr2" 
 ],
 [
  3,
 0,
-129618,
-80,
-133722197,
-50685,
-80,
+0,
+0,
+198022430,
+0,
+0,
 51304566,
-"3" 
+"chr3" 
 ],
 [
  4,
 0,
-101370,
-100,
-115068408,
-50685,
-100,
+0,
+0,
+191154276,
+0,
+0,
 51304566,
-"4" 
+"chr4" 
 ],
 [
  5,
 0,
-50685,
-101,
-62974734,
-50685,
-101,
+0,
+0,
+180915260,
+0,
+0,
 51304566,
-"5" 
+"chr5" 
 ],
 [
  6,
 0,
-50685,
-100,
-51253781,
-50685,
-100,
+0,
+0,
+171115067,
+0,
+0,
 51304566,
-"6" 
+"chr6" 
 ],
 [
  7,
+0,
+0,
+0,
+159138663,
+0,
+0,
+51304566,
+"chr7" 
+],
+[
+ 8,
+0,
+0,
+0,
+146364022,
+0,
+0,
+51304566,
+"chr8" 
+],
+[
+ 9,
+0,
+0,
+100,
+141213331,
+0,
+100,
+51304566,
+"chr9" 
+],
+[
+ 10,
+0,
+0,
+0,
+135534747,
+0,
+0,
+51304566,
+"chr10" 
+],
+[
+ 11,
+0,
+0,
+100,
+135006416,
+0,
+100,
+51304566,
+"chr11" 
+],
+[
+ 12,
+0,
+0,
+80,
+133851815,
+0,
+80,
+51304566,
+"chr12" 
+],
+[
+ 13,
+0,
+0,
+100,
+115169778,
+0,
+100,
+51304566,
+"chr13" 
+],
+[
+ 14,
+0,
+0,
+0,
+107349540,
+0,
+0,
+51304566,
+"chr14" 
+],
+[
+ 15,
+0,
+0,
+0,
+102531392,
+0,
+0,
+51304566,
+"chr15" 
+],
+[
+ 16,
+0,
+0,
+0,
+90354753,
+0,
+0,
+51304566,
+"chr16" 
+],
+[
+ 17,
+0,
+0,
+0,
+81195210,
+0,
+0,
+51304566,
+"chr17" 
+],
+[
+ 18,
+0,
+0,
+0,
+78077248,
+0,
+0,
+51304566,
+"chr18" 
+],
+[
+ 19,
+0,
+0,
+0,
+59128983,
+0,
+0,
+51304566,
+"chr19" 
+],
+[
+ 20,
+0,
+0,
+101,
+63025419,
+0,
+101,
+51304566,
+"chr20" 
+],
+[
+ 21,
+0,
+0,
+100,
+48129795,
+0,
+100,
+51304566,
+"chr21" 
+],
+[
+ 22,
 50685,
 0,
 63897,
@@ -1314,7 +1403,29 @@ t1$print("bases", cdn=TRUE)</code></pre>
 50685,
 114582,
 51304566,
-"7" 
+"chr22" 
+],
+[
+ 23,
+0,
+0,
+0,
+155270560,
+0,
+0,
+51304566,
+"chrX" 
+],
+[
+ 24,
+0,
+0,
+0,
+59373566,
+0,
+0,
+51304566,
+"chrY" 
 ] 
 ],
 "aoColumns": [
@@ -1384,39 +1495,34 @@ index.seg <- data.frame(do.call(rbind, lapply(index.all, function(x) {
     sapply(x, function(y) {
         sum(runValue(y))
     })
-})))</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning in data.row.names(row.names, rowsi, i): some row.names duplicated:
-## 3,4,5,6,7 --> row.names NOT used
-</code></pre><button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-up"></span> R source
-</button><pre style="display:none"><code class="source r">index.seg$chr <- rownames(index.seg)
+})))
+index.seg$chr <- rownames(index.seg)
 rownames(index.seg) <- NULL
 
 ## Print info
 summary(index.seg)</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">##       both           only.der        only.reg           none      
-##  Min.   :  0.00   Min.   :  0.0   Min.   :  1.00   Min.   :269.0  
-##  1st Qu.:  0.00   1st Qu.:304.0   1st Qu.:  1.00   1st Qu.:306.0  
-##  Median :  0.00   Median :608.0   Median :  1.00   Median :610.0  
-##  Mean   : 43.43   Mean   :492.4   Mean   : 57.57   Mean   :532.6  
-##  3rd Qu.:  0.00   3rd Qu.:704.0   3rd Qu.:  1.00   3rd Qu.:706.0  
-##  Max.   :304.00   Max.   :823.0   Max.   :397.00   Max.   :825.0  
-##     all.der       all.reg           chr           
-##  Min.   :304   Min.   :  1.00   Length:7          
-##  1st Qu.:304   1st Qu.:  1.00   Class :character  
-##  Median :304   Median :  1.00   Mode  :character  
-##  Mean   :304   Mean   : 39.14                     
-##  3rd Qu.:304   3rd Qu.:  1.00                     
-##  Max.   :304   Max.   :268.00
+</button><pre style=""><code class="output r">##       both           only.der    only.reg           none       
+##  Min.   :  0.00   Min.   :0   Min.   :  0.00   Min.   :  1.00  
+##  1st Qu.:  0.00   1st Qu.:0   1st Qu.:  0.00   1st Qu.:  1.00  
+##  Median :  0.00   Median :0   Median :  0.00   Median :  1.00  
+##  Mean   : 12.67   Mean   :0   Mean   : 16.79   Mean   : 12.42  
+##  3rd Qu.:  0.00   3rd Qu.:0   3rd Qu.:  1.00   3rd Qu.:  2.00  
+##  Max.   :304.00   Max.   :0   Max.   :397.00   Max.   :269.00  
+##     all.der          all.reg           chr           
+##  Min.   :  0.00   Min.   :  0.00   Length:24         
+##  1st Qu.:  0.00   1st Qu.:  0.00   Class :character  
+##  Median :  0.00   Median :  0.00   Mode  :character  
+##  Mean   : 12.67   Mean   : 11.42                     
+##  3rd Qu.:  0.00   3rd Qu.:  1.00                     
+##  Max.   :304.00   Max.   :268.00
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button><pre style="display:none"><code class="source r">## Overall info
 colSums(index.seg[, -ncol(index.seg)])</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button><pre style=""><code class="output r">##     both only.der only.reg     none  all.der  all.reg 
-##      304     3447      403     3728     2128      274
+##      304        0      403      298      304      274
 </code></pre></div>
 
 
@@ -1437,72 +1543,242 @@ t2$print("segments")</code></pre>
  [
  1,
 0,
-823,
+0,
+0,
 1,
-825,
-304,
-1,
-"1" 
+0,
+0,
+"chr1" 
 ],
 [
  2,
 0,
-704,
+0,
+0,
 1,
-706,
-304,
-1,
-"2" 
+0,
+0,
+"chr2" 
 ],
 [
  3,
 0,
-704,
+0,
+0,
 1,
-706,
-304,
-1,
-"3" 
+0,
+0,
+"chr3" 
 ],
 [
  4,
 0,
-608,
+0,
+0,
 1,
-610,
-304,
-1,
-"4" 
+0,
+0,
+"chr4" 
 ],
 [
  5,
 0,
-304,
+0,
+0,
 1,
-306,
-304,
-1,
-"5" 
+0,
+0,
+"chr5" 
 ],
 [
  6,
 0,
-304,
+0,
+0,
 1,
-306,
-304,
-1,
-"6" 
+0,
+0,
+"chr6" 
 ],
 [
  7,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr7" 
+],
+[
+ 8,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr8" 
+],
+[
+ 9,
+0,
+0,
+1,
+2,
+0,
+1,
+"chr9" 
+],
+[
+ 10,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr10" 
+],
+[
+ 11,
+0,
+0,
+1,
+2,
+0,
+1,
+"chr11" 
+],
+[
+ 12,
+0,
+0,
+1,
+2,
+0,
+1,
+"chr12" 
+],
+[
+ 13,
+0,
+0,
+1,
+2,
+0,
+1,
+"chr13" 
+],
+[
+ 14,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr14" 
+],
+[
+ 15,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr15" 
+],
+[
+ 16,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr16" 
+],
+[
+ 17,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr17" 
+],
+[
+ 18,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr18" 
+],
+[
+ 19,
+0,
+0,
+0,
+1,
+0,
+0,
+"chr19" 
+],
+[
+ 20,
+0,
+0,
+1,
+2,
+0,
+1,
+"chr20" 
+],
+[
+ 21,
+0,
+0,
+1,
+2,
+0,
+1,
+"chr21" 
+],
+[
+ 22,
 304,
 0,
 397,
 269,
 304,
 268,
-"7" 
+"chr22" 
+],
+[
+ 23,
+0,
+0,
+0,
+1,
+0,
+0,
+"chrX" 
+],
+[
+ 24,
+0,
+0,
+0,
+1,
+0,
+0,
+"chrY" 
 ] 
 ],
 "aoColumns": [
@@ -1580,22 +1856,30 @@ rownames(index.width) <- NULL
 ## Print info
 summary(index.width)</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">##       Min.           1st Qu.           Median            Mean         
-##  Min.   :  1.00   Min.   :  5.00   Min.   :  33.0   Min.   :    80.0  
-##  1st Qu.:  3.00   1st Qu.:  6.75   1st Qu.:  33.5   1st Qu.:   100.0  
-##  Median :  3.00   Median :  6.75   Median :  65.0   Median :   166.7  
-##  Mean   : 34.91   Mean   : 64.42   Mean   : 134.9   Mean   : 37363.5  
-##  3rd Qu.:100.00   3rd Qu.:100.00   3rd Qu.: 100.0   3rd Qu.:   184.1  
-##  Max.   :101.00   Max.   :857.00   Max.   :2424.0   Max.   :205800.0  
-##  NA's   :7        NA's   :7        NA's   :7        NA's   :7         
-##     3rd Qu.           Max.             index               chr           
-##  Min.   :   80   Min.   :      80   Length:42          Length:42         
-##  1st Qu.:  100   1st Qu.:     100   Class :character   Class :character  
-##  Median :  120   Median :    4999   Mode  :character   Mode  :character  
-##  Mean   : 1066   Mean   : 3368321                                        
-##  3rd Qu.:  128   3rd Qu.:    4999                                        
-##  Max.   :19540   Max.   :17880000                                        
-##  NA's   :7       NA's   :7
+</button><pre style=""><code class="output r">##       Min.              1st Qu.              Median         
+##  Min.   :        1   Min.   :        6   Min.   :       33  
+##  1st Qu.:      100   1st Qu.:      100   1st Qu.:      100  
+##  Median : 29640000   Median : 46865000   Median : 58355000  
+##  Mean   : 65166780   Mean   : 66660054   Mean   : 68153096  
+##  3rd Qu.:114350000   3rd Qu.:114350000   3rd Qu.:114350000  
+##  Max.   :249300000   Max.   :249300000   Max.   :249300000  
+##  NA's   :104         NA's   :104         NA's   :104        
+##       Mean              3rd Qu.               Max.          
+##  Min.   :       80   Min.   :       80   Min.   :       80  
+##  1st Qu.:      101   1st Qu.:      101   1st Qu.:      101  
+##  Median : 58355000   Median : 59250000   Median : 59250000  
+##  Mean   : 68157810   Mean   : 69647284   Mean   : 71578531  
+##  3rd Qu.:114350000   3rd Qu.:114350000   3rd Qu.:114350000  
+##  Max.   :249300000   Max.   :249300000   Max.   :249300000  
+##  NA's   :104         NA's   :104         NA's   :104        
+##     index               chr           
+##  Length:144         Length:144        
+##  Class :character   Class :character  
+##  Mode  :character   Mode  :character  
+##                                       
+##                                       
+##                                       
+## 
 </code></pre></div>
 
 <div class="row"><button class="source R toggle btn btn-xs btn-primary">
@@ -1625,56 +1909,56 @@ null,
 ],
 [
  2,
-     3,
-     7,
-    37,
- 168.8,
-   121,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.der",
 "chr22" 
 ],
 [
  3,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.reg",
 "chr22" 
 ],
 [
  4,
-     1,
-     6,
-    88,
-1.71e+05,
-  2319,
-1.788e+07,
+2.493e+08,
+2.493e+08,
+2.493e+08,
+2.493e+08,
+2.493e+08,
+2.493e+08,
 "none",
 "chr22" 
 ],
 [
  5,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.der",
 "chr22" 
 ],
 [
  6,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ],
@@ -1691,56 +1975,56 @@ null,
 ],
 [
  8,
-     3,
-     7,
-  37.5,
- 184.1,
-   128,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.der",
 "chr22" 
 ],
 [
  9,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.reg",
 "chr22" 
 ],
 [
  10,
-     1,
-  5.25,
-  92.5,
-1.91e+05,
-  2615,
-1.788e+07,
+2.432e+08,
+2.432e+08,
+2.432e+08,
+2.432e+08,
+2.432e+08,
+2.432e+08,
 "none",
 "chr22" 
 ],
 [
  11,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.der",
 "chr22" 
 ],
 [
  12,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ],
@@ -1757,56 +2041,56 @@ null,
 ],
 [
  14,
-     3,
-     7,
-  37.5,
- 184.1,
-   128,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.der",
 "chr22" 
 ],
 [
  15,
-    80,
-    80,
-    80,
-    80,
-    80,
-    80,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.reg",
 "chr22" 
 ],
 [
  16,
-     1,
-  5.25,
-  92.5,
-1.894e+05,
-  2615,
-1.788e+07,
+1.98e+08,
+1.98e+08,
+1.98e+08,
+1.98e+08,
+1.98e+08,
+1.98e+08,
 "none",
 "chr22" 
 ],
 [
  17,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.der",
 "chr22" 
 ],
 [
  18,
-    80,
-    80,
-    80,
-    80,
-    80,
-    80,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ],
@@ -1823,56 +2107,56 @@ null,
 ],
 [
  20,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.der",
 "chr22" 
 ],
 [
  21,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.reg",
 "chr22" 
 ],
 [
  22,
-     1,
-     5,
-    65,
-1.886e+05,
-  2319,
-1.788e+07,
+1.912e+08,
+1.912e+08,
+1.912e+08,
+1.912e+08,
+1.912e+08,
+1.912e+08,
 "none",
 "chr22" 
 ],
 [
  23,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.der",
 "chr22" 
 ],
 [
  24,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ],
@@ -1889,56 +2173,56 @@ null,
 ],
 [
  26,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.der",
 "chr22" 
 ],
 [
  27,
-   101,
-   101,
-   101,
-   101,
-   101,
-   101,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.reg",
 "chr22" 
 ],
 [
  28,
-     1,
-     5,
-    65,
-2.058e+05,
-  2320,
-1.76e+07,
+1.809e+08,
+1.809e+08,
+1.809e+08,
+1.809e+08,
+1.809e+08,
+1.809e+08,
 "none",
 "chr22" 
 ],
 [
  29,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.der",
 "chr22" 
 ],
 [
  30,
-   101,
-   101,
-   101,
-   101,
-   101,
-   101,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ],
@@ -1955,67 +2239,67 @@ null,
 ],
 [
  32,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.der",
 "chr22" 
 ],
 [
  33,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "only.reg",
 "chr22" 
 ],
 [
  34,
-     1,
-     5,
-    65,
-1.675e+05,
-  2320,
-1.117e+07,
+1.711e+08,
+1.711e+08,
+1.711e+08,
+1.711e+08,
+1.711e+08,
+1.711e+08,
 "none",
 "chr22" 
 ],
 [
  35,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.der",
 "chr22" 
 ],
 [
  36,
-   100,
-   100,
-   100,
-   100,
-   100,
-   100,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ],
 [
  37,
-     3,
-  6.75,
-  33.5,
- 166.7,
-   120,
-  4999,
+null,
+null,
+null,
+null,
+null,
+null,
 "both",
 "chr22" 
 ],
@@ -2032,6 +2316,996 @@ null,
 ],
 [
  39,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 40,
+1.591e+08,
+1.591e+08,
+1.591e+08,
+1.591e+08,
+1.591e+08,
+1.591e+08,
+"none",
+"chr22" 
+],
+[
+ 41,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 42,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 43,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 44,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 45,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 46,
+1.464e+08,
+1.464e+08,
+1.464e+08,
+1.464e+08,
+1.464e+08,
+1.464e+08,
+"none",
+"chr22" 
+],
+[
+ 47,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 48,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 49,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 50,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 51,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"only.reg",
+"chr22" 
+],
+[
+ 52,
+3.752e+07,
+5.406e+07,
+7.061e+07,
+7.061e+07,
+8.715e+07,
+1.037e+08,
+"none",
+"chr22" 
+],
+[
+ 53,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 54,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"all.reg",
+"chr22" 
+],
+[
+ 55,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 56,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 57,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 58,
+1.355e+08,
+1.355e+08,
+1.355e+08,
+1.355e+08,
+1.355e+08,
+1.355e+08,
+"none",
+"chr22" 
+],
+[
+ 59,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 60,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 61,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 62,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 63,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"only.reg",
+"chr22" 
+],
+[
+ 64,
+6.264e+07,
+6.507e+07,
+6.75e+07,
+6.75e+07,
+6.994e+07,
+7.237e+07,
+"none",
+"chr22" 
+],
+[
+ 65,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 66,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"all.reg",
+"chr22" 
+],
+[
+ 67,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 68,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 69,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80,
+"only.reg",
+"chr22" 
+],
+[
+ 70,
+5.463e+07,
+6.078e+07,
+6.693e+07,
+6.693e+07,
+7.308e+07,
+7.923e+07,
+"none",
+"chr22" 
+],
+[
+ 71,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 72,
+    80,
+    80,
+    80,
+    80,
+    80,
+    80,
+"all.reg",
+"chr22" 
+],
+[
+ 73,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 74,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 75,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"only.reg",
+"chr22" 
+],
+[
+ 76,
+2.176e+07,
+3.967e+07,
+5.758e+07,
+5.758e+07,
+7.55e+07,
+9.341e+07,
+"none",
+"chr22" 
+],
+[
+ 77,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 78,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"all.reg",
+"chr22" 
+],
+[
+ 79,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 80,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 81,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 82,
+1.073e+08,
+1.073e+08,
+1.073e+08,
+1.073e+08,
+1.073e+08,
+1.073e+08,
+"none",
+"chr22" 
+],
+[
+ 83,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 84,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 85,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 86,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 87,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 88,
+1.025e+08,
+1.025e+08,
+1.025e+08,
+1.025e+08,
+1.025e+08,
+1.025e+08,
+"none",
+"chr22" 
+],
+[
+ 89,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 90,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 91,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 92,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 93,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 94,
+9.035e+07,
+9.035e+07,
+9.035e+07,
+9.035e+07,
+9.035e+07,
+9.035e+07,
+"none",
+"chr22" 
+],
+[
+ 95,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 96,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 97,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 98,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 99,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 100,
+8.12e+07,
+8.12e+07,
+8.12e+07,
+8.12e+07,
+8.12e+07,
+8.12e+07,
+"none",
+"chr22" 
+],
+[
+ 101,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 102,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 103,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 104,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 105,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 106,
+7.808e+07,
+7.808e+07,
+7.808e+07,
+7.808e+07,
+7.808e+07,
+7.808e+07,
+"none",
+"chr22" 
+],
+[
+ 107,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 108,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 109,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 110,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 111,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 112,
+5.913e+07,
+5.913e+07,
+5.913e+07,
+5.913e+07,
+5.913e+07,
+5.913e+07,
+"none",
+"chr22" 
+],
+[
+ 113,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 114,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 115,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 116,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 117,
+   101,
+   101,
+   101,
+   101,
+   101,
+   101,
+"only.reg",
+"chr22" 
+],
+[
+ 118,
+1.102e+07,
+2.127e+07,
+3.151e+07,
+3.151e+07,
+4.176e+07,
+5.2e+07,
+"none",
+"chr22" 
+],
+[
+ 119,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 120,
+   101,
+   101,
+   101,
+   101,
+   101,
+   101,
+"all.reg",
+"chr22" 
+],
+[
+ 121,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 122,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 123,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"only.reg",
+"chr22" 
+],
+[
+ 124,
+1.117e+07,
+1.762e+07,
+2.406e+07,
+2.406e+07,
+3.051e+07,
+3.696e+07,
+"none",
+"chr22" 
+],
+[
+ 125,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 126,
+   100,
+   100,
+   100,
+   100,
+   100,
+   100,
+"all.reg",
+"chr22" 
+],
+[
+ 127,
+     3,
+  6.75,
+  33.5,
+ 166.7,
+   120,
+  4999,
+"both",
+"chr22" 
+],
+[
+ 128,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 129,
      1,
      6,
     33,
@@ -2042,7 +3316,7 @@ null,
 "chr22" 
 ],
 [
- 40,
+ 130,
      8,
    857,
   2424,
@@ -2053,7 +3327,7 @@ null,
 "chr22" 
 ],
 [
- 41,
+ 131,
      3,
   6.75,
   33.5,
@@ -2064,13 +3338,145 @@ null,
 "chr22" 
 ],
 [
- 42,
+ 132,
      3,
    103,
    155,
  427.5,
  294.2,
   5691,
+"all.reg",
+"chr22" 
+],
+[
+ 133,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 134,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 135,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 136,
+1.553e+08,
+1.553e+08,
+1.553e+08,
+1.553e+08,
+1.553e+08,
+1.553e+08,
+"none",
+"chr22" 
+],
+[
+ 137,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 138,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.reg",
+"chr22" 
+],
+[
+ 139,
+null,
+null,
+null,
+null,
+null,
+null,
+"both",
+"chr22" 
+],
+[
+ 140,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.der",
+"chr22" 
+],
+[
+ 141,
+null,
+null,
+null,
+null,
+null,
+null,
+"only.reg",
+"chr22" 
+],
+[
+ 142,
+5.937e+07,
+5.937e+07,
+5.937e+07,
+5.937e+07,
+5.937e+07,
+5.937e+07,
+"none",
+"chr22" 
+],
+[
+ 143,
+null,
+null,
+null,
+null,
+null,
+null,
+"all.der",
+"chr22" 
+],
+[
+ 144,
+null,
+null,
+null,
+null,
+null,
+null,
 "all.reg",
 "chr22" 
 ] 
@@ -2230,7 +3636,7 @@ data.frame('under-20' = small, '20-and-above' = 100 - small, check.names = FALSE
 c('regs' = overallInfo['both'] / (overallInfo['both'] + overallInfo['only.reg']) * 100, 'ders' = overallInfo['both'] / (overallInfo['both'] + overallInfo['only.der']) * 100)</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button><pre style=""><code class="output r">## regs.both ders.both 
-##  44.01153   7.77833
+##  44.01153 100.00000
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button><pre style="display:none"><code class="source r">## Overlap (min 20) agreement
@@ -2350,7 +3756,7 @@ render('step7-regMatVsDERs.Rmd')</code></pre></div>
 <div class="row">
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## [1] "2014-12-11 14:33:00 EST"
+</button><pre style=""><code class="output r">## [1] "2014-12-12 12:33:15 EST"
 </code></pre></div>
 
 <p><code>R</code> session information.</p>
@@ -2438,9 +3844,6 @@ Type
 </li>
 <li class="active">
 <a href="#" class="toggle-global output" type="output">output</a>
-</li>
-<li class="active">
-<a href="#" class="toggle-global warning" type="warning">warning</a>
 </li>
 <li >
 <a href="#" type="all-output" class="toggle-global">All</a>
