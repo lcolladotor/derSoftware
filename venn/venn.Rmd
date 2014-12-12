@@ -12,7 +12,7 @@ Table of results and venn diagrams
 ==================================
 
 ```{r citationsSetup, echo=FALSE, message=FALSE, warning=FALSE}
-## Track time spent on making the vignette
+## Track time spent on making the report
 startTime <- Sys.time()
 
 ## Bib setup
@@ -233,4 +233,10 @@ Citations made with `knitcitations` `r citep(bib[['knitcitations']])`.
 ```{r vignetteBiblio, results = 'asis', echo = FALSE, warning = FALSE}
 ## Print bibliography
 bibliography()
+```
+
+
+```{r clean, echo=FALSE, results="hide"}
+## Clean up
+file.remove("venn.bib")
 ```
