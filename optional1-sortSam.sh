@@ -16,13 +16,13 @@ WDIR=${MAINDIR}/sortSam
 
 if [[ "${EXPERIMENT}" == "stem" ]]
 then
-    SAMFILES='/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat/*out/accepted_hits.bam'
+    SAMFILES='/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat/*out/accepted_hits.bam'
 elif [[ "${EXPERIMENT}" == "snyder" ]]
 then
-    SAMFILES='/dcs01/lieber/ajaffe/Snyder/RNAseq/TopHat/*out/accepted_hits.bam'
+    SAMFILES='/dcs01/ajaffe/Snyder/RNAseq/TopHat/*out/accepted_hits.bam'
 elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
-    SAMFILES='/dcs01/lieber/ajaffe/Hippo/TopHat/*out/accepted_hits.bam'
+    SAMFILES='/dcs01/ajaffe/Hippo/TopHat/*out/accepted_hits.bam'
 else
     echo "Specify a valid experiment: stem, snyder, or hippo"
 fi

@@ -21,7 +21,7 @@ WDIR=${MAINDIR}/CoverageInfo
 
 if [[ "${EXPERIMENT}" == "stem" ]]
 then
-    DATADIR=/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat
+    DATADIR=/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat
     CUTOFF=5
 elif [[ "${EXPERIMENT}" == "brainspan" ]]
 then
@@ -29,11 +29,11 @@ then
     CUTOFF=0.25
 elif [[ "${EXPERIMENT}" == "snyder" ]]
 then
-    DATADIR=/dcs01/lieber/ajaffe/Snyder/RNAseq/TopHat
+    DATADIR=/dcs01/ajaffe/Snyder/RNAseq/TopHat
     CUTOFF=5
 elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
-    DATADIR=/dcs01/lieber/ajaffe/Hippo/TopHat
+    DATADIR=/dcs01/ajaffe/Hippo/TopHat
     CUTOFF=3
 elif [[ "${EXPERIMENT}" == "simulation" ]]
 then

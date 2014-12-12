@@ -17,15 +17,15 @@ WDIR=${MAINDIR}/summOv
 if [[ "${EXPERIMENT}" == "stem" ]]
 then
     CORES=10
-    DATADIR=/dcs01/lieber/ajaffe/UCSC_Epigenome/RNAseq/TopHat
+    DATADIR=/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat
 elif [[ "${EXPERIMENT}" == "snyder" ]]
 then
     CORES=10
-    DATADIR=/dcs01/lieber/ajaffe/Snyder/RNAseq/TopHat
+    DATADIR=/dcs01/ajaffe/Snyder/RNAseq/TopHat
 elif [[ "${EXPERIMENT}" == "hippo" ]]
 then
     CORES=24
-    DATADIR=/dcs01/lieber/ajaffe/Hippo/TopHat
+    DATADIR=/dcs01/ajaffe/Hippo/TopHat
 else
     echo "Specify a valid experiment: stem, snyder, or hippo"
 fi
