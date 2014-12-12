@@ -42,7 +42,7 @@ names(bib) <- names(bibs)
 ```
 
 
-This report creates the CSV files with the candidate differentially expressed regions (DERs) found using `derfinder` `r mycitep(bib[["derfinder"]])` on three data sets. It also has Venn diagrams illustrating the overlap with known annotation. 
+This report creates the CSV files with the candidate differentially expressed regions (DERs) found using `derfinder` `r citep(bib[["derfinder"]])` on three data sets. It also has Venn diagrams illustrating the overlap with known annotation. 
 
 # Results
 
@@ -110,7 +110,7 @@ unlist(check)
 
 ## Venn diagrams
 
-The following Venn diagrams show how many candidate differentially expressed regions (DERs) overlap with an exon, intron, or intragenic regions of the UCSC hg19 knownGene annotation. By default, a minimum overlap of 20 base pairs is required to say that a candidate DER overlaps any of feature. The annotation overlap was done using the `mergeResults()` function from `derfinder` `r mycitep(bib[["derfinder"]])` while the Venn diagrams were made using `limma` `r mycitep(bib[["limma"]])`.
+The following Venn diagrams show how many candidate differentially expressed regions (DERs) overlap with an exon, intron, or intragenic regions of the UCSC hg19 knownGene annotation. By default, a minimum overlap of 20 base pairs is required to say that a candidate DER overlaps any of feature. The annotation overlap was done using the `mergeResults()` function from `derfinder` `r citep(bib[["derfinder"]])` while the Venn diagrams were made using `limma` `r citep(bib[["limma"]])`.
 
 Three Venn diagrams are shown per data set. The first one uses all the candidate DERs, the second one uses only the candidate DERs that had a significant q-value (by default less than 0.10), and the third uses only the candidate DERs that had a FWER adjusted p-value less than 0.05. 
 
@@ -154,9 +154,9 @@ The supplementary files 1 through 5 files contain the information for the candid
 1. *log2FoldChange__G1__.vs__G2__* The log2 fold change between the samples in __G1__ and the samples in __G2__ for the candidate DER.
 1. __pvalues__ The p-value for the candidate DER. It is calculated empirically using the null candidate DERs (obtained via permutations) from all chromosomes.
 1. __significant__ Whether the p-value is less than 0.05.
-1. __qvalues__ The p-value adjusted to control the FDR by using the `qvalue` `r mycitep(bib[["qvalue"]], "Dabney et al")` function from the package with the same name.
+1. __qvalues__ The p-value adjusted to control the FDR by using the `qvalue` `r citep(bib[["qvalue"]], "Dabney et al")` function from the package with the same name.
 1. __significantQval__ Whether the q-value is less than 0.10.
-1. __name__ This and the following fields are computed using `annotateNearest()` from the `bumphunter` `r mycitep(bib[["bumphunter"]], "Irizarry et al")` package. They were calculated using the UCSC hg19 annotation. __name__ refers to the nearest gene.
+1. __name__ This and the following fields are computed using `annotateNearest()` from the `bumphunter` `r citep(bib[["bumphunter"]], "Irizarry et al")` package. They were calculated using the UCSC hg19 annotation. __name__ refers to the nearest gene.
 1. __annotation__ RefSeq ID. Taken from the help page of `bumphunter::annotateNearest()`.
 1. __description__ A factor with levels _upstream_, _promoter_, _overlaps 5'_, _inside intron_, _inside exon_, _covers exon(s)_, _overlaps exon upstream_, _overlaps exon downstream_, _overlaps two exons_, _overlaps 3'_, _close to 3'_, _downstream_, _covers_. Taken from the help page of `bumphunter::annotateNearest()`.
 1. __region__ A factor with levels _upstream_, _promoter_, _overlaps 5'_, _inside_, _overlaps 3'_, _close to 3'_, _downstream_, _covers_. Taken from the help page of `bumphunter::annotateNearest()`.
