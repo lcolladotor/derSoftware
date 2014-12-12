@@ -118,7 +118,7 @@ load("../derAnalysis/run3-v1.0.10/colsubset.Rdata")
 fullCovSmall <- lapply(chrs, function(chr) {
 	fullCov[[chr]][, colsubset]
 })
-names(fullCovSmall) <- chr
+names(fullCovSmall) <- chrs
 rm(fullCov)
 
 ## Main plotting function
