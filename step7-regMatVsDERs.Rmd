@@ -104,6 +104,29 @@ build_index <- function(gr) {
 }
 index.ders <- build_index(ders)
 index.regs <- build_index(regs)
+
+## Add info for chrs where there are no regs
+miss <- !paste0('chr', c(1:22, 'X', 'Y')) %in% names(index.regs)
+names(miss) <- paste0('chr', c(1:22, 'X', 'Y'))
+if(any(miss)) {
+    miss.add <- lapply(names(miss)[miss], function(x) { 
+        Rle(FALSE, seqlengths(hg19Ideogram)[x]) 
+    })
+    names(miss.add) <- names(miss)[miss]
+    index.regs <- c(index.regs, miss.add)
+    index.regs <- index.regs[match(names(miss), names(index.regs))]
+}
+
+## Add info for chrs where there are no DERs
+miss <- !names(index.regs) %in% names(index.ders)
+if(any(miss)) {
+    miss.add <- lapply(names(index.regs)[miss], function(x) { 
+        Rle(FALSE, length(index.regs[[x]])) 
+    })
+    names(miss.add) <- names(index.regs)[miss]
+    index.ders <- c(index.ders, miss.add)
+    index.ders <- index.ders[match(names(index.regs), names(index.ders))]
+}
 ```
 
 # Compare
