@@ -153,6 +153,7 @@ plotClusterCustom <- function(cluster, regions, titleName, coverageInfo, groupIn
 		neighbors <- wh
 		neighbors$significant <- NA
 		neighbors$significantQval <- NA
+        neighbors$significantFWER <- NA
 	} 
 	if(titleUse == "pval") {
 		p.region <- autoplot(neighbors, aes(fill=significant)) + 
