@@ -883,14 +883,8 @@ suppressMessages(library("derfinderPlot"))</code></pre></div>
 <div class="row"><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button><pre style="display:none"><code class="source r">## Extract data from log files
-reads <- system(paste0('grep filterData ', file.path(rootdir, opt$short, 'CoverageInfo', 'logs'), '/fullCov-*.e* | grep -v "that 0 percent"'), intern=TRUE)</code></pre><button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button><pre style=""><code class="warning r">## Warning: running command 'grep filterData
-## /dcs01/ajaffe/Brain/derRuns/derSoftware/stem/CoverageInfo/logs/fullCov-*.e*
-## | grep -v "that 0 percent"' had status 1
-</code></pre><button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-up"></span> R source
-</button><pre style="display:none"><code class="source r">filt <- data.frame(original=as.integer(gsub("were | rows", "", regmatches(reads, regexpr("were [0-9]* rows", reads)))), filtered=as.integer(gsub("are | rows", "", regmatches(reads, regexpr("are [0-9]* rows", reads)))))
+reads <- system(paste0('grep filterData ', file.path(rootdir, opt$short, 'CoverageInfo', 'logs'), '/fullCov-*.e* | grep -v "that 0 percent"'), intern=TRUE)
+filt <- data.frame(original=as.integer(gsub("were | rows", "", regmatches(reads, regexpr("were [0-9]* rows", reads)))), filtered=as.integer(gsub("are | rows", "", regmatches(reads, regexpr("are [0-9]* rows", reads)))))
 
 ## How many were filtered?
 ## What is the percent filtered?
@@ -904,9 +898,9 @@ summ <- c(
 summ</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button><pre style=""><code class="output r">##         Filtered.original      PercentFilt.original 
-##                         0                       NaN 
+##              2.752682e+09              8.892020e+01 
 ## PercentRemaining.original 
-##                       NaN
+##              1.107980e+01
 </code></pre></div>
 
 <h2 id="number-of-candidate-regions">Number of candidate regions</h2>
@@ -1040,14 +1034,14 @@ for(idx in opt$example) {
 <p>Date the report was generated.</p>
 <div class="row"><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## [1] "2014-12-12 12:38:54 EST"
+</button><pre style=""><code class="output r">## [1] "2014-12-12 14:04:19 EST"
 </code></pre></div>
 
 <p>Wallclock time spent generating the report.</p>
 <div class="row">
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## Time difference of 10.024 mins
+</button><pre style=""><code class="output r">## Time difference of 5.328 mins
 </code></pre></div>
 
 <p><code>R</code> session information.</p>
@@ -1191,9 +1185,6 @@ Languages
 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Output <b class="caret"></b></a>
 <ul class="dropdown-menu"><li class="dropdown-header">
 Type
-</li>
-<li class="active">
-<a href="#" class="toggle-global warning" type="warning">warning</a>
 </li>
 <li class="active">
 <a href="#" class="toggle-global output" type="output">output</a>
