@@ -1,0 +1,244 @@
+---
+output:
+  knitrBootstrap::bootstrap_document:
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+---
+
+Compare vs PNAS
+===============
+
+Code is partially based on `/home/epi/ajaffe/Lieber/Projects/RNAseq/HippoPublic/clean_previous_hits.R`.
+
+# Finding regions of interest
+
+First I find the regions of the genome corresponding to the genes of interest.
+
+```{r pkgs, bootstrap.show.message=FALSE, bootstrap.show.code = FALSE}
+## Track time spent on making the report
+startTime <- Sys.time()
+
+## Required pkgs
+library("GenomicRanges")
+library("ggbio")
+library("reshape2")
+library("plyr")
+library("scales")
+library("TxDb.Hsapiens.UCSC.hg19.knownGene")
+library("org.Hs.eg.db")
+```
+
+
+```{r identify, bootstrap.show.code = FALSE}
+## Gene symbol names of interest
+#### Original names
+## symbols <- c("HIST1H4E", "RN7SK", "CDR1", "SNORD89", "SNORA73A", "SCARNA17", "PAPD1", "CACNB2", "LRCH4", "SNORD42A", "SNORA47", "LENG8", "FAM123A", "HIVEP3", "HNRPH1", "ZGPAT", "ERF", "SNORD116-29", "C9orf139", "C9orf3", "KCNA2", "EXOC6B", "CENTB5", "TAOK2", "TNRC6C", "ADAMTS4", "MSH4", "C16orf72", "CCR5")
+
+## http://www.genenames.org/data/hgnc_data.php?hgnc_id=25532
+## http://www.genenames.org/data/hgnc_data.php?hgnc_id=26360
+## http://www.genenames.org/data/hgnc_data.php?hgnc_id=5041
+## http://www.genenames.org/data/hgnc_data.php?hgnc_id=16754
+
+## Updated symbols
+symbols <- c("HIST1H4E", "RN7SK", "CDR1", "SNORD89", "SNORA73A", "SCARNA17", "MTPAP", "CACNB2", "LRCH4", "SNORD42A", "SNORA47", "LENG8", "AMER2", "HIVEP3", "HNRNPH1", "ZGPAT", "ERF", "SNORD116-29", "C9orf139", "C9orf3", "KCNA2", "EXOC6B", "ACAP3", "TAOK2", "TNRC6C", "ADAMTS4", "MSH4", "C16orf72", "CCR5")
+
+
+## Map gene symbol names to entrezid's
+
+keys <- keys(org.Hs.eg.db, keytype = "ENTREZID")
+columns <- c("SYMBOL")
+map <- select(org.Hs.eg.db, keys, columns, keytype = "ENTREZID")
+idx <- sapply(symbols, function(x) { 
+	res <- which(map$SYMBOL == x)
+	ifelse(length(res) > 0, res, NA)
+})
+ids <- map$ENTREZID[idx]
+names(ids) <- names(idx)
+
+## Remove those not-found
+ids <- ids[!is.na(ids)]
+
+## Find the exons
+
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+exonsUCSC <- exons(txdb, vals = list(gene_id =  ids), columns = c("gene_id", "exon_id", "tx_name", "tx_id"))
+
+## some gene ids have multiples, straighten out
+gids <- as.list(exonsUCSC$gene_id)
+for(i in seq(along=gids)) gids[[i]] <- gids[[i]][which(gids[[i]] %in% ids)]
+gids <- unlist(gids)
+
+
+## split into list by EID
+exonListUCSC <- split(exonsUCSC, gids)
+exonListUCSC <- exonListUCSC[ ids[ids %in% gids] ]
+### drop duplicated exons
+# exonListUCSC = lapply(exonListUCSC, function(x) x[!duplicated(x)])
+# identical(names(exonListUCSC), ids[ids %in% gids]) # TRUE
+
+## Not found
+ids[which(!ids %in% gids)]
+
+## Find them manually
+# http://www.ncbi.nlm.nih.gov/gene/125050
+# http://www.ncbi.nlm.nih.gov/gene/6080
+missing <- GRanges(seqnames=c("chr6", "chr1"), ranges=IRanges(start=c(52860418, 28833877), end=c(52860749, 28834083)))
+toAdd <- split(missing, 1:2)
+names(toAdd) <- ids[which(!ids %in% gids)]
+
+## Reduce to min/max per gene
+windows <- c(GRangesList(lapply(exonListUCSC, range)), toAdd)
+
+## Save for later use
+save(windows, ids, idx, file="windows.Rdata")
+```
+
+# Plots
+
+Now, lets make the plots.
+
+```{r plots, message=FALSE, fig.width=20, fig.height=10, dev="CairoPNG", bootstrap.show.code = FALSE}
+## Find chrs used
+chrs <- as.character(unique(unlist(seqnames(windows), use.names=FALSE)))
+
+## Build ideograms
+data(hg19IdeogramCyto, package = "biovizBase")
+p.ideos <- lapply(chrs, function(xx) { 
+	plotIdeogram(hg19IdeogramCyto, xx)
+})
+names(p.ideos) <- chrs
+
+## load data needed
+load("../CoverageInfo/fullCov.Rdata")
+load("../derAnalysis/run3-v1.0.10/fullRegions.Rdata")
+load("../derAnalysis/run3-v1.0.10/groupInfo.Rdata")
+load("../derAnalysis/run3-v1.0.10/colsubset.Rdata")
+
+## Filter data
+fullCovSmall <- lapply(chrs, function(chr) {
+	fullCov[[chr]][, colsubset]
+})
+names(fullCovSmall) <- chr
+rm(fullCov)
+
+## Main plotting function
+plotClusterCustom <- function(cluster, regions, titleName, coverageInfo, groupInfo, titleUse="fwer", txdb=NULL, p.ideogram=NULL, maxExtend=300L, colsubset=NULL, forceLarge=FALSE) {
+
+	stopifnot(is.factor(groupInfo))
+	if(is.null(colsubset)) colsubset <- seq_len(length(groupInfo))
+	
+	## Window length
+	l <-  width(cluster) + 2 * min(maxExtend, width(cluster))
+	
+	if(l > 1e5 & !forceLarge) {
+		message(paste("No plot will be made because the data is too large. The window size exceeds 100 kb."))
+		return(invisible(l))
+	}
+	
+	wh <- resize(cluster, l, fix="center")
+	title <- paste("Window view for ENTREZ Symbol", titleName)
+	
+	## Plot the ideogram if not supplied
+	if(is.null(p.ideogram)) {
+		chr <- as.character(seqnames(wh))
+		## Now load the ideogram info
+		hg19IdeogramCyto <- NULL
+		load(system.file("data", "hg19IdeogramCyto.rda", package="biovizBase", mustWork=TRUE))
+		p.ideogram <- plotIdeogram(hg19IdeogramCyto, chr)
+	}
+	
+	## Regions found (from the view)
+	neighbors <- regions[queryHits(findOverlaps(regions, wh))]
+	if(length(neighbors) == 0) {
+		neighbors <- wh
+		neighbors$significant <- NA
+		neighbors$significantQval <- NA
+	} 
+	if(titleUse == "pval") {
+		p.region <- autoplot(neighbors, aes(fill=significant)) + 
+		scale_fill_manual(values=c("chartreuse4", "wheat2"), limits=c("TRUE", "FALSE")) 
+	} else if (titleUse == "qval" ){
+		p.region <- autoplot(neighbors, aes(fill=significantQval)) +
+		scale_fill_manual(values=c("chartreuse4", "wheat2"), limits=c("TRUE", "FALSE")) 
+	} else if (titleUse == "fwer" ){
+		p.region <- autoplot(neighbors, aes(fill=significantFWER)) +
+		scale_fill_manual(values=c("chartreuse4", "wheat2"), limits=c("TRUE", "FALSE")) 
+	} else {
+		p.region <- autoplot(neighbors)
+	}
+
+	## Graphical parameters
+	nGroups <- length(levels(groupInfo))
+	
+	## Construct the coverage plot
+	pos <- start(wh):end(wh)
+	rawData <- as.data.frame(coverageInfo[pos, colsubset])
+	rawData$position <- pos
+	covData <- melt(rawData, id.vars="position")
+	covData$group <- rep(groupInfo, each=nrow(rawData))
+	p.coverage <- ggplot(covData, aes(x=position, y=value, group=variable, colour=group)) + geom_line(alpha=1/nGroups) + scale_y_continuous(trans=log2_trans())
+	
+	## Construct mean by group coverage plot
+	meanCoverage <- ddply(covData, c("position", "group"), summarise, meanCov=mean(value))
+	p.meanCov <- ggplot(meanCoverage, aes(x=position, y=meanCov, colour=group)) + geom_line(alpha=1/max(1, 1/2 * nGroups)) + scale_y_continuous(trans=log2_trans())
+	
+	## Annotation info and final plot
+	if(is.null(txdb)) {
+		p.transcripts <- FALSE
+	} else {
+		## The tryCatch is needed because not all regions overlap a transcript
+		p.transcripts <- tryCatch(autoplot(txdb, which = wh, names.expr = "tx_name(gene_id)"), warning=function(w) { FALSE })
+	}	
+	if(!is.logical(p.transcripts)) {
+		result <- tracks(p.ideogram, "Coverage" = p.coverage, "Mean coverage" = p.meanCov, "Regions" = p.region, "tx_name\n(gene_id)" = p.transcripts, heights = c(2, 4, 4, 1.5, 3), xlim=wh, title=title) + ylab("") + theme_tracks_sunset()		
+	} else {
+		result <- tracks(p.ideogram, "Coverage" = p.coverage, "Mean coverage" = p.meanCov, "Regions" = p.region, heights = c(2, 5, 5, 2), xlim=wh, title=title) + ylab("") + theme_tracks_sunset()
+	}
+	return(result)	
+}
+
+## Plotting function
+regionClusterPlot <- function(i, tUse="fwer") {
+	## Chr specific selections
+	chr <- as.character(seqnames(windows[[i]]))
+	p.ideo <- p.ideos[[chr]]
+	covInfo <- fullCovSmall[[chr]]
+	
+	## Make the plot
+	p <- plotClusterCustom(windows[[i]], regions=fullRegions, titleName=names(ids)[ids == names(windows)[i]], coverageInfo=covInfo, groupInfo=groupInfo, titleUse=tUse, txdb=txdb, p.ideogram=p.ideo, forceLarge=TRUE)
+	print(p)
+	rm(p.ideo, covInfo)
+	
+	return(invisible(TRUE))	
+}
+
+## Make plots
+for(i in seq_len(length(windows))) {
+	regionClusterPlot(i)
+}
+```
+
+# Reproducibility
+
+Date the report was generated.
+
+```{r reproducibility1, echo=FALSE, bootstrap.show.code=FALSE}
+## Date the report was generated
+Sys.time()
+```
+
+Wallclock time spent generating the report.
+
+```{r "reproducibility2", echo=FALSE, bootstrap.show.code=FALSE}
+## Processing time in seconds
+totalTime <- diff(c(startTime, Sys.time()))
+round(totalTime, digits=3)
+```
+
+`R` session information.
+
+```{r "reproducibility3", echo=FALSE, bootstrap.show.code=FALSE, bootstrap.show.message=FALSE}
+## Session info
+options(width=120)
+devtools::session_info()
+```
