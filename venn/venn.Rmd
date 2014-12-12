@@ -77,6 +77,24 @@ regions <- lapply(exps, function(exp) {
 anno <- lapply(exps, function(exp) {
     load(file.path('..', exp, 'derAnalysis', run[exp],
         'fullAnnotatedRegions.Rdata'))
+    
+    ## Fix region labels: its intergenic, not intragenic
+    if('intragenic' %in% names(fullAnnotatedRegions$countTable)) {
+        ## Fix countTable
+        names(fullAnnotatedRegions$countTable)[names(fullAnnotatedRegions$countTable) == 'intragenic'] <- 'intergenic'
+        
+        ## Fix annotation list
+        fullAnnotatedRegions$annotationList <- GRangesList(lapply(fullAnnotatedRegions$annotationList, function(x) {
+            idx <- x$theRegion == 'intragenic'
+            if(sum(idx) > 0) {
+                x$theRegion[idx] <- 'intergenic'
+            }
+            return(x)
+        }))
+        
+        save(fullAnnotatedRegions, file = file.path('..', exp, 'derAnalysis',
+            run[exp], 'fullAnnotatedRegions.Rdata'))
+    }
     res <- fullAnnotatedRegions
     return(res)
 })
@@ -116,7 +134,7 @@ CSV files correspond to experiments `r paste(exps, collapse = ', ')` from runs `
 
 ## Venn diagrams
 
-The following Venn diagrams show how many candidate differentially expressed regions (DERs) overlap with an exon, intron, or intragenic regions of the UCSC hg19 knownGene annotation. By default, a minimum overlap of 20 base pairs is required to say that a candidate DER overlaps any of feature. The annotation overlap was done using the `mergeResults()` function from `derfinder` `r citep(bib[["derfinder"]])` while the Venn diagrams were made using `limma` `r citep(bib[["limma"]])`.
+The following Venn diagrams show how many candidate differentially expressed regions (DERs) overlap with an exon, intron, or intergenic regions of the UCSC hg19 knownGene annotation. By default, a minimum overlap of 20 base pairs is required to say that a candidate DER overlaps any of feature. The annotation overlap was done using the `mergeResults()` function from `derfinder` `r citep(bib[["derfinder"]])` while the Venn diagrams were made using `limma` `r citep(bib[["limma"]])`.
 
 A maximum of three Venn diagrams are shown per data set. The first one uses all the candidate DERs, the second one uses only the candidate DERs that had a significant q-value (by default less than 0.10), and the third uses only the candidate DERs that had a FWER adjusted p-value less than 0.05. 
 
