@@ -57,7 +57,7 @@ suppressMessages(library("GenomicRanges"))
 suppressMessages(library("derfinder"))
 suppressMessages(library("limma"))
 
-## Define number of cores used
+## Experiments
 exps <- c('brainspan', 'simulation', 'hippo', 'snyder', 'stem')
 
 ## Find the latest run from each experiment
