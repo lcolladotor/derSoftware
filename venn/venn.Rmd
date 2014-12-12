@@ -60,6 +60,7 @@ suppressMessages(library("limma"))
 ## Define number of cores used
 exps <- c('brainspan', 'simulation', 'hippo', 'snyder', 'stem')
 
+## Find the latest run from each experiment
 run <- sapply(exps, function(exp) {
     runs <- dir(file.path('..', exp, 'derAnalysis'), pattern = 'run')
     runs[length(runs)]
@@ -80,6 +81,9 @@ anno <- lapply(exps, function(exp) {
     return(res)
 })
 
+## Fix names
+names(regions) <- names(anno) <- exps
+
 ## Perform check and create csv files
 check <- vector("list", length(exps))
 names(check) <- exps
@@ -90,9 +94,6 @@ for(exp in exps) {
         length(regions[[exp]]))
 	
 	## Export regions information into plain text
-	tmp <- regions[[exp]]
-	names(tmp) <- seq_len(length(tmp))
-	tmp <- as.data.frame(tmp)
 	write.csv(as.data.frame(regions[[exp]]), file = paste0("supplementaryFile", 
         which(exp == exps), ".csv"), quote = FALSE, row.names = FALSE)
 	
@@ -107,6 +108,8 @@ for(exp in exps) {
 ## Check that the rows match
 unlist(check)
 ```
+
+CSV files correspond to experiments `r paste(exps, collapse = ', ')` from runs `r paste(run, collapse = ', ')` respectively.
 
 ## Venn diagrams
 
