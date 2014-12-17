@@ -25,7 +25,7 @@ then
     CUTOFF=5
 elif [[ "${EXPERIMENT}" == "brainspan" ]]
 then
-    CUTOFF=0.25
+    CUTOFF=0.1
 elif [[ "${EXPERIMENT}" == "snyder" ]]
 then
     CUTOFF=5
