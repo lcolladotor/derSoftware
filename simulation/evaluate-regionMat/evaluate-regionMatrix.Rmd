@@ -1,0 +1,541 @@
+---
+output:
+  knitrBootstrap::bootstrap_document:
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+  html_document:
+    toc: true
+    theme: united
+---
+
+Evaluate simulation
+==============
+
+This report evaluates the simulation results for the `regionMatrix()` output.
+
+```{r 'setup', bootstrap.show.message = FALSE, bootstrap.show.code = FALSE}
+library('GenomicRanges')
+library('TxDb.Hsapiens.UCSC.hg19.knownGene')
+library('knitr')
+library('devtools')
+library('derfinder')
+library('derfinderHelper')
+library('derfinderPlot')
+library('bumphunter')
+library('limma')
+load('../simulation_info.Rdata')
+load('../regionMatrix/regionMat-cut5.Rdata')
+load('../derAnalysis/run2-v1.0.10/groupInfo.Rdata')
+load('../derAnalysis/run2-v1.0.10/models.Rdata')
+load('../derAnalysis/run2-v1.0.10/chr22/optionsStats.Rdata')
+load('../CoverageInfo/fullCov.Rdata')
+```
+
+# Results
+
+```{r 'txsetup', bootstrap.show.code = FALSE}
+## Find exons
+txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+txinfo <- select(txdb, keys = chosen$ucsckg_id, columns = columns(txdb), keytype = 'TXNAME')
+
+## Buiild GRangesList with exons grouped by transcript
+tx <- split(GRanges(seqnames = txinfo$EXONCHROM, IRanges(start = txinfo$EXONSTART, end = txinfo$EXONEND), strand = txinfo$EXONSTRAND), txinfo$TXNAME)
+tx <- tx[match(chosen$ucsckg_id, names(tx))]
+
+## Determine DE status for the regions
+getF  <- function(fit, fit0, theData) {
+	rss1 = rowSums((fitted(fit)-theData)^2)
+	df1 = ncol(fit$coef)
+	rss0 = rowSums((fitted(fit0)-theData)^2)
+	df0 = ncol(fit0$coef)
+	fstat = ((rss0-rss1)/(df1-df0))/(rss1/(ncol(theData)-df1))
+	f_pval = pf(fstat, df1-1, ncol(theData)-df1,lower.tail=FALSE)
+	fout = cbind(fstat,df1-1,ncol(theData)-df1,f_pval)
+	colnames(fout)[2:3] = c("df1","df0")
+	fout = data.frame(fout)
+	return(fout)
+}
+
+# regions
+regList <- lapply(regionMat, function(x) x$regions)
+fullRegionGR <- unlist(GRangesList(regList))
+
+## Explore widths
+# summary(width(fullRegionGR))
+#Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 4.0   106.0   156.0   448.9   307.0  5685.0 
+
+# coverage matrix
+fullRegionMat <- do.call("rbind",
+    lapply(regionMat, function(x) x$coverageMatrix))
+
+## log transform
+y <- log2(fullRegionMat + 32)
+rownames(y) <- NULL
+
+## Run limma
+fit <- lmFit(y, models$mod)
+fit0 <- lmFit(y, models$mod0)
+ff <- getF(fit,fit0, y)
+fullRegionGR$sigBonf <- factor(p.adjust(ff$f_pval,"bonf") < 0.05, levels = c('TRUE', 'FALSE'))
+
+## Find overlaps with DE regions
+ctov <- countOverlaps(tx, fullRegionGR)
+
+## Check result with sig regs
+bonf <-  fullRegionGR[fullRegionGR$sigBonf == 'TRUE']
+min.ov <- min(min(width(bonf)), min(width(tx)))
+ctov.bonf <- countOverlaps(tx, bonf, minoverlap =  min.ov)
+
+## Use appropriate set
+ctov.use <- if (identical(ctov > 0, ctov.bonf > 0)) ctov else ctov.bonf
+```
+
+
+## Transcripts / genes vs DE regions
+
+### Overview
+
+Table showing the results between whether the transcript was set to be differentially expressed (DE) and if it overlaps (minimum 1 bp) any candidate region.
+
+```{r 'mainres', bootstrap.show.code = FALSE}
+addmargins(table('DE status' = chosen$DE, 'Overlaps DE region' = ctov > 0))
+```
+
+The results are `r ifelse(identical(ctov > 0, ctov.bonf > 0), 'the same', 'not the same')` using a minimum overlap of `r min.ov` bp between transcripts and candidate regions with a Bonferroni adjusted p-value < 0.05. Thus, we will use `r ifelse(identical(ctov > 0, ctov.bonf > 0), 'all DE regions', 'only the DE regions with Bonferroni adjusted p-value < 0.05')`.
+
+
+```{r 'stricter', bootstrap.show.code = FALSE}
+addmargins(table('DE status' = chosen$DE, 'Overlaps DE region (sig Bonf.)' = ctov.bonf > 0))
+```
+
+At a finer level, there is a difference in the number of exons per transcript overlapping all candidate regions vs the regions with Bonferroni adjusted p-value < 0.05.
+
+```{r 'detaildiff', bootstrap.show.code = FALSE}
+## Verify things are working properly
+# table(countOverlaps(tx, fullRegionGR, minoverlap = min.ov) - ctov.bonf)
+
+## Difference in overlaps found
+table(ctov - ctov.bonf)
+```
+
+### By case
+
+We can separate the transcripts by their experiment setup case. That is, whether its from a gene with:
+
+* a single transcript
+    * set to be DE: _singleDE_
+    * set not to be DE: _singleNotDe_
+* two transcripts
+    * with both set to be DE: _bothDE_
+    * with only one transcript set to be DE: _oneDE_
+    * with both set not to be DE: _noneDE_
+
+Then compare against the results where
+
+* _success.DE_ means that the transcript was set to be DE and overlaps an expressed region that is differentially expressed as determined by the limma analysis (true positive)
+* _failed.DE_ means that the transcript was set to be DE and doesn't overlap an expressed DE region (false negative)
+* _success.Reg_ means that the transcript was set not to de DE and doesn't overlap an expressed DE region (true negative)
+* _failed.Reg_ means that the transcript was set not to be DE and does overlap an expressed DE region (false positive)
+
+
+```{r 'bycase', results = 'asis', bootstrap.show.code = FALSE}
+## Indexes
+idx <- list(success = list(de = chosen$DE & ctov.use > 0, reg = !chosen$DE & !ctov.use > 0), failed = list(de = chosen$DE & !ctov.use > 0, reg = !chosen$DE & ctov.use > 0))
+idx <- lapply(idx, function(x) { lapply(x, which) })
+
+## Classify results
+chosen$result <- 'Success.DE'
+chosen$result[ idx$success$reg ] <- 'success.Reg'
+chosen$result[ idx$failed$de ] <- 'Failed.DE'
+chosen$result[ idx$failed$reg ] <- 'failed.Reg'
+
+## Overall summary
+kable(table(chosen$case, chosen$result), format = 'html')
+```
+
+### Failed.DE (false negative)
+
+The `r length(idx$failed$de)` _Failed.DE_ cases (false negatives) are mostly short single transcript genes (one exon only) where `r sum(chosen[idx$failed$de, c('group1', 'group2', 'group3')] == 'low')` were set to have low expression on one group, normal on the other two.
+
+```{r 'failed.de', results = 'asis', bootstrap.show.code = FALSE}
+## Successful cases
+success.de <- tx[ idx$success$de  ]
+success.Reg <- tx[ idx$success$reg ]
+
+## What happened with the txs set to be DE that were not picked up?
+failed.de <- tx[ idx$failed$de  ]
+
+## They are short transcripts
+kable(chosen[idx$failed$de, ], format = 'html')
+```
+
+However, `r length(idx$success$de[sum(width(success.de)) <= 110])` similar cases with short transcripts were successfully detected. So it's likely that a lower F-stat cutoff would have picked up these false negative cases.
+
+```{r 'success.de.short', results = 'asis', bootstrap.show.code = FALSE}
+## However there are other short transcripts that were picked up
+kable(chosen[ idx$success$de[sum(width(success.de)) <= 110], ], format = 'html')
+```
+
+More info:
+
+```{r 'failed.de.extra', bootstrap.show.code = FALSE}
+width(failed.de)
+width(tx[ idx$success$de[sum(width(success.de)) <= 110] ])
+```
+
+#### Plots
+
+```{r 'plotsFun', bootstrap.show.code = FALSE}
+gs <- makeGenomicState(txdb, chrs = '22', verbose = FALSE)
+makePlots <- function(reg, gs) {
+    ## Prep
+    strand(reg) <- '*'
+    regCov <- getRegionCoverage(fullCov = fullCov, regions = reg, verbose = FALSE)
+    annoReg <- annotateRegions(reg, gs$fullGenome, verbose = FALSE)
+    annoNear <- annotateNearest(reg, 'hg19')
+
+    ## Actually make the plots with F-stat track
+    prev.name <- ''
+    def.par <- par()
+    def.par <- def.par[-which(names(def.par) %in% c('cin', 'cra', 'csi', 'cxy', 'din', 'page'))]
+    for(reg.i in seq_len(length(reg))) {
+        
+        if(prev.name != names(reg)[reg.i]) {
+            par(def.par)
+            plot.new()
+            text(0.5, 0.5, names(reg)[reg.i], cex = 5)
+        }
+        prev.name <- names(reg)[reg.i]
+        
+        
+        range <- start(reg[reg.i]):end(reg[reg.i])
+        dat <- fullCov$chr22[range, ]
+        
+        ## Skip plot if there is no coverage data
+        if(max(sapply(dat, max)) == 0) {
+            par(def.par)
+            plot.new()
+            text(0.5, 0.5, paste('No data\nReg', reg.i), cex = 5)
+            next
+        }
+        
+        ## Log2 transform
+        for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+        
+        ## Calculate f-stats
+        fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
+    
+        ## Make plot
+        plotRegionCoverage(reg, regCov, groupInfo, annoNear, annoReg, txdb, reg.i, ask = FALSE, verbose = FALSE)
+    
+        ## Add F-stat track
+        par(fig = c(0, 1, 0.075, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
+        plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1))
+        abline(h = optionsStats$cutoffFstatUsed, col = 'red')
+    }
+}
+```
+
+Coverage plots with F-statistics shown at the bottom for the false negative cases. One plot it shown for each exon that compose these transcripts.
+
+```{r 'plotFalseNeg', bootstrap.show.code = FALSE, eval = length(failed.de) > 0, warning = FALSE}
+makePlots(unlist(failed.de), gs)
+```
+
+
+### failed.Reg (false positive)
+
+Out of the `r length(idx$failed$reg)` _failed.Reg_ transcripts (false positives), `r table(chosen$case, chosen$result)['oneDE', 'failed.Reg']` of them are from the _oneDE_ case. You could then argue that they are really not false positives. However, `r table(chosen$case, chosen$result)['noneDE', 'failed.Reg']` and `r table(chosen$case, chosen$result)['singleNotDE', 'failed.Reg']` transcripts are from the _noneDE_ and _singleNotDE_ cases respectively which would be the truly false positives.
+
+```{r 'failed.Reg', results = 'asis', bootstrap.show.code = FALSE}
+## What happened with those set to be not DE but overlap DE regions?
+failed.Reg <- tx[ idx$failed$reg ]
+
+kable(chosen[idx$failed$reg, ], format = 'html')
+```
+
+#### Plots
+
+Coverage plots with F-statistics shown at the bottom for the false positive cases. One plot it shown for each exon that compose these transcripts. For the `r table(chosen$case, chosen$result)['oneDE', 'failed.Reg']` transcripts from the _oneDE_ case, it can be seen how at least one plot contains a DE region overlapping an exon set to be DE. `r ifelse(length(failed.Reg) > 0, '', '(Skipped as such cases were not present in this simulation)')`.
+
+Some complex situations where there are exons on both strands can be observed.
+
+```{r 'plotsFalsePositive', eval = length(failed.Reg) > 0, bootstrap.show.code = FALSE, warning = FALSE}
+makePlots(unlist(failed.Reg), gs)
+```
+
+#### Other strand
+
+In some simulations, we found what seemed to be false positive transcripts but turned out to overlap DE regions in sections where there are exons on both the positive and negative strands and at least one of the exons was set to be DE.
+
+```{r 'otherstrand', bootstrap.show.code = FALSE}
+## Most of the truly false positive transcripts don't overlap other transcripts
+inter <- intersect(idx$failed$reg, c(which(chosen$case == 'noneDE'), which(chosen$case == 'singleNotDE')))
+table(countOverlaps(tx[inter], tx[-inter]))
+
+## They are not short
+width(tx[inter])
+
+## To explore regions with derfinderReport
+sort(subjectHits(findOverlaps(tx[inter], fullRegionGR)))
+
+## DE regions
+# fullRegionGR[subjectHits(findOverlaps(tx[i], fullRegionGR))]
+```
+
+`r ifelse( table(chosen$case, chosen$result)['noneDE', 'failed.Reg'] == 0, '_Skipped the following section due to the absence of such cases in this particular simulation_', '')`
+
+As it can be seen below, `r table(chosen$case, chosen$result)['noneDE', 'failed.Reg']` apparent false positive transcripts from the _noneDE_ case overlap (when strand is not taken into account) genes where at least one of two transcripts was set to be DE. 
+
+```{r 'failed.Reg.strand', results = 'asis', bootstrap.show.code = FALSE}
+kable(chosen[ subjectHits(findOverlaps(tx[inter], tx[-inter], ignore.strand = TRUE)), ], format = 'html')
+```
+
+
+
+
+### Gene level
+
+For each gene, if at least one transcript is set to be DE then we consider the gene to be DE. Then, we check if the gene overlaps at least one DE region.
+
+```{r 'gene', bootstrap.show.code = FALSE}
+gene <- data.frame(gene_id = unique(chosen$gene_id))
+gene$DE <- sapply(gene$gene_id, function(x) { any(chosen$DE[chosen$gene_id == x])  })
+gene$case <- sapply(gene$gene_id, function(x) { unique(chosen$case[chosen$gene_id == x])  })
+gene$overlaps <- sapply(gene$gene_id, function(x) { sum(ctov.use[ chosen$ucsckg_id[chosen$gene_id == x] ]) })
+gene$overlap <- gene$overlaps > 0
+
+## Results between DE status and overlapping at least 1 DE regrion at the gene level
+addmargins(table('DE status' = gene$DE, 'Overlaps DE region' = gene$overlap))
+```
+
+### Conclusions
+
+The results from the simulation are promising as most transcripts were correctly classified as differentially expressed or not by in the expressed-regions analysis.
+
+The majority of the false negative cases involved short single transcript genes with one group having low expression relative to the other two. These cases could potentially be mitigated by lowering the F-statistic threshold used in the `derfinder` analysis. 
+
+In some simulations there are some apparent false positives which are due to transcripts on one strand set not to be DE overlapping transcripts from the other strand set to be DE. This situation could be solved with strand-specific RNA-seq data and running `derfinder` for each strand separately.
+
+
+### Extra
+
+Minimum number of reads per transcript as well as per sample.
+
+```{r 'minreadmat'}
+## Distribution of the minimum number of reads per transcript
+summary(apply(readmat, 1, min))
+
+## Distribution of the minimum number of reads per sample
+summary(apply(readmat, 2, min))
+```
+
+The minimum number of reads per transcript for a given sample is `r min(readmat)`.
+
+## Exonic segments
+
+Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DE regions overlap such segments and viceversa. We would expect that the DE regions with a Bonferroni adjusted p-value < 0.05 would only overlap segments that were set to be DE.
+
+
+```{r 'segments', bootstrap.show.code = FALSE}
+segments <- GRangesList(lapply(gene$gene_id, function(x) {
+    i <- chosen$ucsckg_id[ chosen$gene_id == x]
+    
+    ## Find segments
+    segs <- disjoin(unlist(tx[i]))
+    ov <- findOverlaps(segs, tx[i])
+    
+    ## Find DE status per segment
+    segs$DE <- as.vector(tapply(subjectHits(ov), queryHits(ov), function(y) {
+        any(chosen$DE[ chosen$gene_id == x])
+    }))
+    
+    ## Finish
+    return(segs)
+}))
+names(segments) <- gene$gene_id
+segs <- unlist(segments)
+```
+
+### Segments vs DE regions
+
+
+We can check the if the exonic segments overlap one or more DE region similarly to what we did earlier at the transcript and gene level. The results change depending on whether only the DE regions with significant Bonferroni adjusted p-value or all of the DE regions are used.
+
+
+```{r, 'segsvsders', bootstrap.show.code = FALSE}
+addmargins(table('DE status' = segs$DE, 'Overlaps DE region (sig Bonf)' = countOverlaps(segs, bonf) > 0))
+
+addmargins(table('DE status' = segs$DE, 'Overlaps DE region' = countOverlaps(segs, fullRegionGR) > 0))
+```
+
+Using the DE regions with significant Bonferroni adjusted p-values, there are `r sum(segs$DE & !countOverlaps(segs, bonf) > 0)` false negative cases. From the exploration shown below, half of them seem short. Most of the false negative segments correspond to genes from the _oneDE_ scenario. Thus revealing that the complexity of that scenario makes it challenging to identify significant DE regions.
+
+
+```{r 'seg.fn'}
+## Explore false negative segments using DE regions with sig Bonf
+seg.fn <- which(segs$DE & !countOverlaps(segs, bonf) > 0)
+
+## Around half of these segments are short
+summary(width(segs[seg.fn]))
+chosen[chosen$gene_id == '6523', ]
+
+## 11 of the 37 segments are from gene with id 6523
+tail(sort(table(names(segs[seg.fn]))))
+
+## Cases of the genes with at least one FN segment
+table(tapply(subset(chosen, gene_id %in% names(seg.fn))$case, subset(chosen, gene_id %in% names(seg.fn))$gene_id, unique))
+
+## Type of gene where the segments come from. Mostly oneDE genes
+table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_id == x]) }))
+```
+
+
+#### Plots
+
+Coverage plots with F-statistics shown at the bottom for the false negative exonic segments grouped by their gene.
+
+```{r 'segplots', bootstrap.show.code = FALSE, warning = FALSE}
+makePlots(segs[seg.fn], gs)
+```
+
+
+
+
+
+### DE regions vs segments
+
+```{r 'segsperderprep'}
+## Do DE regions overlap segments that are set to be DE?
+reg.ov <- findOverlaps(fullRegionGR, segs)
+fullRegionGR$overlap <- sapply(seq_len(length(fullRegionGR)), function(x) {
+    y <- which(queryHits(reg.ov) == x)
+    if(length(y) == 0) return(NA)
+    any(segs$DE[ subjectHits(reg.ov)[y] ])
+})
+```
+
+
+We can check how many segments each DE region overlaps. Ideally they should all overlap at least one segment, but there are some cases where this could not happen (`r sum(is.na(fullRegionGR$overlap))` in this case). Possibly because of small mismatches between the transcripts and the actual mRNA used in the simulation. Alternatively, alignment problems could explain such cases.
+
+```{r 'segsperder'}
+## Do DE regions overlap at least one segment?
+table(countOverlaps(fullRegionGR, segs))
+
+## Widths of DE regions not overlapping any segment
+width(fullRegionGR[is.na(fullRegionGR$overlap)])
+
+## Do these DE regions have a significant Bonferroni adjusted p-value?
+table(fullRegionGR$sigBonf[is.na(fullRegionGR$overlap)])
+```
+
+#### Minimum 10bp
+
+We can repeat the same exploration but now requiring at least a 10bp overlap.
+
+```{r 'segsperder10'}
+## Do DE regions overlap segments that are set to be DE?
+reg.ov10 <- findOverlaps(fullRegionGR, segs, minoverlap = 10)
+fullRegionGR$overlap10 <- sapply(seq_len(length(fullRegionGR)), function(x) {
+    y <- which(queryHits(reg.ov10) == x)
+    if(length(y) == 0) return(NA)
+    any(segs$DE[ subjectHits(reg.ov10)[y] ])
+})
+
+## How many DE regions are smaller than 10bp?
+table(width(fullRegionGR) < 10)
+
+## How many exonic segments are smaller than 10bp?
+table(width(segs) < 10)
+
+## Do DE regions (min 10bp long) overlap at least one segment?
+table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 10], segs, minoverlap = 10))
+
+## Widths of DE regions not overlapping any segment
+width(fullRegionGR[is.na(fullRegionGR$overlap10) & width(fullRegionGR) >= 10])
+
+## Do these DE regions have a significant Bonferroni adjusted p-value?
+table(fullRegionGR$sigBonf[is.na(fullRegionGR$overlap10) & width(fullRegionGR) >= 10])
+```
+
+#### Minimum 20bp
+
+And similarly with a minimum overlap of 20bp.
+
+```{r 'segsperder20'}
+## Do DE regions overlap segments that are set to be DE?
+reg.ov20 <- findOverlaps(fullRegionGR, segs, minoverlap = 20)
+fullRegionGR$overlap20 <- sapply(seq_len(length(fullRegionGR)), function(x) {
+    y <- which(queryHits(reg.ov20) == x)
+    if(length(y) == 0) return(NA)
+    any(segs$DE[ subjectHits(reg.ov20)[y] ])
+})
+
+## How many DE regions are smaller than 20bp?
+table(width(fullRegionGR) < 20)
+
+## How many exonic segments are smaller than 20bp?
+table(width(segs) < 20)
+
+## Do DE regions (min 20bp long) overlap at least one segment?
+table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 20], segs, minoverlap = 20))
+
+## Widths of DE regions not overlapping any segment
+width(fullRegionGR[is.na(fullRegionGR$overlap20) & width(fullRegionGR) >= 20])
+
+## Do these DE regions have a significant Bonferroni adjusted p-value?
+table(fullRegionGR$sigBonf[is.na(fullRegionGR$overlap20) & width(fullRegionGR) >= 20])
+```
+
+
+### DE regions correctness
+
+However, the main result is whether the DE regions overlap segments expected to be DE. Note that for this comparison, DE regions are unstranded and could potentially overlap two segments from different strands where only one of them was set to be DE.
+
+
+```{r 'segsresult', bootstrap.show.code = FALSE}
+## Check by whether the DE region has a Bonferroni adjusted p-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap, 'Bonf. p-value < 0.05' = fullRegionGR$sigBonf))
+```
+
+Regardless of whether the DE region p-value is significant, we see that `r round(sum(!fullRegionGR$overlap, na.rm = TRUE) / sum(!is.na(fullRegionGR$overlap)) * 100, 2)` percent of the DE regions overlapping at least one segment, incorrectly overlap a segment set not to be DE. 
+
+
+#### Minimum 10bp
+
+Out of the `r length(fullRegionGR)` DE regions, only `r sum(width(fullRegionGR) >= 10)` are at least 10bp long. They are compared against `r sum(width(segs) >= 10)` exonic segments at least 10bp long out of the total `r length(segs)`. Only `r table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 10], segs, minoverlap = 10))['0']` DE regions 10bp or longer do not overlap any exonic segment regardless of its DE status.
+
+```{r 'segsresult10', bootstrap.show.code = FALSE}
+## Check by whether the DE region has a Bonferroni adjusted p-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap10, 'Bonf. p-value < 0.05' = fullRegionGR$sigBonf))
+```
+
+Regardless of whether the DE region p-value is significant, we see that `r round(sum(!fullRegionGR$overlap10, na.rm = TRUE) / sum(!is.na(fullRegionGR$overlap10)) * 100, 2)` percent of the DE regions overlapping at least one segment (min overlap 10bp), incorrectly overlap a segment set not to be DE. 
+
+#### Minimum 20bp
+
+Out of the `r length(fullRegionGR)` DE regions, only `r sum(width(fullRegionGR) >= 20)` are at least 20bp long. They are compared against `r sum(width(segs) >= 20)` exonic segments at least 20bp long out of the total `r length(segs)`. Only `r table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 20], segs, minoverlap = 20))['0']` DE regions 20bp or longer do not overlap any exonic segment regardless of its DE status.
+
+```{r 'segsresult20', bootstrap.show.code = FALSE}
+## Check by whether the DE region has a Bonferroni adjusted p-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap20, 'Bonf. p-value < 0.05' = fullRegionGR$sigBonf))
+```
+
+Regardless of whether the DE region p-value is significant, we see that `r round(sum(!fullRegionGR$overlap20, na.rm = TRUE) / sum(!is.na(fullRegionGR$overlap20)) * 100, 2)` percent of the DE regions overlapping at least one segment (min overlap 20bp), incorrectly overlap a segment set not to be DE. 
+
+### Conclusions
+
+`r ifelse(table(fullRegionGR$overlap, fullRegionGR$sigBonf)[1,1] == 0, 'None of the DE regionss with a Bonferroni adjusted p-value < 0.05 overlaps a segment set not to be DE, which is what we would expect.', 'We were not expecting to see DE regions with a Bonferroni adjusted p-value < 0.05 overlaping a segment set no to be DE.')`
+
+
+
+# Reproducibility
+
+```{r 'reproduc', bootstrap.show.code = FALSE}
+## Reproducibility info
+Sys.time()
+proc.time()
+options(width = 120)
+session_info()
+```
