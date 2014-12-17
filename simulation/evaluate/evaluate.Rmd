@@ -460,7 +460,7 @@ However, the main result is whether the DERs overlap segments expected to be DE.
 addmargins(table('Overlaps a DE segment' = fullRegions$overlap, 'FWER p-value < 0.05' = fullRegions$significantFWER))
 ```
 
-Regardless of whether the DER p-value, we see that `r round(sum(!fullRegions$overlap, na.rm = TRUE) / sum(!is.na(fullRegions$overlap)) * 100, 2)` percent of the DERs overlapping at least one segment, incorrectly overlap a segment set not to be DE. 
+Regardless of whether the DER p-value is significant, we see that `r round(sum(!fullRegions$overlap, na.rm = TRUE) / sum(!is.na(fullRegions$overlap)) * 100, 2)` percent of the DERs overlapping at least one segment, incorrectly overlap a segment set not to be DE. 
 
 
 #### Minimum 10bp
@@ -472,7 +472,7 @@ Out of the `r length(fullRegions)` DERs, only `r sum(width(fullRegions) >= 10)` 
 addmargins(table('Overlaps a DE segment' = fullRegions$overlap10, 'FWER p-value < 0.05' = fullRegions$significantFWER))
 ```
 
-Regardless of whether the DER p-value, we see that `r round(sum(!fullRegions$overlap10, na.rm = TRUE) / sum(!is.na(fullRegions$overlap10)) * 100, 2)` percent of the DERs overlapping at least one segment (min overlap 10bp), incorrectly overlap a segment set not to be DE. 
+Regardless of whether the DER p-value is significant, we see that `r round(sum(!fullRegions$overlap10, na.rm = TRUE) / sum(!is.na(fullRegions$overlap10)) * 100, 2)` percent of the DERs overlapping at least one segment (min overlap 10bp), incorrectly overlap a segment set not to be DE. 
 
 #### Minimum 20bp
 
@@ -483,7 +483,7 @@ Out of the `r length(fullRegions)` DERs, only `r sum(width(fullRegions) >= 20)` 
 addmargins(table('Overlaps a DE segment' = fullRegions$overlap20, 'FWER p-value < 0.05' = fullRegions$significantFWER))
 ```
 
-Regardless of whether the DER p-value, we see that `r round(sum(!fullRegions$overlap20, na.rm = TRUE) / sum(!is.na(fullRegions$overlap20)) * 100, 2)` percent of the DERs overlapping at least one segment (min overlap 20bp), incorrectly overlap a segment set not to be DE. 
+Regardless of whether the DER p-value is significant, we see that `r round(sum(!fullRegions$overlap20, na.rm = TRUE) / sum(!is.na(fullRegions$overlap20)) * 100, 2)` percent of the DERs overlapping at least one segment (min overlap 20bp), incorrectly overlap a segment set not to be DE. 
 
 ### Conclusions
 
