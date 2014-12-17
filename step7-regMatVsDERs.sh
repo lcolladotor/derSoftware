@@ -34,7 +34,7 @@ then
     CUTOFF=3
 elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
-    CUTOFF=0
+    CUTOFF=5
 else
     echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi

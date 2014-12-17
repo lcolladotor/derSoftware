@@ -36,7 +36,7 @@ then
     RLENGTH=36
 elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
-    CUTOFF=0
+    CUTOFF=5
     RLENGTH=100
 else
     echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
