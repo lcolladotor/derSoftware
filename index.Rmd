@@ -130,6 +130,8 @@ You can view the reports by following these links:
 * [Snyder](snyder/derAnalysis/run3-v1.0.10/basicExploration/basicExploration.html)
 * [Stem](stem/derAnalysis/run4-v1.0.10/basicExploration/basicExploration.html)
 
+Note that these HTML reports are large and can take time to load properly. Please wait for them to load completely before scrolling. In particular, the report for the BrainSpan data set is a 47 MB file.
+
 ## CSV files and annotation comparison
 
 This HTML report has the code for loading the R data files and generating the CSV files. The report also has Venn diagrams showing the number of candidate DERs from the single-base level analysis that overlap known exons, introns and intergenic regions using the UCSC hg19 annotation. It also includes a detailed description of the columns in the CSV files.
@@ -193,6 +195,17 @@ The code used for generating the panels using in Figure 1 of the paper is availa
 ## Figure 2
 
 The code used for generating the panels using in Figure 2 of the paper is available in the [figure2.R](figure2/figure2.R) file.
+
+## Additional analyses
+
+The following `R` source files have the code for reproducing additional analyses described in the paper.
+
+* [brainspan_regionLevel](additional_analyses/brainspan_regionLevel.R) Analysis of BrainSpan expressed-regions level DERs.
+* [characterize_brainspan_DERs](additional_analyses/characterize_brainspan_DERs.R) Analysis of BrainSpan single-base level DERs.
+* [stem_analysis](additional_analyses/stem_analysis.R) Analysis of the Stem data set DERs.
+* [feature_counts](additional_analyses/feature_counts.R) Feature counts analysis of Hippo, Snyder and Stem data sets.
+
+These scripts also include other exploratory code.
 
 ## Hippo vs previous results
 
