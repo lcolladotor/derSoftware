@@ -200,10 +200,10 @@ The code used for generating the panels using in Figure 2 of the paper is availa
 
 The following `R` source files have the code for reproducing additional analyses described in the paper.
 
-* [brainspan_regionLevel](additional_analyses/brainspan_regionLevel.R) Analysis of BrainSpan expressed-regions level DERs.
-* [characterize_brainspan_DERs](additional_analyses/characterize_brainspan_DERs.R) Analysis of BrainSpan single-base level DERs.
-* [stem_analysis](additional_analyses/stem_analysis.R) Analysis of the Stem data set DERs.
-* [feature_counts](additional_analyses/feature_counts.R) Feature counts analysis of Hippo, Snyder and Stem data sets.
+* [brainspan_regionLevel.R](additional-analyses/brainspan_regionLevel.R) Analysis of BrainSpan expressed-regions level DERs.
+* [characterize_brainspan_DERs.R](additional-analyses/characterize_brainspan_DERs.R) Analysis of BrainSpan single-base level DERs.
+* [stem_analysis.R](additional-analyses/stem_analysis.R) Analysis of the Stem data set DERs.
+* [feature_counts.R](additional-analyses/feature_counts.R) Feature counts analysis of Hippo, Snyder and Stem data sets.
 
 These scripts also include other exploratory code.
 
