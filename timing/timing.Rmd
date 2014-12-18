@@ -217,7 +217,7 @@ analysisSummary <- do.call(rbind, analysisSummary)
 
 The following plots show per analysis the maximum memory used by a job and maximum wall time for that step. This is assuming that all jobs for a given step ran simultaneously. For example, that all jobs running `derfinder::analyzeChr()` were running at the same time. Note that for some analyses relied on the same steps, like loading the data (_fullCov_).
 
-```{r 'analysisSumFigs', fig.width=10, bootstrap.show.code=FALSE}
+```{r 'analysisSumFigs', fig.width=14, bootstrap.show.code=FALSE}
 ggplot(analysisSummary, aes(x=walltime, y=memG, colour=experiment, shape=analysis)) + geom_point() + xlab("Maximum wall time (hrs) per job") + ylab("Peak memory (GB) used by a single job") + facet_grid(. ~ step)
 ggplot(analysisSummary, aes(x=log2(walltime), y=memG, colour=experiment, shape=analysis)) + geom_point() + xlab("Maximum wall time (log2 hrs) per job") + ylab("Peak memory (GB) used by a single job") + facet_grid(. ~ step)
 ```
@@ -225,7 +225,7 @@ ggplot(analysisSummary, aes(x=log2(walltime), y=memG, colour=experiment, shape=a
 Below are similar plots showing the peak memory by core usage instead of the actual peak memory. This takes into account the number of cores used to run each job.
 
 
-```{r 'analysisSumFigs2', fig.width=10, bootstrap.show.code=FALSE}
+```{r 'analysisSumFigs2', fig.width=14, bootstrap.show.code=FALSE}
 ggplot(analysisSummary, aes(x=walltime, y=memByCore, colour=experiment, shape=analysis)) + geom_point() + xlab("Maximum wall time (hrs) per job") + ylab("Peak memory by core (GB) used by a single job") + facet_grid(. ~ step)
 ggplot(analysisSummary, aes(x=log2(walltime), y=memByCore, colour=experiment, shape=analysis)) + geom_point() + xlab("Maximum wall time (log2 hrs) per job") + ylab("Peak memory by core (GB) used by a single job") + facet_grid(. ~ step)
 ```
@@ -257,14 +257,14 @@ peaks <- do.call(rbind, peaks)
 
 We can further summarize the resources used by each analysis by identified the maximum memory used in the steps required for a particular analysis and the total wall time for running all the steps when all the jobs of a particular step are running simultaneously. Thus giving us the total actual wall time to run a specific analysis and the maximum memory required.
 
-```{r 'peakSumFigs', fig.width=10, bootstrap.show.code=FALSE}
+```{r 'peakSumFigs', fig.width=14, bootstrap.show.code=FALSE}
 ggplot(peaks, aes(x=walltime, y=memG, colour=experiment)) + geom_point() + xlab("Wall time (hrs) per analysis") + ylab("Peak memory (GB) used by a single job") + facet_grid(. ~ analysis)
 ggplot(peaks, aes(x=log2(walltime), y=memG, colour=experiment)) + geom_point() + xlab("Wall time (log2 hrs) per analysis") + ylab("Peak memory (GB) used by a single job") + facet_grid(. ~ analysis)
 ```
 
 Below are similar plots showing the peak memory by core instead of the actual peak memory for a given job.
 
-```{r 'peakSumFigs2', fig.width=10, bootstrap.show.code=FALSE}
+```{r 'peakSumFigs2', fig.width=14, bootstrap.show.code=FALSE}
 ggplot(peaks, aes(x=walltime, y=memByCore, colour=experiment)) + geom_point() + xlab("Wall time (hrs) per analysis") + ylab("Peak memory by core (GB) used by a single job") + facet_grid(. ~ analysis)
 ggplot(peaks, aes(x=log2(walltime), y=memByCore, colour=experiment)) + geom_point() + xlab("Wall time (log2 hrs) per analysis") + ylab("Peak memory by core (GB) used by a single job") + facet_grid(. ~ analysis)
 ```
