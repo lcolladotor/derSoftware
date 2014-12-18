@@ -945,6 +945,7 @@
 <li><a href="snyder/derAnalysis/run3-v1.0.10/basicExploration/basicExploration.html">Snyder</a></li>
 <li><a href="stem/derAnalysis/run4-v1.0.10/basicExploration/basicExploration.html">Stem</a></li>
 </ul>
+<p>Note that these HTML reports are large and can take time to load properly. Please wait for them to load completely before scrolling. In particular, the report for the BrainSpan data set is a 47 MB file.</p>
 <h2>CSV files and annotation comparison</h2>
 <p>This HTML report has the code for loading the R data files and generating the CSV files. The report also has Venn diagrams showing the number of candidate DERs from the single-base level analysis that overlap known exons, introns and intergenic regions using the UCSC hg19 annotation. It also includes a detailed description of the columns in the CSV files.</p>
 <p>View the <a href="venn/venn.html">venn</a> report or its <code>R Markdown</code> source file <a href="venn/venn.Rmd">venn.Rmd</a>.</p>
@@ -979,6 +980,15 @@
 <p>The code used for generating the panels using in Figure 1 of the paper is available in the <a href="figure1/figure1.R">figure1.R</a> file.</p>
 <h2>Figure 2</h2>
 <p>The code used for generating the panels using in Figure 2 of the paper is available in the <a href="figure2/figure2.R">figure2.R</a> file.</p>
+<h2>Additional analyses</h2>
+<p>The following <code>R</code> source files have the code for reproducing additional analyses described in the paper.</p>
+<ul>
+<li><a href="additional_analyses/brainspan_regionLevel.R">brainspan_regionLevel</a> Analysis of BrainSpan expressed-regions level DERs.</li>
+<li><a href="additional_analyses/characterize_brainspan_DERs.R">characterize_brainspan_DERs</a> Analysis of BrainSpan single-base level DERs.</li>
+<li><a href="additional_analyses/stem_analysis.R">stem_analysis</a> Analysis of the Stem data set DERs.</li>
+<li><a href="additional_analyses/feature_counts.R">feature_counts</a> Feature counts analysis of Hippo, Snyder and Stem data sets.</li>
+</ul>
+<p>These scripts also include other exploratory code.</p>
 <h2>Hippo vs previous results</h2>
 <p><a href="hippo/pnas/compareVsPNAS.html">compareVsPNAS</a> is an HTML report comparing 29 regions that were previously found to be differentially expressed <a id='cite-zhou2011'></a>(<a href='#bib-zhou2011'>Zhou, Zhifeng, Yuan, Qiaoping, et al., 2011</a>) versus the <code>derfinder</code> single-base level results.</p>
 <p>View the <a href="hippo/pnas/compareVsPNAS.html">compareVsPNAS</a> report or check the <code>R Markdown</code> file <a href="hippo/pnas/compareVsPNAS.Rmd">compareVsPNAS.Rmd</a> run by the <a href="hippo/pnas/runComparison.sh">runComparison.sh</a> script.</p>
@@ -988,7 +998,7 @@
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2014-12-18 02:05:29 EST"
+<pre style=""><code class="output r">## [1] "2014-12-18 16:36:04 EST"
 </code></pre>
 </div>
 <p>Wallclock time spent generating the report.</p>
@@ -996,7 +1006,7 @@
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## Time difference of 1.323 secs
+<pre style=""><code class="output r">## Time difference of 1.303 secs
 </code></pre>
 </div>
 <p><code>R</code> session information.</p>
