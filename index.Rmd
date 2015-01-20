@@ -41,7 +41,7 @@ names(bib) <- names(bibs)
 
 This page describes the supplementary material for the `derfinder` software paper which includes several HTML reports as well as code files for reproducing the results.
 
-# Main Code
+# Code to reproduce analysis
 
 
 All the `bash`, `R` and `R Markdown` source files used to analyze the data for this project as well as generate the HTML reports are available in this website. However, it is easier to view them at [github.com/lcolladotor/derSoftware](https://github.com/lcolladotor/derSoftware).
@@ -84,7 +84,7 @@ Note that all `bash` scripts are tailored for the Sun Grid Engine (SGE) cluster 
 
 ## Quick overview HTML reports
 
-These HTML reports contain  basic information on the `derfinder` `r citep(bib[["derfinder"]])` results from the public data sets used (_BrainSpan_, _Simulation_, _Hippo_, and _Snyder_). These reports answer basic questions such as:
+These HTML reports contain  basic information on the `derfinder` `r citep(bib[["derfinder"]])` results from the public data sets used (_BrainSpan_, _Simulation_, and _Hippo_). These reports answer basic questions such as:
 
 * What is the number of filtered bases?
 * What is the number of candidate regions?
@@ -95,7 +95,6 @@ They also illustrate three clusters of candidate differentially expressed region
 * [BrainSpan](brainspan/summaryInfo/run4-v1.0.10/summaryInfo.html)
 * [Simulation](simulation/summaryInfo/run2-v1.0.10/summaryInfo.html)
 * [Hippo](hippo/summaryInfo/run3-v1.0.10/summaryInfo.html)
-* [Snyder](snyder/summaryInfo/run3-v1.0.10/summaryInfo.html)
 
 ## CSV files and annotation comparison
 
@@ -116,7 +115,6 @@ These reports show how many bases are picked up in each of the approaches and di
 * [Simulation (cutoff 0)](simulation/regionMatrix-vs-DERs/cut0-vs-run2-v1.0.10/step7-regMatVsDERs.html)
 * [Simulation (cutoff 5)](simulation/regionMatrix-vs-DERs/cut5-vs-run2-v1.0.10/step7-regMatVsDERs.html)
 * [Hippo (cutoff 3)](hippo/regionMatrix-vs-DERs/cut3-vs-run3-v1.0.10/step7-regMatVsDERs.html)
-* [Snyder (cutoff 5)](snyder/regionMatrix-vs-DERs/cut5-vs-run3-v1.0.10/step7-regMatVsDERs.html)
 
 # Simulation
 
@@ -162,8 +160,10 @@ The code used for generating the panels using in Figure 2 of the paper is availa
 
 ## Additional analyses
 
-The following `R` source files have the code for reproducing additional 
+The following `R` source files have the code for reproducing additional analyses described in the paper
 
+* [brainspan_regionLevel.R](additional-analyses/brainspan_regionLevel.R) Analysis of BrainSpan expressed-regions level DERs.
+* [characterize_brainspan_DERs.R](additional-analyses/characterize_brainspan_DERs.R) Analysis of BrainSpan single-base level DERs.
 * [feature_counts.R](additional-analyses/feature_counts.R) Feature counts analysis of Hippo and Snyder data sets.
 
 These scripts also include other exploratory code.

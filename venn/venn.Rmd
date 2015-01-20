@@ -58,7 +58,7 @@ suppressMessages(library("derfinder"))
 suppressMessages(library("limma"))
 
 ## Experiments
-exps <- c('brainspan', 'simulation', 'hippo', 'snyder')
+exps <- c('brainspan', 'simulation', 'hippo')
 
 ## Find the latest run from each experiment
 run <- sapply(exps, function(exp) {
@@ -119,7 +119,6 @@ for(exp in exps) {
 	# read.csv("supplementaryFile1.csv")
 	# read.csv("supplementaryFile2.csv")
 	# read.csv("supplementaryFile3.csv")
-    # read.csv("supplementaryFile4.csv")
     
     ## Compress
     system(paste0('gzip supplementaryFile', which(exp == exps), '.csv'))
@@ -161,7 +160,7 @@ for(exp in exps) {
 
 # Details
 
-The supplementary files 1 through 5 files contain the information for the candidate DERs found in [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) format. The CSV files contain the following columns:
+The supplementary files 1 through 3 files contain the information for the candidate DERs found in [CSV](http://en.wikipedia.org/wiki/Comma-separated_values) format. The CSV files contain the following columns:
 
 1. __seqnames__ The chromosome name.
 1. __start__ The position of the chromosome where the candidate DER begins.

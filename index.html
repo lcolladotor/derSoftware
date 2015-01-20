@@ -867,7 +867,7 @@
 <div class="contents col-xs-12 col-md-10">
 <h1>Supplementary Website</h1>
 <p>This page describes the supplementary material for the <code>derfinder</code> software paper which includes several HTML reports as well as code files for reproducing the results.</p>
-<h1>Main Code</h1>
+<h1>Code to reproduce analysis</h1>
 <p>All the <code>bash</code>, <code>R</code> and <code>R Markdown</code> source files used to analyze the data for this project as well as generate the HTML reports are available in this website. However, it is easier to view them at <a href="https://github.com/lcolladotor/derSoftware">github.com/lcolladotor/derSoftware</a>.</p>
 <p>There are 9 main <code>bash</code> scripts named _step1-*_ through _step9-*_.</p>
 <ol style="list-style-type: decimal">
@@ -894,7 +894,7 @@
 <p>Note that all <code>bash</code> scripts are tailored for the Sun Grid Engine (SGE) cluster we have access to.</p>
 <h1>Single-base level</h1>
 <h2>Quick overview HTML reports</h2>
-<p>These HTML reports contain basic information on the <code>derfinder</code> <a id='cite-derfinder'></a>(<a href='http://www.bioconductor.org/packages/release/bioc/html/derfinder.html'>Collado-Torres, Frazee, Jaffe, and Leek, 2014</a>) results from the public data sets used (<em>BrainSpan</em>, <em>Simulation</em>, <em>Hippo</em>, and <em>Snyder</em>). These reports answer basic questions such as:</p>
+<p>These HTML reports contain basic information on the <code>derfinder</code> <a id='cite-derfinder'></a>(<a href='http://www.bioconductor.org/packages/release/bioc/html/derfinder.html'>Collado-Torres, Frazee, Jaffe, and Leek, 2014</a>) results from the public data sets used (<em>BrainSpan</em>, <em>Simulation</em>, and <em>Hippo</em>). These reports answer basic questions such as:</p>
 <ul>
 <li>What is the number of filtered bases?</li>
 <li>What is the number of candidate regions?</li>
@@ -905,7 +905,6 @@
 <li><a href="brainspan/summaryInfo/run4-v1.0.10/summaryInfo.html">BrainSpan</a></li>
 <li><a href="simulation/summaryInfo/run2-v1.0.10/summaryInfo.html">Simulation</a></li>
 <li><a href="hippo/summaryInfo/run3-v1.0.10/summaryInfo.html">Hippo</a></li>
-<li><a href="snyder/summaryInfo/run3-v1.0.10/summaryInfo.html">Snyder</a></li>
 </ul>
 <h2>CSV files and annotation comparison</h2>
 <p>This HTML report has the code for loading the R data files and generating the CSV files. The report also has Venn diagrams showing the number of candidate DERs from the single-base level analysis that overlap known exons, introns and intergenic regions using the UCSC hg19 annotation. It also includes a detailed description of the columns in the CSV files.</p>
@@ -919,7 +918,6 @@
 <li><a href="simulation/regionMatrix-vs-DERs/cut0-vs-run2-v1.0.10/step7-regMatVsDERs.html">Simulation (cutoff 0)</a></li>
 <li><a href="simulation/regionMatrix-vs-DERs/cut5-vs-run2-v1.0.10/step7-regMatVsDERs.html">Simulation (cutoff 5)</a></li>
 <li><a href="hippo/regionMatrix-vs-DERs/cut3-vs-run3-v1.0.10/step7-regMatVsDERs.html">Hippo (cutoff 3)</a></li>
-<li><a href="snyder/regionMatrix-vs-DERs/cut5-vs-run3-v1.0.10/step7-regMatVsDERs.html">Snyder (cutoff 5)</a></li>
 </ul>
 <h1>Simulation</h1>
 <h2>Generating reads</h2>
@@ -941,8 +939,10 @@
 <h2>Figure 2</h2>
 <p>The code used for generating the panels using in Figure 2 of the paper is available in the <a href="figure2/figure2.R">figure2.R</a> file.</p>
 <h2>Additional analyses</h2>
-<p>The following <code>R</code> source files have the code for reproducing additional</p>
+<p>The following <code>R</code> source files have the code for reproducing additional analyses described in the paper</p>
 <ul>
+<li><a href="additional-analyses/brainspan_regionLevel.R">brainspan_regionLevel.R</a> Analysis of BrainSpan expressed-regions level DERs.</li>
+<li><a href="additional-analyses/characterize_brainspan_DERs.R">characterize_brainspan_DERs.R</a> Analysis of BrainSpan single-base level DERs.</li>
 <li><a href="additional-analyses/feature_counts.R">feature_counts.R</a> Feature counts analysis of Hippo and Snyder data sets.</li>
 </ul>
 <p>These scripts also include other exploratory code.</p>
@@ -955,7 +955,7 @@
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-01-19 20:24:34 EST"
+<pre style=""><code class="output r">## [1] "2015-01-20 14:20:32 EST"
 </code></pre>
 </div>
 <p>Wallclock time spent generating the report.</p>
@@ -963,7 +963,7 @@
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## Time difference of 1.455 secs
+<pre style=""><code class="output r">## Time difference of 1.363 secs
 </code></pre>
 </div>
 <p><code>R</code> session information.</p>
