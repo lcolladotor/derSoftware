@@ -58,7 +58,7 @@ suppressMessages(library("derfinder"))
 suppressMessages(library("limma"))
 
 ## Experiments
-exps <- c('brainspan', 'simulation', 'hippo', 'snyder', 'stem')
+exps <- c('brainspan', 'simulation', 'hippo', 'snyder')
 
 ## Find the latest run from each experiment
 run <- sapply(exps, function(exp) {

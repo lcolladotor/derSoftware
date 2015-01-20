@@ -117,6 +117,9 @@ all$coresGroups <- factor(all$coresGroups, levels = c(1, 2, 4, 5, 8, 10, '20+'))
 
 ## Types of analysis
 all$analysis <- factor(ifelse(all$step %in% c('derMod', 'derA', 'derM'), 'Single-base DER', ifelse(all$step %in% c('toSam', 'htseq', 'summOv', 'covToEx'), 'Exon count', ifelse(all$step == 'regMat', 'Expressed-region DER', ifelse(all$step == 'fullCov', 'Load data', ifelse(all$step == 'derR', 'HTML report', 'misc'))))))
+
+## Ignore stem data set
+all <- subset(all, experiment != 'stem')
 ```
 
 
