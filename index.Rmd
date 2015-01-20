@@ -41,7 +41,7 @@ names(bib) <- names(bibs)
 
 This page describes the supplementary material for the `derfinder` software paper which includes several HTML reports as well as code files for reproducing the results.
 
-# Code to reproduce analysis
+# Code to reproduce analyses
 
 
 All the `bash`, `R` and `R Markdown` source files used to analyze the data for this project as well as generate the HTML reports are available in this website. However, it is easier to view them at [github.com/lcolladotor/derSoftware](https://github.com/lcolladotor/derSoftware).
