@@ -84,7 +84,7 @@ Note that all `bash` scripts are tailored for the Sun Grid Engine (SGE) cluster 
 
 ## Quick overview HTML reports
 
-These HTML reports contain  basic information on the `derfinder` `r citep(bib[["derfinder"]])` results from the public data sets used (_BrainSpan_, _Simulation_, _Hippo_, _Snyder_, and _Stem_). These reports answer basic questions such as:
+These HTML reports contain  basic information on the `derfinder` `r citep(bib[["derfinder"]])` results from the public data sets used (_BrainSpan_, _Simulation_, _Hippo_, and _Snyder_). These reports answer basic questions such as:
 
 * What is the number of filtered bases?
 * What is the number of candidate regions?
@@ -96,41 +96,6 @@ They also illustrate three clusters of candidate differentially expressed region
 * [Simulation](simulation/summaryInfo/run2-v1.0.10/summaryInfo.html)
 * [Hippo](hippo/summaryInfo/run3-v1.0.10/summaryInfo.html)
 * [Snyder](snyder/summaryInfo/run3-v1.0.10/summaryInfo.html)
-* [Stem](stem/summaryInfo/run4-v1.0.10/summaryInfo.html)
-
-## Full HTML reports
-
-Three full HTML reports for the `derfinder` results are provided. These reports were generated using `regionReport` `r citep(bib[["regionReport"]])` and contain a lot of information including:
-
-* Quality checks
-	* P-values
-	* Q-values
-    * FWER adjusted p-values
-	* Region width
-	* Region area
-	* Null regions: width and area
-	* Mean coverage
-	* Mean coverage vs fold change
-* Genomic overview
-	* By Q-values
-	* Annotation
-	* Annotation (significant)
-* Best regions (by area)
-	* Plots from top 100 regions
-	* Interactive table with data from top 500 regions.
-* Plots from the top 20 region clusters (by area)
-* Permutations details
-* Reproducibility details including some parameters used for the `derfinder` single-base level analysis.
-
-You can view the reports by following these links:
-
-* [BrainSpan](brainspan/derAnalysis/run4-v1.0.10/basicExploration/basicExploration.html)
-* [Simulation](simulation/derAnalysis/run2-v1.0.10/basicExploration/basicExploration.html)
-* [Hippo](hippo/derAnalysis/run3-v1.0.10/basicExploration/basicExploration.html)
-* [Snyder](snyder/derAnalysis/run3-v1.0.10/basicExploration/basicExploration.html)
-* [Stem](stem/derAnalysis/run4-v1.0.10/basicExploration/basicExploration.html)
-
-Note that these HTML reports are large and can take time to load properly. Please wait for them to load completely before scrolling. In particular, the report for the BrainSpan data set is a 47 MB file.
 
 ## CSV files and annotation comparison
 
@@ -152,7 +117,6 @@ These reports show how many bases are picked up in each of the approaches and di
 * [Simulation (cutoff 5)](simulation/regionMatrix-vs-DERs/cut5-vs-run2-v1.0.10/step7-regMatVsDERs.html)
 * [Hippo (cutoff 3)](hippo/regionMatrix-vs-DERs/cut3-vs-run3-v1.0.10/step7-regMatVsDERs.html)
 * [Snyder (cutoff 5)](snyder/regionMatrix-vs-DERs/cut5-vs-run3-v1.0.10/step7-regMatVsDERs.html)
-* [Stem (cutoff 5)](stem/regionMatrix-vs-DERs/cut5-vs-run4-v1.0.10/step7-regMatVsDERs.html)
 
 # Simulation
 
@@ -198,12 +162,9 @@ The code used for generating the panels using in Figure 2 of the paper is availa
 
 ## Additional analyses
 
-The following `R` source files have the code for reproducing additional analyses described in the paper.
+The following `R` source files have the code for reproducing additional 
 
-* [brainspan_regionLevel.R](additional-analyses/brainspan_regionLevel.R) Analysis of BrainSpan expressed-regions level DERs.
-* [characterize_brainspan_DERs.R](additional-analyses/characterize_brainspan_DERs.R) Analysis of BrainSpan single-base level DERs.
-* [stem_analysis.R](additional-analyses/stem_analysis.R) Analysis of the Stem data set DERs.
-* [feature_counts.R](additional-analyses/feature_counts.R) Feature counts analysis of Hippo, Snyder and Stem data sets.
+* [feature_counts.R](additional-analyses/feature_counts.R) Feature counts analysis of Hippo and Snyder data sets.
 
 These scripts also include other exploratory code.
 
