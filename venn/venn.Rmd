@@ -42,7 +42,7 @@ names(bib) <- names(bibs)
 ```
 
 
-This report creates the CSV files with the candidate differentially expressed regions (DERs) found using `derfinder` `r citep(bib[["derfinder"]])` on three data sets. It also has Venn diagrams illustrating the overlap with known annotation. 
+This report creates the CSV files with the candidate differentially expressed regions (DERs) found using `derfinder` `r citep(bib[["derfinder"]])` on four data sets. It also has Venn diagrams illustrating the overlap with known annotation. 
 
 # Results
 
@@ -120,7 +120,6 @@ for(exp in exps) {
 	# read.csv("supplementaryFile2.csv")
 	# read.csv("supplementaryFile3.csv")
     # read.csv("supplementaryFile4.csv")
-    # read.csv("supplementaryFile5.csv")
     
     ## Compress
     system(paste0('gzip supplementaryFile', which(exp == exps), '.csv'))
