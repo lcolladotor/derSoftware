@@ -8,7 +8,7 @@
 
 # Directories
 MAINDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation
-WDIR=${MAINDIR}/deranalysis
+WDIR=${MAINDIR}/deranalysis-original
 DATADIR=${MAINDIR}/dertable
 
 # Define variables
