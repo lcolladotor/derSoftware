@@ -69,7 +69,7 @@ readDir <- function(dir, file=opt$file, test=FALSE, verbose=opt$verbose) {
 
 ## Load tables
 if(opt$verbose) message(paste(Sys.time(), "Reading input tables"))
-all <- lapply(dirs, function(x) { readDir(x, file=opt$file, test=test)})
+all <- lapply(dirs, function(x) { readDir(x, file=opt$file)})
 
 ## Find sample with the longest position
 lengths <- unlist(lapply(all, function(x) { length(x$pos) }))
