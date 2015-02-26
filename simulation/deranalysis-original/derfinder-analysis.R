@@ -74,7 +74,7 @@ if(opt$verbose) message(paste(Sys.time(), "Calculating column medians"))
 colmeds <- getColmeds(dbfile=opt$dbfile, tablename=opt$tablename, colsubset=colsubset, nonzero=nonzero)
 
 ## Save parameters used for running limma
-optionsLimma <- list(dir=info$dir[match][colsubset -1], group=use.groups, adjustvars=adjustvars, colmeds=colmeds, colsubset = colsubset, nonzero = nonzero)
+optionsLimma <- list(dir=info$dir[colsubset -1], group=use.groups, adjustvars=adjustvars, colmeds=colmeds, colsubset = colsubset, nonzero = nonzero)
 save(optionsLimma, file=paste0("optionsLimma-", opt$tablename, "-", opt$group, "R.data"))
 
 # Run limma
