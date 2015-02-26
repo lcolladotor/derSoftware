@@ -103,7 +103,7 @@ save(regions.merged, file=paste0("regions-merged-", opt$tablename, "-", opt$grou
 
 # get the p-values:
 if(opt$verbose) message(paste(Sys.time(), "Calculating p-values"))
-pvals = get.pvals(regions=regions.merged, dbfile=opt$dbfile, tablename=opt$tablename, num.perms=10, group=use.groups, colsubset=colsubset, adjustvars=adjustvars, est.params=find.them, chromosome=opt$tablename, colmeds=colmeds)
+pvals = get.pvals(regions=regions.merged, dbfile=opt$dbfile, tablename=opt$tablename, num.perms=100, group=use.groups, colsubset=colsubset, adjustvars=adjustvars, est.params=find.them, chromosome=opt$tablename, colmeds=colmeds)
 save(pvals, file=paste0("pvals-", opt$tablename, "-", opt$group, ".Rdata"))
 
 # get the flags:
