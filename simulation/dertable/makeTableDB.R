@@ -63,10 +63,6 @@ readDir <- function(dir, file=opt$file, test=FALSE, verbose=opt$verbose) {
 	## Compressing the information using Rle's
 	res <- list(pos=data$pos, count=Rle(data$count))
 	
-	## Free space
-	rm(data)
-	if(verbose) gc()
-	
 	## done
 	return(res)
 }
@@ -145,3 +141,6 @@ system(paste("gzip -f", opt$merged))
 
 ## Processing time
 if(opt$verbose) print(proc.time())
+
+## Reproducibility info    
+sessionInfo()
