@@ -112,7 +112,11 @@ if(opt$verbose) message(paste(Sys.time(), "Getting the flags"))
 
 ## Copied from /home/bst/student/afrazee/hg19-exons-GFversion.rda
 load("/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/deranalysis-original/hg19-exons-GFversion.rda")
-exons <- hg19.exons
+
+## Manually filter out unused chrs
+exons <- subset(hg19.exons, chr == opt$tablename)
+exons$chr <- droplevels(exons$chr)
+
 myflags <- getFlags(regions=regions.merged, exons=exons, chromosome=opt$tablename, pctcut = 0.8)
 save(myflags, file=paste0("flags-", opt$tablename, "-", opt$group, ".Rdata"))
 
