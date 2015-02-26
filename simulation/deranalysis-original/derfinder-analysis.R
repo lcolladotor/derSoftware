@@ -103,6 +103,12 @@ save(regions.merged, file=paste0("regions-merged-", opt$tablename, "-", opt$grou
 
 # get the p-values:
 if(opt$verbose) message(paste(Sys.time(), "Calculating p-values"))
+    
+## Set the seed for reproducibility
+seed <- 20150226 + sum(match(strsplit(opt$group, '')[[1]], toupper(letters[1:3])))
+save(seed, file=paste0('seed-', opt$tablename, '-', opt$group, '.Rdata'))
+
+set.seed(seed)
 pvals = get.pvals(regions=regions.merged, dbfile=opt$dbfile, tablename=opt$tablename, num.perms=100, group=use.groups, colsubset=colsubset, adjustvars=adjustvars, est.params=find.them, chromosome=opt$tablename, colmeds=colmeds)
 save(pvals, file=paste0("pvals-", opt$tablename, "-", opt$group, ".Rdata"))
 
