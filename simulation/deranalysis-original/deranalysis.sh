@@ -18,7 +18,7 @@ SHORT='derA-ori-sim'
 #for chrnum in 22 21 Y 20 19 18 17 16 15 14 13 12 11 10 9 8 X 7 6 5 4 3 2 1
 for chrnum in 22
 do
-    for for group in AB AC BC
+    for group in AB AC BC
     do
     	echo "Creating script for chromosome ${chrnum} comparing groups $group"
     	chr="chr${chrnum}"
