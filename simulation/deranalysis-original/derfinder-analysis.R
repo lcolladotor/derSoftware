@@ -111,7 +111,7 @@ if(opt$verbose) message(paste(Sys.time(), "Getting the flags"))
 #exons = getAnnotation("hg19","knownGene")
 
 ## Copied from /home/bst/student/afrazee/hg19-exons-GFversion.rda
-load("hg19-exons-GFversion.rda")
+load("/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/deranalysis-original/hg19-exons-GFversion.rda")
 exons <- hg19.exons
 myflags <- getFlags(regions=regions.merged, exons=exons, chromosome=opt$tablename, pctcut = 0.8)
 save(myflags, file=paste0("flags-", opt$tablename, "-", opt$group, ".Rdata"))
