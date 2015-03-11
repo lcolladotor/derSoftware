@@ -1,0 +1,367 @@
+---
+output:
+  knitrBootstrap::bootstrap_document:
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+  html_document:
+    toc: true
+    theme: united
+---
+
+Compare vs count-based methods
+==============================
+
+
+This report compares the original implementation of `derfinder` available at [alyssafrazee/derfinder](https://github.com/alyssafrazee/derfinder), `DESeq2`, `edgeR-robust` and our implementation of `derfinder` using the exonic segments described in [evaluate.html](../evaluate/evaluate.html).
+
+# Counts-based analysis
+
+This section has the code for running `edgeR-robust` and `DESeq2` on the simulation data set using the known exons as features.
+
+
+This first code chunk loads the necessary data.
+
+
+```{r 'setup', bootstrap.show.code = FALSE, bootstrap.show.message = FALSE}
+library('edgeR')
+library('DESeq2')
+library('GenomicRanges')
+
+## Load data
+load("../coverageToExon/covToEx-ucsc.Rdata")
+load("../derAnalysis/run2-v1.0.10/groupInfo.Rdata")
+if(file.exists("../derAnalysis/run2-v1.0.10/colsubset.Rdat")) {
+    load("../derAnalysis/run2-v1.0.10/colsubset.Rdata")
+} else {
+    colsubset <- seq_len(length(groupInfo))
+}
+
+## GenomicState object
+if(file.exists('/home/epi/ajaffe/Lieber/Projects/RNAseq/derannotator/rdas/GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')) {
+    load('/home/epi/ajaffe/Lieber/Projects/RNAseq/derannotator/rdas/GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')
+} else if(file.exists('../../GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')) {
+    load('../../GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')
+} else {
+    stop('Missing UCSC hg19 genomic state object')
+}
+
+## Annotation used
+exons <- GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome
+exons <- exons[exons$theRegion == 'exon']
+
+## Round matrix and remove exons with 0s
+counts <- round(covToEx[, colsubset])
+nonzero <- sapply(rowSums(counts), function(x) {x > 0})
+```
+
+
+## DESeq2
+
+The following code performs the DESeq2 analysis. Code is based on [edgeR_Robust supplementary code](http://imlspenticton.uzh.ch/robinson_lab/edgeR_robust/). The main change is that it has been modified for the multi-group scenario.
+
+```{r 'deseq2', bootstrap.show.code = FALSE}
+## Round matrix and specify design
+dse <- DESeqDataSetFromMatrix(counts[nonzero, colsubset], data.frame(group = groupInfo), ~ group)
+
+## Perform DE analysis
+system.time( dse <- DESeq(dse, test = 'LRT', reduced = ~ 1) )
+
+## Extract results
+deseq <- exons[nonzero]
+mcols(deseq) <- cbind(mcols(deseq), results(dse))
+
+## Save results
+save(deseq, file = 'deseq.Rdata')
+```
+
+
+## edgeR-robust
+
+The following code performs the DESeq2 analysis. Code is based on [edgeR_Robust supplementary code](http://imlspenticton.uzh.ch/robinson_lab/edgeR_robust/). The main change is that it has been modified for the multi-group scenario.
+
+
+```{r 'edgeR', bootstrap.show.code = FALSE}
+## Determine design matrix
+design <- model.matrix(~ groupInfo)
+
+## Perform DE analysis
+d <- DGEList(counts = counts[nonzero, colsubset], group = groupInfo)
+d <- calcNormFactors(d)
+system.time(dw <- estimateGLMRobustDisp(d, design = design, prior.df = 10, maxit = 6))
+fw <- glmFit(dw, design = design, coef = 2:3)
+lrw <- glmLRT(fw, coef = 2:3)
+
+## Extract results
+edger <- exons[nonzero]
+mcols(edger) <- cbind(mcols(edger), DataFrame(lrw$table))
+edger$pvalue <-  lrw$table$PValue
+edger$padj <- p.adjust(lrw$table$PValue, 'BH')
+
+## Save results
+save(edger, file = 'edger.Rdata')
+```
+
+
+# Comparison
+
+```{r 'setup-comp', bootstrap.show.code = FALSE, bootstrap.show.message = FALSE}
+library('TxDb.Hsapiens.UCSC.hg19.knownGene')
+#library('knitr')
+#library('derfinder')
+#library('derfinderHelper')
+#library('derfinderPlot')
+#library('bumphunter')
+load('../simulation_info.Rdata')
+load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
+#load('../derAnalysis/run2-v1.0.10/models.Rdata')
+#load('../derAnalysis/run2-v1.0.10/chr22/optionsStats.Rdata')
+load('../CoverageInfo/fullCov.Rdata')
+names(fullRegions) <- seq_len(length(fullRegions))
+```
+
+## Exonic segments
+
+Just as in [evaluate.html](../evaluate/evaluate.html) we can compare the results against the exonic segments. From that document:
+
+Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DERs overlap such segments.
+
+The following code is a subset of [evaluate.html](../evaluate/evaluate.html) and generates the exonic segments.
+
+
+```{r 'segments', bootstrap.show.code = FALSE}
+## Find exons
+txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+txinfo <- select(txdb, keys = chosen$ucsckg_id, columns = columns(txdb), keytype = 'TXNAME')
+
+## Buiild GRangesList with exons grouped by transcript
+tx <- split(GRanges(seqnames = txinfo$EXONCHROM, IRanges(start = txinfo$EXONSTART, end = txinfo$EXONEND), strand = txinfo$EXONSTRAND), txinfo$TXNAME)
+tx <- tx[match(chosen$ucsckg_id, names(tx))]
+
+## Gene level: DE if at least one transcript is DE
+gene <- data.frame(gene_id = unique(chosen$gene_id))
+gene$DE <- sapply(gene$gene_id, function(x) { any(chosen$DE[chosen$gene_id == x])  })
+gene$case <- sapply(gene$gene_id, function(x) { unique(chosen$case[chosen$gene_id == x])  })
+
+## Identify exonic segments
+segments <- GRangesList(lapply(gene$gene_id, function(x) {
+    i <- chosen$ucsckg_id[ chosen$gene_id == x]
+    
+    ## Find segments
+    segs <- disjoin(unlist(tx[i]))
+    ov <- findOverlaps(segs, tx[i])
+    
+    ## Find DE status per segment
+    segs$DE <- as.vector(tapply(subjectHits(ov), queryHits(ov), function(y) {
+        any(chosen$DE[ chosen$gene_id == x])
+    }))
+    
+    ## Finish
+    return(segs)
+}))
+names(segments) <- gene$gene_id
+segs <- unlist(segments)
+```
+
+## derfinder-original
+
+The original derfinder implementation does not support multi-group comparisons. So we performed all pair comparisons for the three groups. We can extract those that are differentially expressed (states 3 and 4) with a p-value $<$ 0.05.
+
+```{r 'original', bootstrap.show.code = FALSE}
+load('../deranalysis-original/chr22/regions-merged-chr22-AB.Rdata')
+original <- list('AB' = regions.merged)
+load('../deranalysis-original/chr22/regions-merged-chr22-AC.Rdata')
+original <- c(original, list('AC' = regions.merged))
+load('../deranalysis-original/chr22/regions-merged-chr22-BC.Rdata')
+original <- c(original, list('BC' = regions.merged))
+original <- lapply(original, function(x) { 
+    GRanges(seqnames = x$chr, ranges = IRanges(x$start, x$end), strand = '*', state = x$state, mean.t = x$mean.t, mean.fold.change = x$mean.fold.change)
+})
+
+## Load p-value info
+original <- lapply(names(original), function(x) {
+    load(paste0('../deranalysis-original/chr22/pvals-chr22-', x, '.Rdata'))
+    original[[x]]$pvalue <- pvals
+    return(original[[x]])
+})
+
+## Identify regions significantly DE
+ori.de <- lapply(original, function(x) {
+    state.idx <- x$state > 2
+    pval.idx <- x$pvalue < 0.05
+    pval.idx[is.na(pval.idx)] <- FALSE
+    x[state.idx & pval.idx]
+})
+
+## Collapse all the significant DERs.
+ori.de.sig <- do.call(c, ori.de)
+```
+
+Due to the simulation setup, only one of the three groups is differentially expressed at a time. One option is to compare the exonic segments versus the resulting DERs and ask if the exonic segments overlap at least one DER as shown below.
+
+
+
+```{r 'only1', bootstrap.show.code = FALSE}
+## Overlaps at least 1 DER
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 1' = countOverlaps(segs, ori.de.sig) > 0))
+```
+
+The results from the new implementation are shown below (extracted from [evaluate.html](../evaluate/evaluate.html)). The original implementation has 2 false positive (versus 0 in the new implemenation) and less false negatives.
+
+```{r 'newFWER', bootstrap.show.code = FALSE}
+## Compare against new derfinder:
+## Check result with FWER sig 
+fwer <-  fullRegions[fullRegions$significantFWER == 'TRUE']
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FWER) -- new' = countOverlaps(segs, fwer) > 0))
+```
+
+However, because of the simulation setup, with the original implementation we would actually expect at least two DERs to overlap each exonic segment that was set to be DE. When doing this comparison, we get the same numbers as with the new implementation.
+
+
+
+```{r 'only2', bootstrap.show.code = FALSE}
+## Identical results to derfinder-original if we ask segments to overlap 
+## two DERs given that we are doing 3 group comparisons with 1 group
+## higher/lower than the other two
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 2' = countOverlaps(segs, ori.de.sig) > 1))
+
+identical(
+    addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, fwer) > 0)),
+    addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, ori.de.sig) > 1))
+)
+```
+
+While the global numbers match, the agreement at the exonic segment level is not perfect between the original and new implementations.
+
+```{r 'newVsOnly2', bootstrap.show.code = FALSE}
+addmargins(table('new' = countOverlaps(segs, fwer) > 0, 'original -- min 2' = countOverlaps(segs, ori.de.sig) > 1))
+```
+
+The following code was adapted from [evaluate.html](../evaluate/evaluate.html) and explores the false negatives when requiring at least 2 DERs to overlap each exonic segment. As with the new implementation, the original implementation struggles in genes where one of the transcripts was set to be DE while the other wasn't.
+
+
+
+```{r 'seg.fn'}
+## Explore false negative segments using sig DERs
+seg.fn <- which(segs$DE & !countOverlaps(segs, ori.de.sig) > 1)
+
+## Some segments are short
+summary(width(segs[seg.fn]))
+## new:
+##
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##     5.0    81.0   136.0   233.4   245.0  1844.0
+chosen[chosen$gene_id == '6523', ]
+
+## 8 / 37 of the segmeents are from gene with id 6523
+## new is 11 / 37 for the same gene
+tail(sort(table(names(segs[seg.fn]))))
+
+## Cases of the genes with at least one FN segment
+table(tapply(subset(chosen, gene_id %in% names(seg.fn))$case, subset(chosen, gene_id %in% names(seg.fn))$gene_id, unique))
+## new:
+## 
+##   bothDE    oneDE singleDE 
+##        3       10        6
+
+## Type of gene where the segments come from. Mostly oneDE genes
+table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_id == x]) }))
+
+## new:
+## 
+##   bothDE    oneDE singleDE 
+##        3       28        6
+```
+
+
+## Counts-based
+
+Just as a verification step, the exonic segments used are disjoint as well as the exons used for the counts-based methods. Also, each exonic segment overlaps only one exon.
+
+```{r 'verify'}
+max(countOverlaps(segs)) - 1
+max(countOverlaps(exons)) - 1
+table(countOverlaps(segs, exons))
+```
+
+### DESeq2
+
+
+Next, we can compare the exonic segments versus the significant DE exons as determined by `DESeq2`. Significance can be determined by regular p-values, FDR FDR adjusted p-values (BH method), and FWER adjusted p-values (Holm method). In all cases we use a cutoff of $<$ 0.05.
+
+```{r 'comp-fun', bootstrap.show.code = FALSE}
+count_comp <- function(info, ptype = 'padj', cut = 0.05) {
+    if(ptype == 'padj') {
+        idx <- info$padj < cut
+    } else if (ptype == 'pvalue') {
+        idx <- info$pvalue < cut
+    } else {
+        p <- p.adjust(info$pvalue, ptype)
+        idx <- p < cut
+    }
+    idx[is.na(idx)] <- FALSE
+
+    ## Overlaps at least 1 DE exon
+    addmargins(table('DE status' = segs$DE, 'Overlaps DE exon' = countOverlaps(segs, info[idx]) > 0))
+}
+```
+
+
+```{r 'deseq-comp'}
+## Regular p-values
+count_comp(deseq, ptype = 'pvalue')
+
+## FDR adjusted p-values by method BH
+count_comp(deseq)
+
+## FWER adjusted p-values by method Holm
+count_comp(deseq, ptype = 'holm')
+identical(count_comp(deseq, ptype = 'holm'), count_comp(deseq, ptype = 'bonferroni'))
+```
+
+As expected the number of false positives is the highest with regular p-values and the lowest with FWER adjusted p-values. In all cases, there are fewer false negatives compared to `derfinder`.
+
+### edgeR-robust
+
+Similar results are shown below when using `edgeR-robust`.
+
+```{r 'edger-comp'}
+## Regular p-values
+count_comp(edger, ptype = 'pvalue')
+
+## FDR adjusted p-values by method BH
+count_comp(edger)
+
+## FWER adjusted p-values by method Holm
+count_comp(edger, ptype = 'holm')
+identical(count_comp(edger, ptype = 'holm'), count_comp(edger, ptype = 'bonferroni'))
+```
+
+# Conclusions
+
+Globally, the results between the original implementation and our implementation of `derfinder` match, with both resulting in the same empirical power and absence of false positives. Both struggle in the scenario where one of the two isoforms of a gene was set to be differentially expressed.
+
+
+```{r 'empirical', bootstrap.show.code = FALSE}
+emp_power <- function(info, ptype) {
+    m <- count_comp(info, ptype)
+    round(m[2, 2] / m[2, 3] * 100, 2)
+}
+emp_fpr <- function(info, ptype) {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[1, 3] * 100, 2)
+}
+```
+
+When adjusting p-values to control the FDR, both `DESeq2` and `edgeR-robust` result in higher empirical power than `derfinder`: `r emp_power(deseq, 'padj')` and `r emp_power(edger, 'padj')` respectively versus `r round(100 * 132 / 169, 2)`. However, both `DESeq2` and `edgeR-robust` have non-zero false positive rates: `r emp_fpr(deseq, 'padj')` and `r emp_fpr(edger, 'padj')` respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.
+
+
+
+# Reproducibility
+
+```{r 'reproduc', bootstrap.show.code = FALSE}
+## Reproducibility info
+Sys.time()
+proc.time()
+options(width = 120)
+devtools::session_info()
+```
