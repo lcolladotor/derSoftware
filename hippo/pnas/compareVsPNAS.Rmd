@@ -428,10 +428,10 @@ load('../derAnalysis/run3-v1.0.10/chr22/optionsStats.Rdata')
 regPlot <- function(region, title) {
     ## Calculate F-stats
     range <- start(region):end(region)
-    dat <- fullCov[[as.character(seqnames(region))]][range, ]
+    dat <- fullCov[[as.character(seqnames(region))]][range, colsubset]
 
     ## Log2 transform
-    for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+    for(i in seq_len(length(groupInfo))) dat[[i]] <- log2(dat[[i]] + 32) 
 
     ## Calculate f-stats
     fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
