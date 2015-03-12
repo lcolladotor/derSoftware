@@ -462,21 +462,21 @@ sortWidth <- function(regions) {
 We can now make plots to explore some DERs for each of the cases.
 
 ```{r 'query-der-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
-for(reg in sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:5]) {
+sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:5], function(reg) {
     regPlot(reg, 'DER query: DE agreement')
-}
+})
 
-for(reg in sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & !fullRegs20$sigFWER])[1:5]) {
+sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & !fullRegs20$sigFWER])[1:5], function(reg) {
     regPlot(reg, 'DER query: not DE agreement')
-}
+})
 
-for(reg in sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & fullRegs20$sigFWER])[1:5]) {
+sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & fullRegs20$sigFWER])[1:5], function(reg) {
     regPlot(reg, 'DER query: only exon not DE')
-}
+})
 
-for(reg in sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & !fullRegs20$sigFWER])[1:5]) {
+sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & !fullRegs20$sigFWER])[1:5], function(reg) {
     regPlot(reg, 'DER query: only exon DE')
-}
+})
 ```
 
 
@@ -500,21 +500,21 @@ We can now visually explore some exons for each of the four cases.
 
 
 ```{r 'query-exon-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
-for(reg in sortWidth(both[width(both) >= 20 &both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5]) {
+sapply(sortWidth(both[width(both) >= 20 &both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5], function(reg) {
     regPlot(reg, 'Exon query: DE agreement')
-}
+})
 
-for(reg in sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[2:6]) {
+sapply(sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[2:6], function(reg) {
     regPlot(reg, 'Exon query: not DE agreement')
-}
+})
 
-for(reg in sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5]) {
+sapply(sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5], function(reg) {
     regPlot(reg, 'Exon query: only exon not DE')
-}
+})
 
-for(reg in sortWidth(both[width(both) >= 20 & both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[2:6]) {
+sapply(sortWidth(both[width(both) >= 20 & both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[2:6], function(reg) {
     regPlot(reg, 'Exon query: only exon DE')
-}
+})
 ```
 
 
