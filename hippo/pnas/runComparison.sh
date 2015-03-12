@@ -7,7 +7,7 @@ echo "**** Job starts ****"
 date
 
 # Generate HTML
-Rscript -e "library(rmarkdown); render('compareVsPNAS.Rmd')"
+Rscript -e "library(rmarkdown); render('compareVsPNAS.Rmd', clean = FALSE)"
 
 echo "**** Job ends ****"
 date
