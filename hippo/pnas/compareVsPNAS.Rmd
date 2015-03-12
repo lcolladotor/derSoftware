@@ -422,6 +422,9 @@ load('../derAnalysis/run3-v1.0.10/models.Rdata')
 load('../derAnalysis/run3-v1.0.10/chr22/optionsStats.Rdata')
 load("../CoverageInfo/fullCov.Rdata")
 
+def.par <- par()
+def.par <- def.par[-which(names(def.par) %in% c('cin', 'cra', 'csi', 'cxy', 'din', 'page'))]
+
 regPlot <- function(region, title) {
     ## Calculate F-stats
     range <- start(region):end(region)
@@ -436,11 +439,13 @@ regPlot <- function(region, title) {
     ## Find annotation
     annoReg <- annotateRegions(region, GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome, verbose = FALSE)
     symbol <- mcols(annoReg$annotationList[[1]])$symbol
-    symbol <- as.character(noNA(symbol))
+    symbol <- as.character(noNA(symbol)[[1]])
     if(length(symbol) > 1) symbol <- symbol[1]
     symbol <- ifelse(is.null(symbol), NA, symbol)
     ## Remove symbol name because it gets chomped on the plot
     mcols(annoReg$annotationList[[1]])$symbol <- NA
+    
+    par(def.par)
 
     ## Plot long exon
     plotRegionCoverage(region, getRegionCoverage(fullCov, region, verbose = FALSE), groupInfo, data.frame(name = title, distance = NA, region = symbol), annoReg, verbose = FALSE, ask = FALSE, txdb = TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -448,7 +453,7 @@ regPlot <- function(region, title) {
     ## Add F-stat track
     par(fig = c(0, 1, 0.065, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
     plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), las = 2, yaxt = 'n')
-    y.max <- round(max(fstats), 0)
+    y.max <- round(max(c(optionsStats$cutoffFstatUsed, fstats[is.finite(fstats)]), na.rm = TRUE), 0)
     axis(2, at = c(0, round(y.max / 2, 0), y.max), c(0, round(y.max / 2, 0), y.max), las = 2, tick = TRUE)
     abline(h = optionsStats$cutoffFstatUsed, col = 'red')
     abline(h = 0, col = 'grey')
@@ -462,21 +467,30 @@ sortWidth <- function(regions) {
 We can now make plots to explore some DERs for each of the cases.
 
 ```{r 'query-der-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
-sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:5], function(reg) {
-    regPlot(reg, 'DER query: DE agreement')
-})
+query_der_plots <- function() {
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:10], function(reg) {
+        regPlot(reg, 'DER query: DE agreement')
+    })
 
-sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & !fullRegs20$sigFWER])[1:5], function(reg) {
-    regPlot(reg, 'DER query: not DE agreement')
-})
+    sapply(sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:10], function(reg) {
+        regPlot(reg, 'DER query: DE agreement')
+    }), function(reg) {
+        regPlot(reg, 'DER query: not DE agreement')
+    })
 
-sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & fullRegs20$sigFWER])[1:5], function(reg) {
-    regPlot(reg, 'DER query: only exon not DE')
-})
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & fullRegs20$sigFWER])[1:10], function(reg) {
+        regPlot(reg, 'DER query: only exon not DE')
+    })
 
-sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & !fullRegs20$sigFWER])[1:5], function(reg) {
-    regPlot(reg, 'DER query: only exon DE')
-})
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & !fullRegs20$sigFWER])[1:10], function(reg) {
+        regPlot(reg, 'DER query: only exon DE')
+    })
+}
+pdf(file = 'query_der_plots.pdf', width = 10, height = 7)
+query_der_plots()
+dev.off()
+
+query_der_plots()
 ```
 
 
@@ -500,21 +514,28 @@ We can now visually explore some exons for each of the four cases.
 
 
 ```{r 'query-exon-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
-sapply(sortWidth(both[width(both) >= 20 &both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5], function(reg) {
-    regPlot(reg, 'Exon query: DE agreement')
-})
+query_exon_plots <- function() {
+    sapply(sortWidth(both[width(both) >= 20 & both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:10], function(reg) {
+        regPlot(reg, 'Exon query: DE agreement')
+    })
 
-sapply(sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[2:6], function(reg) {
-    regPlot(reg, 'Exon query: not DE agreement')
-})
+    sapply(sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[1:10], function(reg) {
+        regPlot(reg, 'Exon query: not DE agreement')
+    })
 
-sapply(sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5], function(reg) {
-    regPlot(reg, 'Exon query: only exon not DE')
-})
+    sapply(sortWidth(both[width(both) >= 20 & !both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:10], function(reg) {
+        regPlot(reg, 'Exon query: only exon not DE')
+    })
 
-sapply(sortWidth(both[width(both) >= 20 & both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[2:6], function(reg) {
-    regPlot(reg, 'Exon query: only exon DE')
-})
+    sapply(sortWidth(both[width(both) >= 20 & both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) == 0])[1:10], function(reg) {
+        regPlot(reg, 'Exon query: only exon DE')
+    })
+}
+pdf(file = 'query_exon_plots.pdf', width = 10, height = 7)
+query_exon_plots()
+dev.off()
+
+query_exon_plots()
 ```
 
 
