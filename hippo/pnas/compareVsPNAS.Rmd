@@ -435,7 +435,8 @@ regPlot <- function(region, title) {
 
     ## Find annotation
     annoReg <- annotateRegions(region, GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome, verbose = FALSE)
-    symbol <- mcols(annoReg$annotationList[[1]])$symbol
+    symbol <- as.character(mcols(annoReg$annotationList[[1]])$symbol)
+    symbol <- ifelse(is.null(symbol), NA, symbol)
     ## Remove symbol name because it gets chomped on the plot
     mcols(annoReg$annotationList[[1]])$symbol <- NA
 
