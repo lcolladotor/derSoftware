@@ -39,10 +39,6 @@ if(file.exists('/home/epi/ajaffe/Lieber/Projects/RNAseq/derannotator/rdas/Genomi
     stop('Missing UCSC hg19 genomic state object')
 }
 
-## Coverage data
-## load data needed
-load("../CoverageInfo/fullCov.Rdata")
-
 ## Annotation used
 exons <- GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome
 exons <- exons[exons$theRegion == 'exon']
@@ -424,6 +420,7 @@ library('derfinderHelper')
 library('derfinderPlot')
 load('../derAnalysis/run3-v1.0.10/models.Rdata')
 load('../derAnalysis/run3-v1.0.10/chr22/optionsStats.Rdata')
+load("../CoverageInfo/fullCov.Rdata")
 
 regPlot <- function(region, title) {
     ## Calculate F-stats
