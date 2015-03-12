@@ -70,6 +70,10 @@ system.time( dse <- DESeq(dse, test = 'LRT', reduced = ~ 1) )
 deseq <- exons[nonzero]
 mcols(deseq) <- cbind(mcols(deseq), results(dse))
 
+## Which are significant?
+deseq$sig <- deseq$padj < 0.05
+deseq$sig[is.na(deseq$sig)] <- FALSE
+
 ## Save results
 save(deseq, file = 'deseq.Rdata')
 ```
@@ -97,6 +101,10 @@ mcols(edger) <- cbind(mcols(edger), DataFrame(lrw$table))
 edger$pvalue <-  lrw$table$PValue
 edger$padj <- p.adjust(lrw$table$PValue, 'BH')
 
+## Which are significant?
+edger$sig <- edger$padj < 0.05
+edger$sig[is.na(edger$sig)] <- FALSE
+
 ## Save results
 save(edger, file = 'edger.Rdata')
 ```
@@ -107,14 +115,14 @@ save(edger, file = 'edger.Rdata')
 ```{r 'setup-comp', bootstrap.show.code = FALSE, bootstrap.show.message = FALSE}
 library('TxDb.Hsapiens.UCSC.hg19.knownGene')
 #library('knitr')
-#library('derfinder')
-#library('derfinderHelper')
-#library('derfinderPlot')
+library('derfinder')
+library('derfinderHelper')
+library('derfinderPlot')
 #library('bumphunter')
 load('../simulation_info.Rdata')
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
-#load('../derAnalysis/run2-v1.0.10/models.Rdata')
-#load('../derAnalysis/run2-v1.0.10/chr22/optionsStats.Rdata')
+load('../derAnalysis/run2-v1.0.10/models.Rdata')
+load('../derAnalysis/run2-v1.0.10/chr22/optionsStats.Rdata')
 load('../CoverageInfo/fullCov.Rdata')
 names(fullRegions) <- seq_len(length(fullRegions))
 ```
@@ -336,6 +344,502 @@ count_comp(edger, ptype = 'holm')
 identical(count_comp(edger, ptype = 'holm'), count_comp(edger, ptype = 'bonferroni'))
 ```
 
+
+
+## Overlap
+
+```{r 'ov-comp-setup', bootstrap.show.code = FALSE}
+## Some formatting and subsets
+fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegs20 <- fullRegions[width(fullRegions) >= 20]
+
+## Overlap table for all 4 cases
+ov_table <- function(ders, counts, query = 'der', minov = 0) {
+    if(query == 'der') {
+        if(minov == 0) {
+            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
+        } else {
+            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
+        }
+    } else if (query == 'counts') {
+        if(minov == 0) {
+            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+        } else {
+            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+        }
+    }
+    return(res)
+}
+
+## Explore mistmatched cases for DERs vs Exons direction
+explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
+    if(case == 'FALSE-TRUE') {
+        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+    } else if (case == 'TRUE-FALSE') {
+        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFWER)
+    } else{
+        stop('invalid case')
+    }
+    if(length(i) == 0) return("No such cases")
+    
+    if(case == 'FALSE-TRUE') {
+        res <- list(
+            n_overlaps = table(countOverlaps(ders[i], counts[counts$sig], minoverlap = minov)),
+            width_der = summary(width(ders[i])),
+            ders_per_exon_table = table(table(subjectHits(findOverlaps(ders[i], counts[counts$sig], minoverlap = minov)))),
+            ders_per_exon = sort(table(subjectHits(findOverlaps(ders[i], counts[counts$sig], minoverlap = minov)))),
+            i = i
+        )
+    } else {
+        res <- list(
+            width_der = summary(width(ders[i])),
+            distance_nearest_sum = summary(mcols(distanceToNearest(ders[i], counts, ignore.strand = TRUE))$distance),
+            distance_nearest_sig_sum = summary(mcols(distanceToNearest(ders[i], counts[counts$sig], ignore.strand = TRUE))$distance),
+            distance_nearest = distanceToNearest(ders[i], counts, ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(ders[i], counts[counts$sig], ignore.strand = TRUE),
+            i = i
+        )
+    }
+    
+    return(res)
+}
+
+## Explore mistmatched cases for Exons vs DERs direction
+explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
+    counts <- counts[width(counts) >= minov]
+    if(case == 'FALSE-TRUE') {
+        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !counts$sig)
+    } else if (case == 'TRUE-FALSE') {
+        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & counts$sig)
+    } else{
+        stop('invalid case')
+    }
+    if(length(i) == 0) return("No such cases")
+    
+    if(case == 'FALSE-TRUE') {
+        res <- list(
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            width_exon = summary(width(counts[i])),
+            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            i = i
+        )
+    } else {
+        res <- list(
+            width_exon = summary(width(counts[i])),
+            distance_nearest_sum = summary(mcols(distanceToNearest(counts[i], ders, ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+            distance_nearest = distanceToNearest(counts[i], ders, ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE),
+            i = i
+        )
+    }
+    
+    return(res)
+}
+
+noNA <- function(x) {
+    x[!is.na(x)]
+}
+```
+
+
+### DESeq2
+
+
+#### Query: DERs
+
+We can first compare the results by using the DERs as the query and the exons as the subject. The following output shows the comparison using all DERs and exploring the mismatched cases. Then its repeated using the DERs $\geq$ 20 bp and a minimum overlap of 20bp.
+
+For the mismatched cases of non-significant DERs overlapping a significant exon, we check:
+
+* how many exons each DER overlaps,
+* the width of the DERs
+* the frequency table of how many DERs overlap the same exon
+
+For the other mismatched case, we check:
+
+* the width of the DERs
+* distance to nearest exon (regardless of exon size)
+* distance to nearest significant DE exon (ibidem)
+
+```{r 'ov-comp-deseq', bootstrap.show.code = FALSE}
+## Overlap between DERs and significant DE exons
+ov_table(fullRegions, deseq)
+
+## Explore mismatched cases
+noNA(explore_ov(fullRegions, deseq)[1:3])
+noNA(explore_ov(fullRegions, deseq, 'TRUE-FALSE')[1:3])
+
+## Min 20 bp overlap, using only DERs 20 bp long
+ov_table(fullRegs20, deseq, minov = 20L)
+
+## Explore mismatched cases, min 20bp overlap
+noNA(explore_ov(fullRegs20, deseq, minov = 20L)[1:3])
+noNA(explore_ov(fullRegs20, deseq, 'TRUE-FALSE', minov = 20L)[1:3])
+```
+
+Most of the non-significant DERs that overlap a significant exon are shorter than 20bp with the longest being 88bp long. When restricting the analysis to 20bp or longer DERs, 19 of the 46 overlap a single exon. It is an exon from a gene with two isoforms where only one of them was set to be DE. As can be seen in the figure below, the F-statistics curve oscillates and a lower cutoff could have resulted in significant DERs in this exon.
+
+```{r 'vis-long-exon', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
+## Identify long exon
+long_exon <- deseq[which(deseq$sig)[as.integer(names(explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon)[explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon == 19])]]
+
+## What was it set to be?
+mcols(segs[subjectHits(findOverlaps(long_exon, segs))])$DE
+gene[gene$gene_id %in% unique(names(segs[subjectHits(findOverlaps(long_exon, segs))])),]
+
+## Calculate F-stats
+range <- start(long_exon):end(long_exon)
+dat <- fullCov$chr22[range, ]
+
+## Log2 transform
+for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+
+## Calculate f-stats
+fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
+
+## Find annotation
+annoReg <- annotateRegions(long_exon, GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome, verbose = FALSE)
+## Remove symbol name because it gets chomped on the plot
+mcols(annoReg$annotationList[[1]])$symbol <- NA
+
+## Plot long exon
+long_exon_plot <- function() {
+    plotRegionCoverage(long_exon, getRegionCoverage(fullCov, long_exon, verbose = FALSE), groupInfo, data.frame(name = "sig DE exon via DESeq2, no sig DERs", distance = NA, region = 'SLC5A1'), annoReg, verbose = FALSE, ask = FALSE, txdb = txdb)
+
+    ## Add F-stat track
+    par(fig = c(0, 1, 0.065, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
+    plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), yaxt = 'n')
+    axis(2, at = c(0, 10, 20, 30), c(0, 10, 20, NA), las = 2, tick = TRUE)
+    abline(h = optionsStats$cutoffFstatUsed, col = 'red')
+    abline(h = 0, col = 'grey')
+}
+
+## Save in pdf
+pdf(file = 'long_exon.pdf', width = 10, height = 7)
+long_exon_plot()
+dev.off()
+#system('open long_exon.pdf')
+
+## Render in png
+long_exon_plot()
+```
+
+
+
+#### Query: exons
+
+We can now repeat the comparison using the exons as the query and the DERs as the subject.
+
+For the mismatched cases of non-significant exons overlapping a significant DER, we check:
+
+* how many DERs each exon overlaps,
+* the width of the exons
+* the frequency table of how many exons overlap the same DER
+
+For the other mismatched case, we check:
+
+* the width of the exons
+* distance to nearest DER (regardless of DER size)
+* distance to nearest significant DER (ibidem)
+
+```{r 'ov-comp-deseq-counts', bootstrap.show.code = FALSE}
+## Overlap between exons and significant DERs
+ov_table(fullRegions, deseq, 'counts')
+
+## Explore mismatched cases
+noNA(explore_ov_counts(fullRegions, deseq)[1:3])
+noNA(explore_ov_counts(fullRegions, deseq, 'TRUE-FALSE')[1:3])
+
+## Overlap between exons and significant DERs, min 20 bp
+ov_table(fullRegions, deseq, 'counts', 20L)
+
+## Explore mismatched cases
+noNA(explore_ov_counts(fullRegions, deseq, minov = 20L)[1:3])
+noNA(explore_ov_counts(fullRegions, deseq, 'TRUE-FALSE', minov = 20L)[1:3])
+```
+
+We can further explore the cases where significant DE exons did not overlap a significant DER and compare against the exonic segments.
+
+
+```{r 'ov-comp-deseq-counts-segs', bootstrap.show.code = FALSE}
+## Further explore 
+i <- explore_ov_counts(fullRegions, deseq, 'TRUE-FALSE')[['i']]
+
+## Exclude cases where an exon overlaps exonic segments from both strands
+i.simple <- i[countOverlaps(deseq[i], segs, ignore.strand = TRUE) == 1]
+
+## Number of cases excluded because of strand overlaps
+length(i) - length(i.simple)
+
+## Check with exonic segments
+table(mcols(segs)$DE[subjectHits(findOverlaps(deseq[i.simple], segs ))])
+
+## Gene cases that were set to be DE
+table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], segs )), which(mcols(segs)$DE))])])
+
+## Exon mistmatched cases (DE), what was the gene status?
+table(sapply(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], segs )), which(mcols(segs)$DE))], function(x) { gene$case[gene$gene_id == x] }))
+
+## Gene cases that were not set to be DE
+table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], segs )), which(!mcols(segs)$DE))])])
+
+## Exon mistmatched cases (not DE), what was the gene status?
+table(sapply(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], segs )), which(!mcols(segs)$DE))], function(x) { gene$case[gene$gene_id == x] }))
+```
+
+Out of the 30 cases in disagreement (min overlap 0 bp), 6 of them are due to overlapping exons from both strands. 21 of these exons are correctly detected by `DESeq2` whereas 3 are not. The ones incorrectly identified by `derfinder` to not be DE are mostly (15 / 21) from genes with two isoforms with only one of them DE.
+
+
+```{r 'vis-long-deseq2-error', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
+## Identify longest exon with the error
+err_deseq2 <- segs[intersect(subjectHits(findOverlaps(deseq[i.simple], segs )), which(!mcols(segs)$DE))]
+err_deseq2 <- err_deseq2[which.max(width(err_deseq2))]
+
+## What was it set to be?
+mcols(err_deseq2)$DE
+
+## Calculate F-stats
+range <- start(err_deseq2):end(err_deseq2)
+dat <- fullCov$chr22[range, ]
+
+## Log2 transform
+for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+
+## Calculate f-stats
+fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
+
+## Find annotation
+annoReg <- annotateRegions(err_deseq2, GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome, verbose = FALSE)
+## Remove symbol name because it gets chomped on the plot
+mcols(annoReg$annotationList[[1]])$symbol <- NA
+
+## Plot long exon
+fp_plot <- function() {
+    plotRegionCoverage(err_deseq2, getRegionCoverage(fullCov, err_deseq2, verbose = FALSE), groupInfo, data.frame(name = "False positive via DESeq2/edgeR-robust", distance = NA, region = 'SF3A1'), annoReg, verbose = FALSE, ask = FALSE, txdb = txdb)
+
+    ## Add F-stat track
+    par(fig = c(0, 1, 0.065, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
+    plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), yaxt = 'n')
+    axis(2, at = c(0, 5, 10), c(0, 5, 10), las = 2, tick = TRUE)
+    abline(h = optionsStats$cutoffFstatUsed, col = 'red')
+    abline(h = 0, col = 'grey')
+}
+
+## Save in pdf
+pdf(file = 'fp_deseq2.pdf', width = 10, height = 7)
+fp_plot()
+dev.off()
+#system('open fp_deseq2.pdf')
+
+## Render in png
+fp_plot()
+```
+
+
+
+
+
+### edgeR-robust
+
+#### Query: DERs
+
+Similar comparison using DERs as query and exons as subject with `edgeR-robust` results.
+
+```{r 'ov-comp-edger', bootstrap.show.code = FALSE}
+## Overlap between DERs and significant DE exons
+ov_table(fullRegions, edger)
+
+## Explore mismatched cases
+noNA(explore_ov(fullRegions, edger)[1:3])
+noNA(explore_ov(fullRegions, edger, 'TRUE-FALSE')[1:3])
+
+## Min 20 bp overlap, using only DERs 20 bp long
+ov_table(fullRegs20, edger, minov = 20L)
+
+## Explore mismatched cases, min 20bp overlap
+noNA(explore_ov(fullRegs20, edger, minov = 20L)[1:3])
+noNA(explore_ov(fullRegs20, edger, 'TRUE-FALSE', minov = 20L)[1:3])
+```
+
+The results are fairly similar to those from using `DESeq2`.
+
+#### Query: exons
+
+Similar comparison using exons as query and DERs as subject with `edgeR-robust` results.
+
+```{r 'ov-comp-edger-counts', bootstrap.show.code = FALSE}
+## Overlap between exons and significant DERs
+ov_table(fullRegions, edger, 'counts')
+
+## Explore mismatched cases
+noNA(explore_ov_counts(fullRegions, edger)[1:3])
+noNA(explore_ov_counts(fullRegions, edger, 'TRUE-FALSE')[1:3])
+
+## Overlap between exons and significant DERs, min 20 bp
+ov_table(fullRegions, edger, 'counts', 20L)
+
+## Explore mismatched cases
+noNA(explore_ov_counts(fullRegions, edger, minov = 20L)[1:3])
+noNA(explore_ov_counts(fullRegions, edger, 'TRUE-FALSE', minov = 20L)[1:3])
+```
+
+As before, we can further explore the mismatched cases where `edgeR-robust` finds DE signal but `derfinder` does not.
+
+```{r 'ov-comp-edger-counts-segs', bootstrap.show.code = FALSE}
+## Further explore 
+j <- explore_ov_counts(fullRegions, edger, 'TRUE-FALSE')[['i']]
+
+## Exclude cases where an exon overlaps exonic segments from both strands
+j.simple <- j[countOverlaps(edger[j], segs, ignore.strand = TRUE) == 1]
+
+## Number of cases excluded because of strand overlaps
+length(j) - length(j.simple)
+
+## Check with exonic segments
+table(mcols(segs)$DE[subjectHits(findOverlaps(edger[j.simple], segs ))])
+
+## Gene cases that were set to be DE
+table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findOverlaps(edger[j.simple], segs )), which(mcols(segs)$DE))])])
+
+## Exon mistmatched cases (DE), what was the gene status?
+table(sapply(names(segs)[intersect(subjectHits(findOverlaps(edger[j.simple], segs )), which(mcols(segs)$DE))], function(x) { gene$case[gene$gene_id == x] }))
+
+## Gene cases that were not set to be DE
+table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findOverlaps(edger[j.simple], segs )), which(!mcols(segs)$DE))])])
+
+## Exon mistmatched cases (not DE), what was the gene status?
+table(sapply(names(segs)[intersect(subjectHits(findOverlaps(edger[j.simple], segs )), which(!mcols(segs)$DE))], function(x) { gene$case[gene$gene_id == x] }))
+```
+
+### overall
+
+The results are fairly similar to those from using `DESeq2`. As shown below, they agree on all but 6 of the exons analyzed. In particular, the longest false positive exon by `DESeq2` is also a FP with `edgeR-robust`.
+
+```{r 'deseq-vs-edger'}
+## edgeR vs DESeq2
+addmargins(table('edgeR-robust' = edger$sig, 'DESeq2' = deseq$sig))
+
+## Find FP errors
+err_edger <- segs[intersect(subjectHits(findOverlaps(edger[j.simple], segs )), which(!mcols(segs)$DE))]
+
+## Does it overlap FP from DESeq2? Yes
+countOverlaps(err_deseq2, err_edger) == 1
+```
+
+The following is a coverage plot of the longest exon where all methods agree that its differentially expressed.
+
+```{r 'vis-agree-de', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
+## Find longest exon where edgeR and DEseq2 agree that it's DE
+l <- which.max(width(edger)[which(edger$sig & deseq$sig)])
+agree <- edger[which(edger$sig & deseq$sig)[l]]
+
+## Width of exon
+width(agree)
+
+## DERs this exon overlaps
+width(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])
+mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFWER
+
+## Case
+gene[gene$gene_id == unique(names(segs[subjectHits(findOverlaps(agree,segs))])), ]
+
+## Calculate F-stats
+range <- start(agree):end(agree)
+dat <- fullCov$chr22[range, ]
+
+## Log2 transform
+for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+
+## Calculate f-stats
+fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
+
+## Find annotation
+annoReg <- annotateRegions(agree, GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome, verbose = FALSE)
+## Remove symbol name because it gets chomped on the plot
+mcols(annoReg$annotationList[[1]])$symbol <- NA
+
+## Plot long exon
+agree_plot <- function() {
+    plotRegionCoverage(agree, getRegionCoverage(fullCov, agree, verbose = FALSE), groupInfo, data.frame(name = "Full agreement: differentially expressed", distance = NA, region = 'CECR6'), annoReg, verbose = FALSE, ask = FALSE, txdb = txdb)
+
+    ## Add F-stat track
+    par(fig = c(0, 1, 0.065, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
+    plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), yaxt = 'n')
+    axis(2, at = c(0, 50, 100, 150, 200, 250), c(0, NA, 100, NA, 200, NA), las = 2, tick = TRUE)
+    abline(h = optionsStats$cutoffFstatUsed, col = 'red')
+    abline(h = 0, col = 'grey')
+}
+
+## Save in pdf
+pdf(file = 'agree.pdf', width = 10, height = 7)
+agree_plot()
+dev.off()
+#system('open agree.pdf')
+
+## Render in png
+agree_plot()
+```
+
+The following is a coverage plot of the longest exon where all methods agree that its not differentially expressed. For `derfinder`, we are requiring DERs to be at least 20 bp long.
+
+```{r 'vis-agree-not-de', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
+## Find longest exon where edgeR and DEseq2 agree that it's not DE
+## Exclude the one from chr12
+l <- which(width(edger)[which(!edger$sig & !deseq$sig)] == 5789)
+agree_notde <- edger[which(!edger$sig & !deseq$sig)[l]]
+
+## Width of exon
+width(agree_notde)
+
+## DERs this exon overlaps
+width(fullRegions[subjectHits(findOverlaps(agree_notde, fullRegions))])
+mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFWER
+
+## Case
+gene[gene$gene_id == unique(names(segs[subjectHits(findOverlaps(agree_notde, segs))])), ]
+
+## Calculate F-stats
+range <- start(agree_notde):end(agree_notde)
+dat <- fullCov$chr22[range, ]
+
+## Log2 transform
+for(i in 1:30) dat[[i]] <- log2(dat[[i]] + 32) 
+
+## Calculate f-stats
+fstats <- as.numeric(fstats.apply(data = dat, mod = models$mod, mod0 = models$mod0))
+
+## Find annotation
+annoReg <- annotateRegions(agree_notde, GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome, verbose = FALSE)
+## Remove symbol name because it gets chomped on the plot
+mcols(annoReg$annotationList[[1]])$symbol <- NA
+
+## Plot long exon
+agree_notde_plot <- function() {
+    plotRegionCoverage(agree_notde, getRegionCoverage(fullCov, agree_notde, verbose = FALSE), groupInfo, data.frame(name = "Full agreement: not differentially expressed", distance = NA, region = 'TCF20'), annoReg, verbose = FALSE, ask = FALSE, txdb = txdb)
+
+    ## Add F-stat track
+    par(fig = c(0, 1, 0.065, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
+    plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), yaxt = 'n')
+    axis(2, at = c(0, 5, 10), c(0, 5, 10), las = 2, tick = TRUE)
+    abline(h = optionsStats$cutoffFstatUsed, col = 'red')
+    abline(h = 0, col = 'grey')
+}
+
+## Save in pdf
+pdf(file = 'agree_notde.pdf', width = 10, height = 7)
+agree_notde_plot()
+dev.off()
+#system('open agree_notde.pdf')
+
+## Render in png
+agree_notde_plot()
+```
+
+
+
+
 # Conclusions
 
 Globally, the results between the original implementation and our implementation of `derfinder` match, with both resulting in the same empirical power and absence of false positives. Both struggle in the scenario where one of the two isoforms of a gene was set to be differentially expressed.
@@ -354,6 +858,7 @@ emp_fpr <- function(info, ptype) {
 
 When adjusting p-values to control the FDR, both `DESeq2` and `edgeR-robust` result in higher empirical power than `derfinder`: `r emp_power(deseq, 'padj')` and `r emp_power(edger, 'padj')` respectively versus `r round(100 * 132 / 169, 2)`. However, both `DESeq2` and `edgeR-robust` have non-zero false positive rates: `r emp_fpr(deseq, 'padj')` and `r emp_fpr(edger, 'padj')` respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.
 
+We knew from [evaluate.html](../evaluate/evaluate.html) that `derfinder` struggled in the scenario where a two isoform gene had only one of them set to be differentially expressed. `DESeq2` and `edgeR-robust` are able to correctly identify such exons as differentially expressed in most cases, but they also introduce some occasional false positives whose coverage plots do not reveal apparent differences between the groups.
 
 
 # Reproducibility
