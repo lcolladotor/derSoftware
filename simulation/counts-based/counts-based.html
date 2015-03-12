@@ -961,7 +961,7 @@ nonzero <- sapply(rowSums(counts), function(x) {x > 0})</code></pre>
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
 <pre style="display:none"><code class="source r">## Round matrix and specify design
-dse <- DESeqDataSetFromMatrix(counts[nonzero, colsubset], data.frame(group = groupInfo), ~ group)</code></pre>
+dse <- DESeqDataSetFromMatrix(counts[nonzero, ], data.frame(group = groupInfo), ~ group)</code></pre>
 <button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
 </button>
@@ -986,7 +986,7 @@ system.time( dse <- DESeq(dse, test = 'LRT', reduced = ~ 1) )</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   0.907   0.018   0.928
+##   0.997   0.024   1.034
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1012,14 +1012,14 @@ save(deseq, file = 'deseq.Rdata')</code></pre>
 design <- model.matrix(~ groupInfo)
 
 ## Perform DE analysis
-d <- DGEList(counts = counts[nonzero, colsubset], group = groupInfo)
+d <- DGEList(counts = counts[nonzero, ], group = groupInfo)
 d <- calcNormFactors(d)
 system.time(dw <- estimateGLMRobustDisp(d, design = design, prior.df = 10, maxit = 6))</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   2.093   0.058   2.156
+##   2.169   0.073   2.254
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2553,7 +2553,7 @@ Sys.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-03-12 01:07:31 EDT"
+<pre style=""><code class="output r">## [1] "2015-03-12 01:31:06 EDT"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2563,7 +2563,7 @@ Sys.time()</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-## 114.735   2.288 118.734
+## 123.141   3.038 131.610
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source

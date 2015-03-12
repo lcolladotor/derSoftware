@@ -61,7 +61,7 @@ The following code performs the DESeq2 analysis. Code is based on [edgeR_Robust 
 
 ```{r 'deseq2', bootstrap.show.code = FALSE}
 ## Round matrix and specify design
-dse <- DESeqDataSetFromMatrix(counts[nonzero, colsubset], data.frame(group = groupInfo), ~ group)
+dse <- DESeqDataSetFromMatrix(counts[nonzero, ], data.frame(group = groupInfo), ~ group)
 
 ## Perform DE analysis
 system.time( dse <- DESeq(dse, test = 'LRT', reduced = ~ 1) )
@@ -89,7 +89,7 @@ The following code performs the DESeq2 analysis. Code is based on [edgeR_Robust 
 design <- model.matrix(~ groupInfo)
 
 ## Perform DE analysis
-d <- DGEList(counts = counts[nonzero, colsubset], group = groupInfo)
+d <- DGEList(counts = counts[nonzero, ], group = groupInfo)
 d <- calcNormFactors(d)
 system.time(dw <- estimateGLMRobustDisp(d, design = design, prior.df = 10, maxit = 6))
 fw <- glmFit(dw, design = design, coef = 2:3)
