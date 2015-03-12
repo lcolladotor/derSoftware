@@ -447,7 +447,9 @@ regPlot <- function(region, title) {
 
     ## Add F-stat track
     par(fig = c(0, 1, 0.065, 0.125), new = TRUE, xaxt = 'n', oma = c(0, 0, 0, 0), mar = c(0, 4.5, 0, 1.1))
-    plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), las = 2, cex.axis = 0.7)
+    plot(y = fstats, x = range, ylab = 'F-stat', type = 'l', xlab = '', bty = 'n', ylim = c(0, max(fstats[is.finite(fstats)], optionsStats$cutoffFstatUsed) * 1.1), las = 2, yaxt = 'n')
+    y.max <- round(max(fstats), 0)
+    axis(2, at = c(0, round(y.max / 2, 0), y.max), c(0, round(y.max / 2, 0), y.max), las = 2, tick = TRUE)
     abline(h = optionsStats$cutoffFstatUsed, col = 'red')
     abline(h = 0, col = 'grey')
 }
@@ -459,7 +461,7 @@ sortWidth <- function(regions) {
 
 We can now make plots to explore some DERs for each of the cases.
 
-```{r 'query-der-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
+```{r 'query-der-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
 for(reg in sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:5]) {
     regPlot(reg, 'DER query: DE agreement')
 }
@@ -497,7 +499,7 @@ ov_table(fullRegions, both_holm, 'counts', 20L)
 We can now visually explore some exons for each of the four cases.
 
 
-```{r 'query-exon-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
+```{r 'query-exon-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
 for(reg in sortWidth(both[width(both) >= 20 &both$sig & countOverlaps(both, fullRegions[fullRegions$sigFWER], minoverlap = 20L) > 0])[1:5]) {
     regPlot(reg, 'Exon query: DE agreement')
 }
