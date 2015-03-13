@@ -468,21 +468,19 @@ We can now make plots to explore some DERs for each of the cases.
 
 ```{r 'query-der-plots', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE, dev = 'CairoPNG'}
 query_der_plots <- function() {
-    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:5], function(reg) {
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:10], function(reg) {
         regPlot(reg, 'DER query: DE agreement')
     })
 
-    sapply(sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & fullRegs20$sigFWER])[1:5], function(reg) {
-        regPlot(reg, 'DER query: DE agreement')
-    }), function(reg) {
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & !fullRegs20$sigFWER])[1:10],  function(reg) {
         regPlot(reg, 'DER query: not DE agreement')
     })
 
-    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & fullRegs20$sigFWER])[1:5], function(reg) {
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) == 0 & fullRegs20$sigFWER])[1:10], function(reg) {
         regPlot(reg, 'DER query: only exon not DE')
     })
 
-    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & !fullRegs20$sigFWER])[1:5], function(reg) {
+    sapply(sortWidth(fullRegs20[countOverlaps(fullRegs20, both[both$sig], minoverlap = 20L) > 0 & !fullRegs20$sigFWER])[1:10], function(reg) {
         regPlot(reg, 'DER query: only exon DE')
     })
 }
