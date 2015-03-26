@@ -1,0 +1,2188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  
+  <!-- bootstrap -->
+  <!--<link href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet"  id="style">-->
+  <script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  
+  <!-- highlight.js -->
+  <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/default.min.css" rel="stylesheet" id="code-style">-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/highlight.min.js"></script>
+  <script>
+  hljs.LANGUAGES.r=function(a){var b="([a-zA-Z]|\\.[a-zA-Z.])[a-zA-Z0-9._]*";return{c:[a.HCM,{b:b,l:b,k:{keyword:"function if in break next repeat else for return switch while try tryCatch|10 stop warning require library attach detach source setMethod setGeneric setGroupGeneric setClass ...|10",literal:"NULL NA TRUE FALSE T F Inf NaN NA_integer_|10 NA_real_|10 NA_character_|10 NA_complex_|10"},r:0},{cN:"number",b:"0[xX][0-9a-fA-F]+[Li]?\\b",r:0},{cN:"number",b:"\\d+(?:[eE][+\\-]?\\d*)?L\\b",r:0},{cN:"number",b:"\\d+\\.(?!\\d)(?:i\\b)?",r:0},{cN:"number",b:"\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",r:0},{b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[a.BE],r:0},{cN:"string",b:"'",e:"'",c:[a.BE],r:0}]}}(hljs); </script>
+  <!--<script type="text/javascript", src="https://yandex.st/highlightjs/7.3/languages/r.min.js"></script>-->
+  
+  <!-- Manific Popup -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/0.8.9/jquery.magnific-popup.min.js"></script>
+  
+  <script type="text/javascript"
+    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+  <script defer="defer">
+  // Function to generate the dynamic table of contents
+  jQuery.fn.generate_TOC = function () {
+    var base = $(this[0]);
+  
+    var selectors = ['h1', 'h2', 'h3', 'h4'];
+  
+    var last_ptr = [{}, {}, {}, {}];
+  
+    var anchors = {};
+  
+    generate_anchor = function (text) {
+      var test = text.replace(/\W/g, '_');
+  
+      while(test in anchors){
+        //if no suffix, add one
+        if(test.match(/_\d+$/) === null){
+          test = test + "_2";
+        }
+        //else generate unique id for duplicates by adding one to the suffix
+        else {
+          test = test.replace(/_(\d+)$/, function(match, number){ var num=+number+1; return("_" + num) });
+        }
+      }
+      anchors[test]=1;
+      return(test);
+    }
+  
+    $(selectors.join(',')).filter(function(index) { return $(this).parent().attr("id") != 'header'; }).each(function () {
+  
+      var heading = $(this);
+      var idx = selectors.indexOf(heading.prop('tagName').toLowerCase());
+      var itr = 0;
+  
+      while (itr <= idx) {
+        if (jQuery.isEmptyObject(last_ptr[itr])) {
+          last_ptr[itr] = $('<ul>').addClass('nav');
+          if (itr === 0) {
+            base.append(last_ptr[itr])
+          } else {
+            if(last_ptr[itr-1].children('li').length === 0){
+              last_ptr[itr-1].append(last_ptr[itr]);
+            }
+            else {
+              last_ptr[itr - 1].children('li').last().append(last_ptr[itr]);
+            }
+          }
+        }
+        itr++;
+      }
+      var anchor = generate_anchor(heading.text());
+      heading.attr('id', anchor);
+      var a = $('<a>')
+      .text(heading.text())
+      .attr('href', '#' + anchor);
+  
+    var li = $('<li>')
+      .append(a);
+  
+    last_ptr[idx].append(li);
+    for (i = idx + 1; i < last_ptr.length; i++) {
+      last_ptr[i] = {};
+    }
+    });
+  }
+  /* run scripts when document is ready */
+  $(function() {
+    "use strict";
+  
+    var $window = $(window);
+    var $body = $(document.body);
+  
+    /* size of thumbnails */
+  
+    var hidden_types = ['source']
+    var output_types = ['output', 'message', 'warning', 'error']
+  
+    /* style tables */
+    $('table').addClass('table table-striped table-bordered table-hover table-condensed');
+  
+    $('pre code').each(function(i, e) {
+      hljs.highlightBlock(e);
+    });
+  
+    /* Magnific Popup */
+    $(".thumbnail").each(function(){
+      $(this).magnificPopup({
+        disableOn: 768,
+        closeOnContentClick: true,
+  
+        type: 'image',
+        items: {
+          src: $(this).find('img').attr('src'),
+        }
+      });
+    });
+  
+    function toggle_block(obj, show) {
+      var span = obj.find('span');
+      if(show === true){
+        span.removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+        obj.next('pre').slideDown();
+      }
+      else {
+        span.removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+        obj.next('pre').slideUp();
+      }
+    }
+  
+    function toggle_thumbnails(imgs, show){
+      if(show === true){
+        imgs.parents().show()
+        imgs.slideDown();
+      }
+      else {
+        imgs.slideUp(400, function(){ $(this).parent().hide(); });
+      }
+    }
+  
+    function global_toggle(obj){
+      var type = obj.attr('type');
+      var show = !obj.parent('li').hasClass('active');
+      if(show === true){
+        obj.parent('li').addClass('active');
+      }
+      else{
+        obj.parent('li').removeClass('active');
+      }
+      if(type == 'figure'){
+        toggle_thumbnails($('.thumbnail img'), show);
+      }
+      else {
+        $('.toggle.' + type).each(function() { toggle_block($(this), show); });
+      }
+    }
+  
+    /* onclick toggle next code block */
+    $('.toggle').click(function() {
+      var span = $(this).find('span');
+      toggle_block($(this), !span.hasClass('glyphicon-chevron-down'));
+      return false
+    })
+  
+    // global toggles
+    $('.toggle-global').click(function(){
+      var type = $(this).attr('type');
+      if(type === 'all-source'){
+          $('li a.source').each(function() {
+            global_toggle($(this));
+          });
+        }
+      else if(type === 'all-output'){
+        $.each(output_types, function(i, val){
+          console.log(val);
+          global_toggle($('li a.' + val));
+        });
+      }
+      else {
+        console.log($(this));
+        global_toggle($(this));
+      }
+      return false;
+    });
+    /* table of contents */
+    if($(['h1', 'h2', 'h3', 'h4'].join(',')).length > 0){
+      $('body > #wrap > .container > .row').append('<div class="col-md-2"><div id="toc" class="well sidebar sidenav affix hidden-print"/></div>');
+      $('#toc').generate_TOC();
+    }
+  
+    $.each(hidden_types, function(i, type) {
+      $('li[type=' + type + ']').each(function(){ global_toggle($(this)); });
+    });
+  
+    /* remove paragraphs with no content */
+    $('p:empty').remove();
+  
+    $body.scrollspy({
+      target: '.sidebar',
+    });
+  
+    /* theme switch */
+    $('.theme-switch').click(function(){
+      var css = $('link[title=' + $(this).attr('title') + ']');
+      $('#theme[rel=stylesheet]').attr('href', css.attr('href'));
+      $('.theme-switch').closest('li').removeClass('active');
+      $(this).closest('li').addClass('active');
+      return false;
+    });
+    /* code style switch */ //TODO use same function for both of these?
+    $('.highlight-switch').click(function(){
+      var css = $('link[title="' + $(this).attr('title') + '"]');
+      $('#highlight[rel=stylesheet]').attr('href', css.attr('href'));
+      $('.highlight-switch').closest('li').removeClass('active');
+      $(this).closest('li').addClass('active');
+      return false;
+    });
+  
+    //TODO refresh on show/hide
+    $window.on('load', function () {
+      $body.scrollspy('refresh');
+    })
+  
+  });
+  
+  </script>
+  <style>
+  /* Knitr_bootstrap styles */
+  #header {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  #wrap .container-fluid {
+    padding: 0;
+    overflow: hidden;
+  }
+  .toggle{
+    text-transform: capitalize;
+  }
+  
+  .toggle-global{
+    text-transform: capitalize;
+  }
+  
+  /* Sticky footer styles */
+  * {
+    margin:0;
+  }
+  html,
+  body {
+      height: 100%;
+      padding:0 !important;
+      /* The html and body elements cannot have any padding or margin. */
+      /*overflow-x: hidden;*/
+  }
+  
+  /* Wrapper for page content to push down footer */
+  #wrap {
+      min-height: 100%;
+      height: auto !important;
+      height: 100%;
+      /* Negative indent footer by it's height */
+      margin: 0 auto -120px;
+  }
+  
+  /* Set the fixed height of the footer here */
+  #push,
+  #footer {
+      height: 120px;
+  }
+  
+  #footer {
+    text-align: center;
+  }
+  
+  /* Top level subheader elements.  These are the first nested items underneath a header element. */
+  .header li {
+    font-size: 20px;
+  }
+  
+  /* Makes the font smaller for all subheader elements. */
+  .sub-header li {
+      font-size: 12px;
+  }
+  
+  button.thumbnails {
+    margin-left:0px;
+  }
+  
+  /*
+   * Side navigation
+   *
+   * Scrollspy and affixed enhanced navigation to highlight sections and secondary
+   * sections of docs content.
+   */
+  
+  /* By default it's not affixed in mobile views, so undo that */
+  .sidebar.affix {
+    position: static;
+  }
+  
+  /* First level of nav */
+  .sidenav {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding-top:    10px;
+    padding-bottom: 10px;
+    border-radius: 5px;
+  }
+  
+  /* All levels of nav */
+  .sidebar .nav > li > a {
+    display: block;
+    padding: 5px 20px;
+  }
+  .sidebar .nav > li > a:hover,
+  .sidebar .nav > li > a:focus {
+    text-decoration: none;
+    border-right: 1px solid;
+  }
+  .sidebar .nav > .active > a,
+  .sidebar .nav > .active:hover > a,
+  .sidebar .nav > .active:focus > a {
+    font-weight: bold;
+    background-color: transparent;
+    border-right: 1px solid;
+  }
+  
+  /* Nav: second level (shown on .active) */
+  .sidebar .nav .nav {
+    display: none; /* Hide by default, but at >768px, show it */
+    margin-bottom: 8px;
+  }
+  .sidebar .nav .nav > li > a {
+    padding-top:    3px;
+    padding-bottom: 3px;
+    padding-left: 30px;
+    font-size: 90%;
+  }
+  
+  .sidebar .nav .nav .nav > li > a {
+    padding-left: 40px;
+  }
+  .sidebar .nav .nav .nav .nav > li > a {
+    padding-left: 50px;
+  }
+  
+  /* Show and affix the side nav when space allows it */
+  @media screen and (min-width: 992px) {
+    .sidebar .nav > .active > ul {
+      display: block;
+    }
+    /* Widen the fixed sidebar */
+    .sidebar.affix,
+    .sidebar.affix-bottom {
+      width: 213px;
+    }
+    .sidebar.affix-top,
+    .sidebar.affix {
+      position: fixed; /* Undo the static from mobile first approach */
+      top: 30px;
+    }
+    .sidebar.affix-bottom {
+      position: absolute; /* Undo the static from mobile first approach */
+    }
+    .sidebar.affix-bottom .sidenav,
+    .sidebar.affix .sidenav {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+  @media screen and (min-width: 1200px) {
+    /* Widen the fixed sidebar again */
+    .sidebar.affix-bottom,
+    .sidebar.affix {
+      width: 263px;
+    }
+  }
+  
+  #toc {
+    padding: 10px 0px;
+    margin:0;
+    border:0;
+  }
+  
+  
+  .panel pre {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  button + pre {
+    margin: 0;
+    padding: 0;
+  }
+  pre code {
+    border-radius: 0;
+  }
+  /* Magnific Popup CSS */
+  .mfp-bg {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1042;
+    overflow: hidden;
+    position: fixed;
+    background: #0b0b0b;
+    opacity: 0.8;
+    filter: alpha(opacity=80); }
+  
+  .mfp-wrap {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1043;
+    position: fixed;
+    outline: none !important;
+    -webkit-backface-visibility: hidden; }
+  
+  .mfp-container {
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    padding: 0 8px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box; }
+  
+  .mfp-container:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle; }
+  
+  .mfp-align-top .mfp-container:before {
+    display: none; }
+  
+  .mfp-content {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 auto;
+    text-align: left;
+    z-index: 1045; }
+  
+  .mfp-inline-holder .mfp-content,
+  .mfp-ajax-holder .mfp-content {
+    width: 100%;
+    cursor: auto; }
+  
+  .mfp-ajax-cur {
+    cursor: progress; }
+  
+  .mfp-zoom-out-cur,
+  .mfp-zoom-out-cur .mfp-image-holder .mfp-close {
+    cursor: -moz-zoom-out;
+    cursor: -webkit-zoom-out;
+    cursor: zoom-out; }
+  
+  .mfp-zoom {
+    cursor: pointer;
+    cursor: -webkit-zoom-in;
+    cursor: -moz-zoom-in;
+    cursor: zoom-in; }
+  
+  .mfp-auto-cursor .mfp-content {
+    cursor: auto; }
+  
+  .mfp-close,
+  .mfp-arrow,
+  .mfp-preloader,
+  .mfp-counter {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none; }
+  
+  .mfp-loading.mfp-figure {
+    display: none; }
+  
+  .mfp-hide {
+    display: none !important; }
+  
+  .mfp-preloader {
+    color: #cccccc;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    text-align: center;
+    margin-top: -0.8em;
+    left: 8px;
+    right: 8px;
+    z-index: 1044; }
+  
+  .mfp-preloader a {
+    color: #cccccc; }
+  
+  .mfp-preloader a:hover {
+    color: white; }
+  
+  .mfp-s-ready .mfp-preloader {
+    display: none; }
+  
+  .mfp-s-error .mfp-content {
+    display: none; }
+  
+  button.mfp-close,
+  button.mfp-arrow {
+    overflow: visible;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    -webkit-appearance: none;
+    display: block;
+    padding: 0;
+    z-index: 1046;
+    -webkit-box-shadow: none;
+    box-shadow: none; }
+  
+  button::-moz-focus-inner {
+    padding: 0;
+    border: 0; }
+  
+  .mfp-close {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-decoration: none;
+    text-align: center;
+    opacity: 0.65;
+    padding: 0 0 18px 10px;
+    color: white;
+    font-style: normal;
+    font-size: 28px;
+    font-family: Arial, Baskerville, monospace; }
+    .mfp-close:hover, .mfp-close:focus {
+      opacity: 1; }
+    .mfp-close:active {
+      top: 1px; }
+  
+  .mfp-close-btn-in .mfp-close {
+    color: #333333; }
+  
+  .mfp-image-holder .mfp-close,
+  .mfp-iframe-holder .mfp-close {
+    color: white;
+    right: -6px;
+    text-align: right;
+    padding-right: 6px;
+    width: 100%; }
+  
+  .mfp-counter {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: #cccccc;
+    font-size: 12px;
+    line-height: 18px; }
+  
+  .mfp-arrow {
+    position: absolute;
+    opacity: 0.65;
+    margin: 0;
+    top: 50%;
+    margin-top: -55px;
+    padding: 0;
+    width: 90px;
+    height: 110px;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+  
+  .mfp-arrow:active {
+    margin-top: -54px; }
+  
+  .mfp-arrow:hover,
+  .mfp-arrow:focus {
+    opacity: 1; }
+  
+  .mfp-arrow:before, .mfp-arrow:after,
+  .mfp-arrow .mfp-b,
+  .mfp-arrow .mfp-a {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin-top: 35px;
+    margin-left: 35px;
+    border: medium inset transparent; }
+  .mfp-arrow:after,
+  .mfp-arrow .mfp-a {
+    border-top-width: 13px;
+    border-bottom-width: 13px;
+    top: 8px; }
+  .mfp-arrow:before,
+  .mfp-arrow .mfp-b {
+    border-top-width: 21px;
+    border-bottom-width: 21px; }
+  
+  .mfp-arrow-left {
+    left: 0; }
+    .mfp-arrow-left:after,
+    .mfp-arrow-left .mfp-a {
+      border-right: 17px solid white;
+      margin-left: 31px; }
+    .mfp-arrow-left:before,
+    .mfp-arrow-left .mfp-b {
+      margin-left: 25px;
+      border-right: 27px solid #3f3f3f; }
+  
+  .mfp-arrow-right {
+    right: 0; }
+    .mfp-arrow-right:after,
+    .mfp-arrow-right .mfp-a {
+      border-left: 17px solid white;
+      margin-left: 39px; }
+    .mfp-arrow-right:before,
+    .mfp-arrow-right .mfp-b {
+      border-left: 27px solid #3f3f3f; }
+  
+  .mfp-iframe-holder {
+    padding-top: 40px;
+    padding-bottom: 40px; }
+  
+  .mfp-iframe-holder .mfp-content {
+    line-height: 0;
+    width: 100%;
+    max-width: 900px; }
+  
+  .mfp-iframe-scaler {
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    padding-top: 56.25%; }
+  
+  .mfp-iframe-scaler iframe {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+    background: black; }
+  
+  .mfp-iframe-holder .mfp-close {
+    top: -40px; }
+  
+  /* Main image in popup */
+  img.mfp-img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    line-height: 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 40px 0 40px;
+    margin: 0 auto; }
+  
+  /* The shadow behind the image */
+  .mfp-figure:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 40px;
+    bottom: 40px;
+    display: block;
+    right: 0;
+    width: auto;
+    height: auto;
+    z-index: -1;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+    background: #444444; }
+  
+  .mfp-figure {
+    line-height: 0; }
+  
+  .mfp-bottom-bar {
+    margin-top: -36px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    cursor: auto; }
+  
+  .mfp-title {
+    text-align: left;
+    line-height: 18px;
+    color: #f3f3f3;
+    word-wrap: break-word;
+    padding-right: 36px; }
+  
+  .mfp-figure small {
+    color: #bdbdbd;
+    display: block;
+    font-size: 12px;
+    line-height: 14px; }
+  
+  .mfp-image-holder .mfp-content {
+    max-width: 100%; }
+  
+  .mfp-gallery .mfp-image-holder .mfp-figure {
+    cursor: pointer; }
+  
+  @media screen and (max-width: 800px) and (orientation: landscape), screen and (max-height: 300px) {
+    /**
+     * Remove all paddings around the image on small screen
+     */
+    .mfp-img-mobile .mfp-image-holder {
+      padding-left: 0;
+      padding-right: 0; }
+  
+    .mfp-img-mobile img.mfp-img {
+      padding: 0; }
+  
+    /* The shadow behind the image */
+    .mfp-img-mobile .mfp-figure:after {
+      top: 0;
+      bottom: 0; }
+  
+    .mfp-img-mobile .mfp-bottom-bar {
+      background: rgba(0, 0, 0, 0.6);
+      bottom: 0;
+      margin: 0;
+      top: auto;
+      padding: 3px 5px;
+      position: fixed;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box; }
+  
+    .mfp-img-mobile .mfp-bottom-bar:empty {
+      padding: 0; }
+  
+    .mfp-img-mobile .mfp-counter {
+      right: 5px;
+      top: 3px; }
+  
+    .mfp-img-mobile .mfp-close {
+      top: 0;
+      right: 0;
+      width: 35px;
+      height: 35px;
+      line-height: 35px;
+      background: rgba(0, 0, 0, 0.6);
+      position: fixed;
+      text-align: center;
+      padding: 0; }
+  
+    .mfp-img-mobile .mfp-figure small {
+      display: inline;
+      margin-left: 5px; } }
+  @media all and (max-width: 900px) {
+    .mfp-arrow {
+      -webkit-transform: scale(0.75);
+      transform: scale(0.75); }
+  
+    .mfp-arrow-left {
+      -webkit-transform-origin: 0;
+      transform-origin: 0; }
+  
+    .mfp-arrow-right {
+      -webkit-transform-origin: 100%;
+      transform-origin: 100%; }
+  
+    .mfp-container {
+      padding-left: 6px;
+      padding-right: 6px; } }
+  .mfp-ie7 .mfp-img {
+    padding: 0; }
+  .mfp-ie7 .mfp-bottom-bar {
+    width: 600px;
+    left: 50%;
+    margin-left: -300px;
+    margin-top: 5px;
+    padding-bottom: 5px; }
+  .mfp-ie7 .mfp-container {
+    padding: 0; }
+  .mfp-ie7 .mfp-content {
+    padding-top: 44px; }
+  .mfp-ie7 .mfp-close {
+    top: 0;
+    right: 0;
+    padding-top: 0; }
+  
+  //Magnific overrides
+  .mfp-image img{
+    background: white;
+  }
+  .mfp-figure:after {
+    background: white;
+  }
+  
+  /*
+   * Off Canvas navbar toggle right
+   * --------------------------------------------------
+   */
+  
+  @media screen and (max-width: 768px) {
+    .row-offcanvas .collapsing {
+    -webkit-transition: none 0;
+      -moz-transition: none 0;
+      transition: none 0;
+    }
+   .row-offcanvas .navbar {
+    position: absolute;
+    z-index: 2;
+      right:0;
+      height:100%;
+      width:55px;
+      border:0;
+      background-color:transparent;
+    }
+    .row-offcanvas .navbar-toggle {
+      margin-right: 5px;
+      margin-left: 5px;
+    }
+    .row-offcanvas {
+      position: relative;
+    }
+    .row-offcanvas-right.active .navbar {
+    position: absolute;
+    z-index: 2;
+      right: -28.4%;
+      width:40%;
+      background-color:#eee;
+      border:0 solid #ddd;
+      border-left-width:1px;
+    }
+    .row-offcanvas-right.active {
+      left: -30%;
+    }
+    .row-offcanvas-right.active .navbar-collapse {
+      position: relative;
+      width: 100%;
+    }
+    .row-offcanvas .content {
+    /*width:calc(100% - 60px);*/
+    }
+  }
+  </style>
+</head>
+<body>
+<div id="wrap">
+<div class="container">
+<div class="row row-offcanvas row-offcanvas-right">
+<div class="contents col-xs-12 col-md-10">
+<h1>All exon counting methods</h1>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">library('edgeR')</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
+</button>
+<pre style="display:none"><code class="message r">## Loading required package: limma
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">library('DESeq2')</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
+</button>
+<pre style="display:none"><code class="message r">## Loading required package: S4Vectors
+## Loading required package: stats4
+## Loading required package: BiocGenerics
+## Loading required package: parallel
+## 
+## Attaching package: 'BiocGenerics'
+## 
+## The following objects are masked from 'package:parallel':
+## 
+##     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+##     clusterExport, clusterMap, parApply, parCapply, parLapply,
+##     parLapplyLB, parRapply, parSapply, parSapplyLB
+## 
+## The following object is masked from 'package:limma':
+## 
+##     plotMA
+## 
+## The following object is masked from 'package:stats':
+## 
+##     xtabs
+## 
+## The following objects are masked from 'package:base':
+## 
+##     anyDuplicated, append, as.data.frame, as.vector, cbind,
+##     colnames, do.call, duplicated, eval, evalq, Filter, Find, get,
+##     intersect, is.unsorted, lapply, Map, mapply, match, mget,
+##     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+##     rbind, Reduce, rep.int, rownames, sapply, setdiff, sort,
+##     table, tapply, union, unique, unlist, unsplit
+## 
+## Loading required package: IRanges
+## Loading required package: GenomicRanges
+## Loading required package: GenomeInfoDb
+## Loading required package: Rcpp
+## Loading required package: RcppArmadillo
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">library('GenomicRanges')
+library('Rsubread')
+library('derfinder')</code></pre>
+<button class="warning R toggle btn btn-xs btn-warning">
+<span class="glyphicon glyphicon-chevron-down"></span> R warning
+</button>
+<pre style=""><code class="warning r">## Warning: multiple methods tables found for 'score'
+</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
+</button>
+<pre style="display:none"><code class="message r">## Find out what's changed in derfinder with
+## news(Version == "1.1.17", package = "derfinder")
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">## Load data
+load("../coverageToExon/covToEx-ucsc.Rdata")
+load("../CoverageInfo/fullCov.Rdata")
+load("../derAnalysis/run2-v1.0.10/groupInfo.Rdata")
+load('../simulation_info.Rdata')
+if(file.exists("../derAnalysis/run2-v1.0.10/colsubset.Rdat")) {
+    load("../derAnalysis/run2-v1.0.10/colsubset.Rdata")
+} else {
+    colsubset <- seq_len(length(groupInfo))
+}
+
+## GenomicState object
+if(file.exists('/home/epi/ajaffe/Lieber/Projects/RNAseq/derannotator/rdas/GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')) {
+    load('/home/epi/ajaffe/Lieber/Projects/RNAseq/derannotator/rdas/GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')
+} else if(file.exists('../../GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')) {
+    load('../../GenomicState.Hsapiens.UCSC.hg19.knownGene.rda')
+} else {
+    stop('Missing UCSC hg19 genomic state object')
+}
+
+## TxDb setup
+library('GenomeInfoDb')
+library('TxDb.Hsapiens.UCSC.hg19.knownGene')</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
+</button>
+<pre style="display:none"><code class="message r">## Loading required package: GenomicFeatures
+## Loading required package: AnnotationDbi
+## Loading required package: Biobase
+## Welcome to Bioconductor
+## 
+##     Vignettes contain introductory material; view with
+##     'browseVignettes()'. To cite Bioconductor, see
+##     'citation("Biobase")', and for packages 'citation("pkgname")'.
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+txinfo <- select(txdb, keys = chosen$ucsckg_id, columns = columns(txdb), keytype = 'TXNAME')
+
+## Buiild GRangesList with exons grouped by transcript
+tx <- split(GRanges(seqnames = txinfo$EXONCHROM, IRanges(start = txinfo$EXONSTART, end = txinfo$EXONEND), strand = txinfo$EXONSTRAND), txinfo$TXNAME)
+tx <- tx[match(chosen$ucsckg_id, names(tx))]
+
+## Calculate coverage
+calc_cov <- function(exons) {
+    print(system.time(reg_cov <- getRegionCoverage(fullCov = fullCov, exons, verbose = FALSE)))
+    cov <- t(sapply(reg_cov, function(x) { colSums(x) })) / 100
+    round(cov, 0)
+}
+
+## DESeq2 analysis
+run_deseq <- function(counts, exons, file, groupInfo) {
+    nonzero <- sapply(rowSums(counts), function(x) {x > 0})
+    
+    ## Round matrix and specify design
+    dse <- DESeqDataSetFromMatrix(counts[nonzero, ], data.frame(group = groupInfo), ~ group)
+
+    ## Perform DE analysis
+    system.time( dse <- DESeq(dse, test = 'LRT', reduced = ~ 1) )
+
+    ## Extract results
+    deseq <- exons[nonzero]
+    mcols(deseq) <- cbind(mcols(deseq), results(dse))
+
+    ## Which are significant?
+    deseq$sig <- deseq$padj < 0.05
+    deseq$sig[is.na(deseq$sig)] <- FALSE
+
+    ## Save results
+    save(deseq, file = paste0(file, '-DESeq2.Rdata'))
+    
+    ## End
+    return(deseq)
+}
+
+## edgeR analysis
+run_edger <- function(counts, exons, file, groupInfo) {
+    nonzero <- sapply(rowSums(counts), function(x) {x > 0})
+    
+    ## Determine design matrix
+    design <- model.matrix(~ groupInfo)
+
+    ## Perform DE analysis
+    d <- DGEList(counts = counts[nonzero, ], group = groupInfo)
+    d <- calcNormFactors(d)
+    system.time(dw <- estimateGLMRobustDisp(d, design = design, prior.df = 10, maxit = 6))
+    fw <- glmFit(dw, design = design, coef = 2:3)
+    lrw <- glmLRT(fw, coef = 2:3)
+
+    ## Extract results
+    edger <- exons[nonzero]
+    mcols(edger) <- cbind(mcols(edger), DataFrame(lrw$table))
+    edger$pvalue <-  lrw$table$PValue
+    edger$padj <- p.adjust(lrw$table$PValue, 'BH')
+
+    ## Which are significant?
+    edger$sig <- edger$padj < 0.05
+    edger$sig[is.na(edger$sig)] <- FALSE
+
+    ## Save results
+    save(edger, file = paste0(file, '-edgeR.Rdata'))
+    
+    ## End
+    return(edger)
+}</code></pre>
+</div>
+<h1>Exon analysis</h1>
+<h2>Sets</h2>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## Genomic state
+exons <- GenomicState.Hsapiens.UCSC.hg19.knownGene$fullGenome
+exons <- exons[seqnames(exons) == 'chr22']
+exons <- list('genomicState' = exons[exons$theRegion == 'exon'])
+
+## TxDb
+exons <- c(exons, list(txdb = exons(txdb)))
+
+## TxDb by gene
+exons <- c(exons, list(byGene = unlist(exonsBy(txdb, 'gene'))))
+
+## TxDb disjoint
+exons <- c(exons, list(disjoint = disjointExons(txdb)))
+
+## feature counts
+hg19 <- read.table(system.file("annot", "hg19_RefSeq_exon.txt", package = "Rsubread"), header = TRUE)
+hg19 <- subset(hg19, Chr == 'chr22')
+exons <- c(exons, list(featureCounts = GRanges(hg19$Chr, IRanges(hg19$Start, hg19$End), strand = hg19$Strand, GeneID = hg19$GeneID)))
+rm(hg19)
+
+## Note that in some exon sets, some exons overlap
+lapply(exons, function(x) { table(countOverlaps(x) - 1)})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+## 
+##    0 
+## 5676 
+## 
+## $txdb
+## 
+##    0    1    2    3    4    5    7 
+## 5096 1105  219   69   21    5    1 
+## 
+## $byGene
+## 
+##    0    1    2    3    4    5    7 
+## 4284 1130  241   84   14    9    1 
+## 
+## $disjoint
+## 
+##    0 
+## 5659 
+## 
+## $featureCounts
+## 
+##    0    1    2    3 
+## 4917  131    4    1
+</code></pre>
+</div>
+<h2>Counting</h2>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## Count using derfinder
+counts <- lapply(exons, calc_cov)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##    user  system elapsed 
+##  28.664  11.294  40.213 
+##    user  system elapsed 
+##  26.272  16.377  42.689 
+##    user  system elapsed 
+##  21.569  14.549  36.159 
+##    user  system elapsed 
+##  21.617  13.214  34.858 
+##    user  system elapsed 
+##  19.152  10.990  30.198
+</code></pre>
+</div>
+<h2>DE</h2>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## DESeq2
+system.time( deseq <- mapply(run_deseq, counts, exons, names(exons), MoreArgs = list(groupInfo = groupInfo)) )</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-down"></span> R message
+</button>
+<pre style=""><code class="message r">## converting counts to integer mode
+## estimating size factors
+## estimating dispersions
+## gene-wise dispersion estimates
+## mean-dispersion relationship
+## final dispersion estimates
+## fitting model and testing
+## converting counts to integer mode
+## estimating size factors
+## estimating dispersions
+## gene-wise dispersion estimates
+## mean-dispersion relationship
+## final dispersion estimates
+## fitting model and testing
+## converting counts to integer mode
+## estimating size factors
+## estimating dispersions
+## gene-wise dispersion estimates
+## mean-dispersion relationship
+## final dispersion estimates
+## fitting model and testing
+## converting counts to integer mode
+## estimating size factors
+## estimating dispersions
+## gene-wise dispersion estimates
+## mean-dispersion relationship
+## final dispersion estimates
+## fitting model and testing
+## converting counts to integer mode
+## estimating size factors
+## estimating dispersions
+## gene-wise dispersion estimates
+## mean-dispersion relationship
+## final dispersion estimates
+## fitting model and testing
+</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##    user  system elapsed 
+##   7.092   0.025   7.170
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## edgeR
+system.time( edger <- mapply(run_edger, counts, exons, names(exons), MoreArgs = list(groupInfo = groupInfo)) )</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##    user  system elapsed 
+##  13.098   0.162  13.304
+</code></pre>
+</div>
+<h2>Compare</h2>
+<h3>Exonic segments</h3>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">## Find exons
+txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+txinfo <- select(txdb, keys = chosen$ucsckg_id, columns = columns(txdb), keytype = 'TXNAME')
+
+## Buiild GRangesList with exons grouped by transcript
+tx <- split(GRanges(seqnames = txinfo$EXONCHROM, IRanges(start = txinfo$EXONSTART, end = txinfo$EXONEND), strand = txinfo$EXONSTRAND), txinfo$TXNAME)
+tx <- tx[match(chosen$ucsckg_id, names(tx))]
+
+## Gene level: DE if at least one transcript is DE
+gene <- data.frame(gene_id = unique(chosen$gene_id))
+gene$DE <- sapply(gene$gene_id, function(x) { any(chosen$DE[chosen$gene_id == x])  })
+gene$case <- sapply(gene$gene_id, function(x) { unique(chosen$case[chosen$gene_id == x])  })
+
+## Identify exonic segments
+segments <- GRangesList(lapply(gene$gene_id, function(x) {
+    i <- chosen$ucsckg_id[ chosen$gene_id == x]
+    
+    ## Find segments
+    segs <- disjoin(unlist(tx[i]))
+    ov <- findOverlaps(segs, tx[i])
+    
+    ## Find DE status per segment
+    segs$DE <- as.vector(tapply(subjectHits(ov), queryHits(ov), function(y) {
+        any(chosen$DE[ chosen$gene_id == x])
+    }))
+    
+    ## Finish
+    return(segs)
+}))
+names(segments) <- gene$gene_id
+segs <- unlist(segments)</code></pre>
+</div>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">count_comp <- function(info, ptype = 'padj', cut = 0.05) {
+    if(ptype == 'padj') {
+        idx <- info$padj < cut
+    } else if (ptype == 'pvalue') {
+        idx <- info$pvalue < cut
+    } else {
+        p <- p.adjust(info$pvalue, ptype)
+        idx <- p < cut
+    }
+    idx[is.na(idx)] <- FALSE
+
+    ## Overlaps at least 1 DE exon
+    addmargins(table('DE status' = segs$DE, 'Overlaps DE exon' = countOverlaps(segs, info[idx]) > 0))
+}
+
+lapply(deseq, count_comp)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   104    7 111
+##     TRUE      6  163 169
+##     Sum     110  170 280
+## 
+## $txdb
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   104    7 111
+##     TRUE      6  163 169
+##     Sum     110  170 280
+## 
+## $byGene
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   102    9 111
+##     TRUE      7  162 169
+##     Sum     109  171 280
+## 
+## $disjoint
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   108    3 111
+##     TRUE     22  147 169
+##     Sum     130  150 280
+## 
+## $featureCounts
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   105    6 111
+##     TRUE     15  154 169
+##     Sum     120  160 280
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">lapply(edger, count_comp)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE    94   17 111
+##     TRUE      6  163 169
+##     Sum     100  180 280
+## 
+## $txdb
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE    94   17 111
+##     TRUE      6  163 169
+##     Sum     100  180 280
+## 
+## $byGene
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE    97   14 111
+##     TRUE      7  162 169
+##     Sum     104  176 280
+## 
+## $disjoint
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   104    7 111
+##     TRUE     21  148 169
+##     Sum     125  155 280
+## 
+## $featureCounts
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE    99   12 111
+##     TRUE     14  155 169
+##     Sum     113  167 280
+</code></pre>
+</div>
+<h4>Empirical Power</h4>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">emp_power <- function(info, ptype = 'padj') {
+    m <- count_comp(info, ptype)
+    round(m[2, 2] / m[2, 3] * 100, 2)
+}
+
+
+sapply(deseq, emp_power)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  genomicState          txdb        byGene      disjoint featureCounts 
+##         96.45         96.45         95.86         86.98         91.12
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">sapply(edger, emp_power)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  genomicState          txdb        byGene      disjoint featureCounts 
+##         96.45         96.45         95.86         87.57         91.72
+</code></pre>
+</div>
+<h4>Empirical FPR</h4>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">emp_fpr <- function(info, ptype = 'padj') {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[1, 3] * 100, 2)
+}
+
+sapply(deseq, emp_fpr)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  genomicState          txdb        byGene      disjoint featureCounts 
+##          6.31          6.31          8.11          2.70          5.41
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">sapply(edger, emp_fpr)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  genomicState          txdb        byGene      disjoint featureCounts 
+##         15.32         15.32         12.61          6.31         10.81
+</code></pre>
+</div>
+<h3>Overlap</h3>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
+
+## Some formatting and subsets
+fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegs20 <- fullRegions[width(fullRegions) >= 20]
+
+## Overlap table for all 4 cases
+ov_table <- function(ders, counts, query = 'der', minov = 0) {
+    if(query == 'der') {
+        if(minov == 0) {
+            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
+        } else {
+            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
+        }
+    } else if (query == 'counts') {
+        if(minov == 0) {
+            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+        } else {
+            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+        }
+    }
+    return(res)
+}
+
+## Explore mistmatched cases for DERs vs Exons direction
+explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
+    if(case == 'FALSE-TRUE') {
+        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+    } else if (case == 'TRUE-FALSE') {
+        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFWER)
+    } else{
+        stop('invalid case')
+    }
+    if(length(i) == 0) return("No such cases")
+    
+    if(case == 'FALSE-TRUE') {
+        res <- list(
+            n_overlaps = table(countOverlaps(ders[i], counts[counts$sig], minoverlap = minov)),
+            width_der = summary(width(ders[i])),
+            ders_per_exon_table = table(table(subjectHits(findOverlaps(ders[i], counts[counts$sig], minoverlap = minov)))),
+            ders_per_exon = sort(table(subjectHits(findOverlaps(ders[i], counts[counts$sig], minoverlap = minov)))),
+            i = i
+        )
+    } else {
+        res <- list(
+            width_der = summary(width(ders[i])),
+            distance_nearest_sum = summary(mcols(distanceToNearest(ders[i], counts, ignore.strand = TRUE))$distance),
+            distance_nearest_sig_sum = summary(mcols(distanceToNearest(ders[i], counts[counts$sig], ignore.strand = TRUE))$distance),
+            distance_nearest = distanceToNearest(ders[i], counts, ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(ders[i], counts[counts$sig], ignore.strand = TRUE),
+            i = i
+        )
+    }
+    
+    return(res)
+}
+
+## Explore mistmatched cases for Exons vs DERs direction
+explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
+    counts <- counts[width(counts) >= minov]
+    if(case == 'FALSE-TRUE') {
+        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !counts$sig)
+    } else if (case == 'TRUE-FALSE') {
+        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & counts$sig)
+    } else{
+        stop('invalid case')
+    }
+    if(length(i) == 0) return("No such cases")
+    
+    if(case == 'FALSE-TRUE') {
+        res <- list(
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            width_exon = summary(width(counts[i])),
+            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            i = i
+        )
+    } else {
+        res <- list(
+            width_exon = summary(width(counts[i])),
+            distance_nearest_sum = summary(mcols(distanceToNearest(counts[i], ders, ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+            distance_nearest = distanceToNearest(counts[i], ders, ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE),
+            i = i
+        )
+    }
+    
+    return(res)
+}
+
+noNA <- function(x) {
+    x[!is.na(x)]
+}</code></pre>
+</div>
+<h4>Query: DERs</h4>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## DESeq2
+lapply(deseq, function(x) {
+    ov_table(fullRegions, x)
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    15  332 347
+##                  TRUE      0  122 122
+##                  Sum      15  454 469
+## 
+## $txdb
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    15  332 347
+##                  TRUE      0  122 122
+##                  Sum      15  454 469
+## 
+## $byGene
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    15  332 347
+##                  TRUE      0  122 122
+##                  Sum      15  454 469
+## 
+## $disjoint
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    44  303 347
+##                  TRUE      5  117 122
+##                  Sum      49  420 469
+## 
+## $featureCounts
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    21  326 347
+##                  TRUE      6  116 122
+##                  Sum      27  442 469
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">lapply(deseq, function(x) {
+    ov_table(fullRegs20, x, minov = 20L)
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      0  122 122
+##                  Sum       1  168 169
+## 
+## $txdb
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      0  122 122
+##                  Sum       1  168 169
+## 
+## $byGene
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      0  122 122
+##                  Sum       1  168 169
+## 
+## $disjoint
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     9   38  47
+##                  TRUE      5  117 122
+##                  Sum      14  155 169
+## 
+## $featureCounts
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      6  116 122
+##                  Sum       7  162 169
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## edgeR
+lapply(edger, function(x) {
+    ov_table(fullRegions, x)
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    15  332 347
+##                  TRUE      0  122 122
+##                  Sum      15  454 469
+## 
+## $txdb
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    13  334 347
+##                  TRUE      0  122 122
+##                  Sum      13  456 469
+## 
+## $byGene
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    19  328 347
+##                  TRUE      0  122 122
+##                  Sum      19  450 469
+## 
+## $disjoint
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    40  307 347
+##                  TRUE      5  117 122
+##                  Sum      45  424 469
+## 
+## $featureCounts
+##                       Overlaps sig DE exon
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE    18  329 347
+##                  TRUE      6  116 122
+##                  Sum      24  445 469
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">lapply(edger, function(x) {
+    ov_table(fullRegs20, x, minov = 20L)
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      0  122 122
+##                  Sum       1  168 169
+## 
+## $txdb
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      0  122 122
+##                  Sum       1  168 169
+## 
+## $byGene
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      0  122 122
+##                  Sum       1  168 169
+## 
+## $disjoint
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     9   38  47
+##                  TRUE      5  117 122
+##                  Sum      14  155 169
+## 
+## $featureCounts
+##                       Overlaps sig DE exon (min 20bp)
+## Significant DER (FWER) FALSE TRUE Sum
+##                  FALSE     1   46  47
+##                  TRUE      6  116 122
+##                  Sum       7  162 169
+</code></pre>
+</div>
+<h4>Query: exons</h4>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## DESeq2
+lapply(deseq, function(x) {
+    ov_table(fullRegions, x, 'counts')
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   118    0 118
+##               TRUE     31  121 152
+##               Sum     149  121 270
+## 
+## $txdb
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   132    0 132
+##               TRUE     35  142 177
+##               Sum     167  142 309
+## 
+## $byGene
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   133    0 133
+##               TRUE     39  144 183
+##               Sum     172  144 316
+## 
+## $disjoint
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   128    1 129
+##               TRUE     27  127 154
+##               Sum     155  128 283
+## 
+## $featureCounts
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   118    0 118
+##               TRUE     29  116 145
+##               Sum     147  116 263
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">lapply(deseq, function(x) {
+    ov_table(fullRegs20, x, 'counts', minov = 20L)
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   118    0 118
+##               TRUE     31  120 151
+##               Sum     149  120 269
+## 
+## $txdb
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   132    0 132
+##               TRUE     35  141 176
+##               Sum     167  141 308
+## 
+## $byGene
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   133    0 133
+##               TRUE     39  143 182
+##               Sum     172  143 315
+## 
+## $disjoint
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   127    0 127
+##               TRUE     29  123 152
+##               Sum     156  123 279
+## 
+## $featureCounts
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   117    0 117
+##               TRUE     30  115 145
+##               Sum     147  115 262
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## edgeR
+lapply(edger, function(x) {
+    ov_table(fullRegions, x, 'counts')
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   109    0 109
+##               TRUE     40  121 161
+##               Sum     149  121 270
+## 
+## $txdb
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   122    0 122
+##               TRUE     45  142 187
+##               Sum     167  142 309
+## 
+## $byGene
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   128    0 128
+##               TRUE     44  144 188
+##               Sum     172  144 316
+## 
+## $disjoint
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   124    0 124
+##               TRUE     31  128 159
+##               Sum     155  128 283
+## 
+## $featureCounts
+##                    Overlaps sig DER (FWER)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   112    0 112
+##               TRUE     35  116 151
+##               Sum     147  116 263
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">lapply(edger, function(x) {
+    ov_table(fullRegs20, x, 'counts', minov = 20L)
+})</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   109    0 109
+##               TRUE     40  120 160
+##               Sum     149  120 269
+## 
+## $txdb
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   122    0 122
+##               TRUE     45  141 186
+##               Sum     167  141 308
+## 
+## $byGene
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   128    0 128
+##               TRUE     44  143 187
+##               Sum     172  143 315
+## 
+## $disjoint
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   122    0 122
+##               TRUE     34  123 157
+##               Sum     156  123 279
+## 
+## $featureCounts
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE exon FALSE TRUE Sum
+##               FALSE   112    0 112
+##               TRUE     35  115 150
+##               Sum     147  115 262
+</code></pre>
+</div>
+<h1>Reproducibility</h1>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## Reproducibility info
+Sys.time()</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## [1] "2015-03-26 13:43:08 EDT"
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">proc.time()</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##    user  system elapsed 
+## 196.421  68.206 267.466
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">options(width = 120)
+devtools::session_info()</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-down"></span> R message
+</button>
+<pre style=""><code class="message r">## Session info-----------------------------------------------------------------------------------------------------------
+</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  setting  value                                             
+##  version  R Under development (unstable) (2014-11-01 r66923)
+##  system   x86_64, darwin10.8.0                              
+##  ui       X11                                               
+##  language (EN)                                              
+##  collate  en_US.UTF-8                                       
+##  tz       America/New_York
+</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-down"></span> R message
+</button>
+<pre style=""><code class="message r">## Packages---------------------------------------------------------------------------------------------------------------
+</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  package                           * version     date       source                                   
+##  acepack                             1.3.3.3     2013-05-03 CRAN (R 3.2.0)                           
+##  annotate                            1.45.4      2015-03-21 Bioconductor                             
+##  AnnotationDbi                     * 1.29.20     2015-03-19 Bioconductor                             
+##  Biobase                           * 2.27.2      2015-02-28 Bioconductor                             
+##  BiocGenerics                      * 0.13.8      2015-03-19 Bioconductor                             
+##  BiocParallel                        1.1.21      2015-03-24 Bioconductor                             
+##  biomaRt                             2.23.5      2014-11-22 Bioconductor                             
+##  Biostrings                          2.35.11     2015-02-22 Bioconductor                             
+##  bitops                              1.0.6       2013-08-17 CRAN (R 3.2.0)                           
+##  bumphunter                          1.7.6       2015-03-13 Github (lcolladotor/bumphunter@37d10e7)  
+##  cluster                             2.0.1       2015-01-31 CRAN (R 3.2.0)                           
+##  codetools                           0.2.11      2015-03-10 CRAN (R 3.2.0)                           
+##  colorout                          * 1.0.2       2014-11-03 local                                    
+##  colorspace                          1.2.6       2015-03-11 CRAN (R 3.2.0)                           
+##  DBI                                 0.3.1       2014-09-24 CRAN (R 3.2.0)                           
+##  derfinder                         * 1.1.17      2015-03-14 Github (lcolladotor/derfinder@3532e0c)   
+##  derfinderHelper                     1.1.6       2015-03-15 Bioconductor                             
+##  DESeq2                            * 1.7.43      2015-03-22 Bioconductor                             
+##  devtools                            1.6.1       2014-10-07 CRAN (R 3.2.0)                           
+##  digest                              0.6.8       2014-12-31 CRAN (R 3.2.0)                           
+##  doRNG                               1.6         2014-03-07 CRAN (R 3.2.0)                           
+##  edgeR                             * 3.9.13      2015-03-12 Bioconductor                             
+##  evaluate                            0.5.5       2014-04-29 CRAN (R 3.2.0)                           
+##  foreach                             1.4.2       2014-04-11 CRAN (R 3.2.0)                           
+##  foreign                             0.8.63      2015-02-20 CRAN (R 3.2.0)                           
+##  formatR                             1.0         2014-08-25 CRAN (R 3.2.0)                           
+##  Formula                             1.2.0       2015-01-20 CRAN (R 3.2.0)                           
+##  futile.logger                       1.4         2015-03-21 CRAN (R 3.2.0)                           
+##  futile.options                      1.0.0       2010-04-06 CRAN (R 3.2.0)                           
+##  genefilter                          1.49.2      2014-10-21 Bioconductor                             
+##  geneplotter                         1.45.0      2014-10-14 Bioconductor                             
+##  GenomeInfoDb                      * 1.3.15      2015-03-19 Bioconductor                             
+##  GenomicAlignments                   1.3.32      2015-03-18 Bioconductor                             
+##  GenomicFeatures                   * 1.19.33     2015-03-21 Bioconductor                             
+##  GenomicFiles                        1.3.14      2015-03-07 Bioconductor                             
+##  GenomicRanges                     * 1.19.47     2015-03-21 Bioconductor                             
+##  ggplot2                             1.0.0       2014-05-21 CRAN (R 3.2.0)                           
+##  gtable                              0.1.2       2012-12-05 CRAN (R 3.2.0)                           
+##  Hmisc                               3.14.5      2014-09-12 CRAN (R 3.2.0)                           
+##  htmltools                           0.2.6       2014-09-08 CRAN (R 3.2.0)                           
+##  IRanges                           * 2.1.43      2015-03-07 Bioconductor                             
+##  iterators                           1.0.7       2014-04-11 CRAN (R 3.2.0)                           
+##  knitr                               1.7         2014-10-13 CRAN (R 3.2.0)                           
+##  knitrBootstrap                      1.0.0       2014-11-03 Github (jimhester/knitrBootstrap@76c41f0)
+##  lambda.r                            1.1.7       2015-03-20 CRAN (R 3.2.0)                           
+##  lattice                             0.20.30     2015-02-22 CRAN (R 3.2.0)                           
+##  latticeExtra                        0.6.26      2013-08-15 CRAN (R 3.2.0)                           
+##  limma                             * 3.23.11     2015-03-15 Bioconductor                             
+##  locfit                              1.5.9.1     2013-04-20 CRAN (R 3.2.0)                           
+##  markdown                            0.7.4       2014-08-24 CRAN (R 3.2.0)                           
+##  MASS                                7.3.40      2015-03-21 CRAN (R 3.2.0)                           
+##  Matrix                              1.1.5.1     2015-03-23 CRAN (R 3.2.0)                           
+##  matrixStats                         0.14.0      2015-02-14 CRAN (R 3.2.0)                           
+##  munsell                             0.4.2       2013-07-11 CRAN (R 3.2.0)                           
+##  nnet                                7.3.9       2015-02-11 CRAN (R 3.2.0)                           
+##  pkgmaker                            0.22        2014-05-14 CRAN (R 3.2.0)                           
+##  plyr                                1.8.1       2014-02-26 CRAN (R 3.2.0)                           
+##  proto                               0.3.10      2012-12-22 CRAN (R 3.2.0)                           
+##  qvalue                              1.43.0      2015-03-04 Bioconductor                             
+##  RColorBrewer                        1.1.2       2014-12-07 CRAN (R 3.2.0)                           
+##  Rcpp                              * 0.11.5      2015-03-06 CRAN (R 3.2.0)                           
+##  RcppArmadillo                     * 0.4.650.1.1 2015-02-26 CRAN (R 3.2.0)                           
+##  RCurl                               1.95.4.5    2014-12-28 CRAN (R 3.2.0)                           
+##  registry                            0.2         2012-01-24 CRAN (R 3.2.0)                           
+##  reshape2                            1.4.1       2014-12-06 CRAN (R 3.2.0)                           
+##  rmarkdown                           0.3.3       2014-09-17 CRAN (R 3.2.0)                           
+##  rngtools                            1.2.4       2014-03-06 CRAN (R 3.2.0)                           
+##  rpart                               4.1.9       2015-02-24 CRAN (R 3.2.0)                           
+##  Rsamtools                           1.19.47     2015-03-21 Bioconductor                             
+##  RSQLite                             1.0.0       2014-10-25 CRAN (R 3.2.0)                           
+##  rstudioapi                          0.2         2014-12-31 CRAN (R 3.2.0)                           
+##  Rsubread                          * 1.17.1      2014-11-01 Bioconductor                             
+##  rtracklayer                         1.27.9      2015-03-19 Bioconductor                             
+##  S4Vectors                         * 0.5.22      2015-03-06 Bioconductor                             
+##  scales                              0.2.4       2014-04-22 CRAN (R 3.2.0)                           
+##  stringr                             0.6.2       2012-12-06 CRAN (R 3.2.0)                           
+##  survival                            2.38.1      2015-02-24 CRAN (R 3.2.0)                           
+##  TxDb.Hsapiens.UCSC.hg19.knownGene * 3.0.0       2014-09-26 Bioconductor                             
+##  XML                                 3.98.1.1    2013-06-20 CRAN (R 3.2.0)                           
+##  xtable                              1.7.4       2014-09-12 CRAN (R 3.2.0)                           
+##  XVector                           * 0.7.4       2015-02-08 Bioconductor                             
+##  yaml                                2.1.13      2014-06-12 CRAN (R 3.2.0)                           
+##  zlibbioc                            1.13.3      2015-03-23 Bioconductor
+</code></pre>
+</div>
+</div>
+</div>
+<div class="navbar navbar-fixed-bottom navbar-inverse">
+<div class="container">
+<div class="navbar-header">
+<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-responsive-collapse">
+<span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span>
+</button>
+</div>
+<div id="bottom-navbar" class="navbar-collapse collapse navbar-responsive-collapse">
+<ul class="nav navbar-nav navbar-right">
+<li class="nav">
+<p class="navbar-text">
+Toggle
+</p>
+</li>
+<li class="dropup">
+<a href="#" class="dropdown-toggle" data-toggle="dropdown">Code <b class="caret"></b></a>
+<ul class="dropdown-menu">
+<li class="dropdown-header">
+Languages
+</li>
+<li class="active">
+<a href="#" class="toggle-global source R" type="source.R">R</a>
+</li>
+<li>
+<a href="#" type="all-source" class="toggle-global">All</a>
+</li>
+</ul>
+</li>
+<li class="dropup">
+<a href="#" class="dropdown-toggle" data-toggle="dropdown">Output <b class="caret"></b></a>
+<ul class="dropdown-menu">
+<li class="dropdown-header">
+Type
+</li>
+<li class="active">
+<a href="#" class="toggle-global message" type="message">message</a>
+</li>
+<li class="active">
+<a href="#" class="toggle-global warning" type="warning">warning</a>
+</li>
+<li class="active">
+<a href="#" class="toggle-global output" type="output">output</a>
+</li>
+<li>
+<a href="#" type="all-output" class="toggle-global">All</a>
+</li>
+</ul>
+</li>
+<li class="active">
+<a href="#" type="figure" class="toggle-global">Figures</a>
+</li>
+</ul>
+<ul class="nav navbar-nav navbar-left">
+<li class="dropup">
+<a href="#" class="dropdown-toggle" data-toggle="dropdown">Bootstrap theme <b class="caret"></b></a>
+<ul class="dropdown-menu">
+<li class="active">
+<a class="theme-switch" title="Default" href="#">Default</a>
+</li>
+<li>
+<a class="theme-switch" title="Amelia" href="#">Amelia</a>
+</li>
+<li>
+<a class="theme-switch" title="Cerulean" href="#">Cerulean</a>
+</li>
+<li>
+<a class="theme-switch" title="Cosmo" href="#">Cosmo</a>
+</li>
+<li>
+<a class="theme-switch" title="Cyborg" href="#">Cyborg</a>
+</li>
+<li>
+<a class="theme-switch" title="Journal" href="#">Journal</a>
+</li>
+<li>
+<a class="theme-switch" title="Flatly" href="#">Flatly</a>
+</li>
+<li>
+<a class="theme-switch" title="Readable" href="#">Readable</a>
+</li>
+<li>
+<a class="theme-switch" title="Simplex" href="#">Simplex</a>
+</li>
+<li>
+<a class="theme-switch" title="Slate" href="#">Slate</a>
+</li>
+<li>
+<a class="theme-switch" title="Spacelab" href="#">Spacelab</a>
+</li>
+<li>
+<a class="theme-switch" title="United" href="#">United</a>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="nav navbar-nav navbar-left">
+<li class="dropup">
+<a href="#" class="dropdown-toggle" data-toggle="dropdown">Code highlighting <b class="caret"></b></a>
+<ul class="dropdown-menu">
+<li class="active">
+<a class="highlight-switch" title="HighlightJs" href="#">HighlightJs</a>
+</li>
+<li>
+<a class="highlight-switch" title="Dark" href="#">Dark</a>
+</li>
+<li>
+<a class="highlight-switch" title="Far" href="#">Far</a>
+</li>
+<li>
+<a class="highlight-switch" title="Idea" href="#">Idea</a>
+</li>
+<li>
+<a class="highlight-switch" title="Sunburst" href="#">Sunburst</a>
+</li>
+<li>
+<a class="highlight-switch" title="Zenburn" href="#">Zenburn</a>
+</li>
+<li>
+<a class="highlight-switch" title="Visual Studio" href="#">Visual Studio</a>
+</li>
+<li>
+<a class="highlight-switch" title="Ascetic" href="#">Ascetic</a>
+</li>
+<li>
+<a class="highlight-switch" title="Magula" href="#">Magula</a>
+</li>
+<li>
+<a class="highlight-switch" title="Github" href="#">Github</a>
+</li>
+<li>
+<a class="highlight-switch" title="Google Code" href="#">Google Code</a>
+</li>
+<li>
+<a class="highlight-switch" title="Brown Paper" href="#">Brown Paper</a>
+</li>
+<li>
+<a class="highlight-switch" title="School Book" href="#">School Book</a>
+</li>
+<li>
+<a class="highlight-switch" title="IR Black" href="#">IR Black</a>
+</li>
+<li>
+<a class="highlight-switch" title="Solarized - Dark" href="#">Solarized - Dark</a>
+</li>
+<li>
+<a class="highlight-switch" title="Solarized - Light" href="#">Solarized - Light</a>
+</li>
+<li>
+<a class="highlight-switch" title="Arta" href="#">Arta</a>
+</li>
+<li>
+<a class="highlight-switch" title="Monokai" href="#">Monokai</a>
+</li>
+<li>
+<a class="highlight-switch" title="Xcode" href="#">Xcode</a>
+</li>
+<li>
+<a class="highlight-switch" title="Pojoaque" href="#">Pojoaque</a>
+</li>
+<li>
+<a class="highlight-switch" title="Rainbow" href="#">Rainbow</a>
+</li>
+<li>
+<a class="highlight-switch" title="Tomorrow" href="#">Tomorrow</a>
+</li>
+<li>
+<a class="highlight-switch" title="Tomorrow Night" href="#">Tomorrow Night</a>
+</li>
+<li>
+<a class="highlight-switch" title="Tomorrow Night Bright" href="#">Tomorrow Night Bright</a>
+</li>
+<li>
+<a class="highlight-switch" title="Tomorrow Night Blue" href="#">Tomorrow Night Blue</a>
+</li>
+<li>
+<a class="highlight-switch" title="Tomorrow Night Eighties" href="#">Tomorrow Night Eighties</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" title="Default" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/amelia/bootstrap.min.css" title="Amelia" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/cerulean/bootstrap.min.css" title="Cerulean" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/cosmo/bootstrap.min.css" title="Cosmo" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/cyborg/bootstrap.min.css" title="Cyborg" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/journal/bootstrap.min.css" title="Journal" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/flatly/bootstrap.min.css" title="Flatly" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/readable/bootstrap.min.css" title="Readable" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/simplex/bootstrap.min.css" title="Simplex" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/slate/bootstrap.min.css" title="Slate" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/spacelab/bootstrap.min.css" title="Spacelab" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://netdna.bootstrapcdn.com/bootswatch/3.0.0/united/bootstrap.min.css" title="United" media="screen"></link><link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/default.min.css" title="HighlightJs" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/dark.min.css" title="Dark" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/far.min.css" title="Far" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/idea.min.css" title="Idea" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/sunburst.min.css" title="Sunburst" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/zenburn.min.css" title="Zenburn" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/vs.min.css" title="Visual Studio" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/ascetic.min.css" title="Ascetic" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/magula.min.css" title="Magula" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/github.min.css" title="Github" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/googlecode.min.css" title="Google Code" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/brown_paper.min.css" title="Brown Paper" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/school_book.min.css" title="School Book" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/ir_black.min.css" title="IR Black" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/solarized_dark.min.css" title="Solarized - Dark" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/solarized_light.min.css" title="Solarized - Light" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/arta.min.css" title="Arta" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/monokai.min.css" title="Monokai" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/xcode.min.css" title="Xcode" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/pojoaque.min.css" title="Pojoaque" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/rainbow.min.css" title="Rainbow" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/tomorrow.min.css" title="Tomorrow" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/tomorrow-night.min.css" title="Tomorrow Night" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/tomorrow-night-bright.min.css" title="Tomorrow Night Bright" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/tomorrow-night-blue.min.css" title="Tomorrow Night Blue" media="screen"></link> <link rel="alternate stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/tomorrow-night-eighties.min.css" title="Tomorrow Night Eighties" media="screen"></link>
+</div>
+<div id="push">
+
+</div>
+<div id="footer">
+<div class="container">
+<p class="text-muted" id="credit">
+Styled with <a href="https://github.com/jimhester/knitrBootstrap">knitrBootstrap</a>
+</p>
+</div>
+</div>
+<link rel="stylesheet" id="theme" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" media="screen"></link><link rel="stylesheet" id="highlight" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3/styles/default.min.css" media="screen"></link>
+</div>
+</body>
+</html>
