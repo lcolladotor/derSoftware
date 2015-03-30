@@ -11,6 +11,15 @@ output:
 All exon counting methods
 =========================
 
+This document is based on [counts.based.html](../counts-based/counts.based.html) and expands the ideas there to using 5 different exon sets. These are exons from:
+
+* the genomic state object produced by `derfinder`: _genomicState_
+* `exons()`: _txdb_
+* `exonsBy(by = 'gene')`: _byGene_
+* `disjointExons()`: _disjoint_
+* `featureCounts()` as included in the `Rsubread` package: _featureCounts_.
+
+Not all exonic sets are disjoint and we wanted to know how they would perform using the simulated data.
 
 ```{r 'setup', bootstrap.show.code = FALSE, bootstrap.show.message = FALSE}
 library('edgeR')
@@ -118,6 +127,7 @@ run_edger <- function(counts, exons, file, groupInfo) {
 
 ## Sets
 
+The following code defines the five exonic sets. It then checks how many exons overlap other exons. If it's zero for all of them, then they are disjoint.
 
 ```{r defineSets}
 ## Genomic state
@@ -144,20 +154,22 @@ rm(hg19)
 lapply(exons, function(x) { table(countOverlaps(x) - 1)})
 ```
 
+As expected, only the _genomicState_ and _disjoint_ sets are fully disjoint since they were designed to be that way.
 
 
 
 ## Counting
 
+The following code counts the number of reads per exon using tools from `derfinder`. Alternatively, other software could be used for counting.
+
 ```{r count}
 ## Count using derfinder
 counts <- lapply(exons, calc_cov)
-
-
-
 ```
 
 ## DE
+
+The following code performs the differential expression analysis using `DESeq2` and `edgeR`.
 
 ```{r runDE}
 ## DESeq2
@@ -166,6 +178,20 @@ system.time( deseq <- mapply(run_deseq, counts, exons, names(exons), MoreArgs = 
 ## edgeR
 system.time( edger <- mapply(run_edger, counts, exons, names(exons), MoreArgs = list(groupInfo = groupInfo)) )
 ```
+
+
+## Agreement
+
+The code below compares the results between `DESeq2` and `edgeR`.
+
+```{r edgeR-DESeq2-agreement}
+agree <- function(deseq, edger) {
+    addmargins(table('Significant DE gene -- DESeq2' = mcols(deseq)$sig, 'Significant DE gene -- edgeR' = mcols(edger)$sig))
+}
+mapply(agree, deseq, edger, SIMPLIFY = FALSE)
+```
+
+Overall, `DESeq2` and `edgeR` mostly agree regardless of the exon set. Their best agreement is in the _disjoint_ set with only 5 disagreements (`r round(5/283 * 100, 1)` percent).
 
 ## Compare
 
@@ -205,7 +231,9 @@ names(segments) <- gene$gene_id
 segs <- unlist(segments)
 ```
 
-```{r 'segments_comp'}
+The following code compares the exonic segments (280 of them) against the resulting exon DE calls from `DESeq2` and `edgeR` (in that order). 
+
+```{r 'segments_comp', bootstrap.show.code = FALSE}
 count_comp <- function(info, ptype = 'padj', cut = 0.05) {
     if(ptype == 'padj') {
         idx <- info$padj < cut
@@ -227,6 +255,8 @@ lapply(edger, count_comp)
 
 #### Empirical Power
 
+The empirical power is shown below for `DESeq2` and `edgeR`.
+
 ```{r empPower}
 emp_power <- function(info, ptype = 'padj') {
     m <- count_comp(info, ptype)
@@ -241,6 +271,8 @@ sapply(edger, emp_power)
 
 #### Empirical FPR
 
+The empirical False Positive Rate (FPR) is shown below for `DESeq2` and `edgeR`.
+
 ```{r empFPR}
 emp_fpr <- function(info, ptype = 'padj') {
     m <- count_comp(info, ptype)
@@ -253,6 +285,8 @@ sapply(edger, emp_fpr)
 
 
 ### Overlap
+
+As in [counts.based.html](../counts-based/counts.based.html) we can compare the DERs and exons directly. 
 
 ```{r 'ov-comp-setup', bootstrap.show.code = FALSE}
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
@@ -353,6 +387,8 @@ noNA <- function(x) {
 
 #### Query: DERs
 
+First we use the DERs as the query and check if they overlap a significantly differentially expressed exon. The results are shown for `DESeq2` and `edgeR` using all DERs and then requiring a minimum overlap of 20 bp.
+
 ```{r 'queryDERs'}
 ## DESeq2
 lapply(deseq, function(x) {
@@ -373,6 +409,8 @@ lapply(edger, function(x) {
 
 #### Query: exons
 
+Next, we can use the exons as the query and check if they overlap a significant DER. The results are shown for `DESeq2` and `edgeR` using all DERs and then restricting the overlap to minimum 20 bp.
+
 ```{r 'queryExons'}
 ## DESeq2
 lapply(deseq, function(x) {
@@ -391,9 +429,17 @@ lapply(edger, function(x) {
 })
 ```
 
+# Conclusions
+
+Using `DESeq2` with the _genomicState_ or _txdb_ exonic sets resulted in the highest power and reasonable FPR. While the _disjoint_ set analyzed by `DESeq2` resulted in the best FPR it had the lowest empirical power.
+
+When using the DERs as the query, the _disjoint_ set has the lowest disagreement for both `DESeq2` and `edgeR`. However, the _genomicState_, _txdb_, and _byGene_ sets are the only ones that do not have cases of a significant DER overlapping a non significant DE exon.
+
+Regardless of the exon set, when using the exons as query, there are no cases of a non significantly DE exon overlap a significant DER when requiring a 20 bp overlap.
+
 # Reproducibility
 
-```{r}
+```{r reproducibility, bootstrap.show.code = FALSE}
 ## Reproducibility info
 Sys.time()
 proc.time()

@@ -866,6 +866,15 @@
 <div class="row row-offcanvas row-offcanvas-right">
 <div class="contents col-xs-12 col-md-10">
 <h1>All exon counting methods</h1>
+<p>This document is based on <a href="../counts-based/counts.based.html">counts.based.html</a> and expands the ideas there to using 5 different exon sets. These are exons from:</p>
+<ul>
+<li>the genomic state object produced by <code>derfinder</code>: <em>genomicState</em></li>
+<li><code>exons()</code>: <em>txdb</em></li>
+<li><code>exonsBy(by = 'gene')</code>: <em>byGene</em></li>
+<li><code>disjointExons()</code>: <em>disjoint</em></li>
+<li><code>featureCounts()</code> as included in the <code>Rsubread</code> package: <em>featureCounts</em>.</li>
+</ul>
+<p>Not all exonic sets are disjoint and we wanted to know how they would perform using the simulated data.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -929,12 +938,6 @@ library('derfinder')</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R warning
 </button>
 <pre style=""><code class="warning r">## Warning: multiple methods tables found for 'score'
-</code></pre>
-<button class="message R toggle btn btn-xs btn-info">
-<span class="glyphicon glyphicon-chevron-up"></span> R message
-</button>
-<pre style="display:none"><code class="message r">## Find out what's changed in derfinder with
-## news(Version == "1.1.17", package = "derfinder")
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1049,6 +1052,7 @@ run_edger <- function(counts, exons, file, groupInfo) {
 </div>
 <h1>Exon analysis</h1>
 <h2>Sets</h2>
+<p>The following code defines the five exonic sets. It then checks how many exons overlap other exons. If it's zero for all of them, then they are disjoint.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1104,7 +1108,9 @@ lapply(exons, function(x) { table(countOverlaps(x) - 1)})</code></pre>
 ## 4917  131    4    1
 </code></pre>
 </div>
+<p>As expected, only the <em>genomicState</em> and <em>disjoint</em> sets are fully disjoint since they were designed to be that way.</p>
 <h2>Counting</h2>
+<p>The following code counts the number of reads per exon using tools from <code>derfinder</code>. Alternatively, other software could be used for counting.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1115,18 +1121,19 @@ counts <- lapply(exons, calc_cov)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##  28.664  11.294  40.213 
+##  29.116  11.281  40.451 
 ##    user  system elapsed 
-##  26.272  16.377  42.689 
+##  26.805  16.604  43.462 
 ##    user  system elapsed 
-##  21.569  14.549  36.159 
+##  22.544  15.126  37.858 
 ##    user  system elapsed 
-##  21.617  13.214  34.858 
+##  21.549  13.242  34.848 
 ##    user  system elapsed 
-##  19.152  10.990  30.198
+##  18.592  10.711  29.331
 </code></pre>
 </div>
 <h2>DE</h2>
+<p>The following code performs the differential expression analysis using <code>DESeq2</code> and <code>edgeR</code>.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1176,7 +1183,7 @@ system.time( deseq <- mapply(run_deseq, counts, exons, names(exons), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   7.092   0.025   7.170
+##   7.558   0.033   7.614
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1187,9 +1194,59 @@ system.time( edger <- mapply(run_edger, counts, exons, names(exons), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##  13.098   0.162  13.304
+##  17.077   0.245  17.403
 </code></pre>
 </div>
+<h2>Agreement</h2>
+<p>The code below compares the results between <code>DESeq2</code> and <code>edgeR</code>.</p>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">agree <- function(deseq, edger) {
+    addmargins(table('Significant DE gene -- DESeq2' = mcols(deseq)$sig, 'Significant DE gene -- edgeR' = mcols(edger)$sig))
+}
+mapply(agree, deseq, edger, SIMPLIFY = FALSE)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">## $genomicState
+##                              Significant DE gene -- edgeR
+## Significant DE gene -- DESeq2 FALSE TRUE Sum
+##                         FALSE   109    9 118
+##                         TRUE      0  152 152
+##                         Sum     109  161 270
+## 
+## $txdb
+##                              Significant DE gene -- edgeR
+## Significant DE gene -- DESeq2 FALSE TRUE Sum
+##                         FALSE   122   10 132
+##                         TRUE      0  177 177
+##                         Sum     122  187 309
+## 
+## $byGene
+##                              Significant DE gene -- edgeR
+## Significant DE gene -- DESeq2 FALSE TRUE Sum
+##                         FALSE   125    8 133
+##                         TRUE      3  180 183
+##                         Sum     128  188 316
+## 
+## $disjoint
+##                              Significant DE gene -- edgeR
+## Significant DE gene -- DESeq2 FALSE TRUE Sum
+##                         FALSE   124    5 129
+##                         TRUE      0  154 154
+##                         Sum     124  159 283
+## 
+## $featureCounts
+##                              Significant DE gene -- edgeR
+## Significant DE gene -- DESeq2 FALSE TRUE Sum
+##                         FALSE   112    6 118
+##                         TRUE      0  145 145
+##                         Sum     112  151 263
+</code></pre>
+</div>
+<p>Overall, <code>DESeq2</code> and <code>edgeR</code> mostly agree regardless of the exon set. Their best agreement is in the <em>disjoint</em> set with only 5 disagreements (1.8 percent).</p>
 <h2>Compare</h2>
 <h3>Exonic segments</h3>
 <div class="row">
@@ -1228,11 +1285,12 @@ segments <- GRangesList(lapply(gene$gene_id, function(x) {
 names(segments) <- gene$gene_id
 segs <- unlist(segments)</code></pre>
 </div>
+<p>The following code compares the exonic segments (280 of them) against the resulting exon DE calls from <code>DESeq2</code> and <code>edgeR</code> (in that order).</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-down"></span> R source
+<span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style=""><code class="source r">count_comp <- function(info, ptype = 'padj', cut = 0.05) {
+<pre style="display:none"><code class="source r">count_comp <- function(info, ptype = 'padj', cut = 0.05) {
     if(ptype == 'padj') {
         idx <- info$padj < cut
     } else if (ptype == 'pvalue') {
@@ -1287,9 +1345,9 @@ lapply(deseq, count_comp)</code></pre>
 ##     Sum     120  160 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-down"></span> R source
+<span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style=""><code class="source r">lapply(edger, count_comp)</code></pre>
+<pre style="display:none"><code class="source r">lapply(edger, count_comp)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
@@ -1330,6 +1388,7 @@ lapply(deseq, count_comp)</code></pre>
 </code></pre>
 </div>
 <h4>Empirical Power</h4>
+<p>The empirical power is shown below for <code>DESeq2</code> and <code>edgeR</code>.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1359,6 +1418,7 @@ sapply(deseq, emp_power)</code></pre>
 </code></pre>
 </div>
 <h4>Empirical FPR</h4>
+<p>The empirical False Positive Rate (FPR) is shown below for <code>DESeq2</code> and <code>edgeR</code>.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1387,6 +1447,7 @@ sapply(deseq, emp_fpr)</code></pre>
 </code></pre>
 </div>
 <h3>Overlap</h3>
+<p>As in <a href="../counts-based/counts.based.html">counts.based.html</a> we can compare the DERs and exons directly.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1487,6 +1548,7 @@ noNA <- function(x) {
 }</code></pre>
 </div>
 <h4>Query: DERs</h4>
+<p>First we use the DERs as the query and check if they overlap a significantly differentially expressed exon. The results are shown for <code>DESeq2</code> and <code>edgeR</code> using all DERs and then requiring a minimum overlap of 20 bp.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1668,6 +1730,7 @@ lapply(edger, function(x) {
 </code></pre>
 </div>
 <h4>Query: exons</h4>
+<p>Next, we can use the exons as the query and check if they overlap a significant DER. The results are shown for <code>DESeq2</code> and <code>edgeR</code> using all DERs and then restricting the overlap to minimum 20 bp.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1848,32 +1911,36 @@ lapply(edger, function(x) {
 ##               Sum     147  115 262
 </code></pre>
 </div>
+<h1>Conclusions</h1>
+<p>Using <code>DESeq2</code> with the <em>genomicState</em> or <em>txdb</em> exonic sets resulted in the highest power and reasonable FPR. While the <em>disjoint</em> set analyzed by <code>DESeq2</code> resulted in the best FPR it had the lowest empirical power.</p>
+<p>When using the DERs as the query, the <em>disjoint</em> set has the lowest disagreement for both <code>DESeq2</code> and <code>edgeR</code>. However, the <em>genomicState</em>, <em>txdb</em>, and <em>byGene</em> sets are the only ones that do not have cases of a significant DER overlapping a non significant DE exon.</p>
+<p>Regardless of the exon set, when using the exons as query, there are no cases of a non significantly DE exon overlap a significant DER when requiring a 20 bp overlap.</p>
 <h1>Reproducibility</h1>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-down"></span> R source
+<span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style=""><code class="source r">## Reproducibility info
+<pre style="display:none"><code class="source r">## Reproducibility info
 Sys.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-03-26 13:43:08 EDT"
+<pre style=""><code class="output r">## [1] "2015-03-30 17:20:20 EDT"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-down"></span> R source
+<span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style=""><code class="source r">proc.time()</code></pre>
+<pre style="display:none"><code class="source r">proc.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-## 196.421  68.206 267.466
+## 203.967  68.756 273.307
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
-<span class="glyphicon glyphicon-chevron-down"></span> R source
+<span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style=""><code class="source r">options(width = 120)
+<pre style="display:none"><code class="source r">options(width = 120)
 devtools::session_info()</code></pre>
 <button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
@@ -1912,7 +1979,6 @@ devtools::session_info()</code></pre>
 ##  bumphunter                          1.7.6       2015-03-13 Github (lcolladotor/bumphunter@37d10e7)  
 ##  cluster                             2.0.1       2015-01-31 CRAN (R 3.2.0)                           
 ##  codetools                           0.2.11      2015-03-10 CRAN (R 3.2.0)                           
-##  colorout                          * 1.0.2       2014-11-03 local                                    
 ##  colorspace                          1.2.6       2015-03-11 CRAN (R 3.2.0)                           
 ##  DBI                                 0.3.1       2014-09-24 CRAN (R 3.2.0)                           
 ##  derfinder                         * 1.1.17      2015-03-14 Github (lcolladotor/derfinder@3532e0c)   
@@ -1965,7 +2031,7 @@ devtools::session_info()</code></pre>
 ##  RCurl                               1.95.4.5    2014-12-28 CRAN (R 3.2.0)                           
 ##  registry                            0.2         2012-01-24 CRAN (R 3.2.0)                           
 ##  reshape2                            1.4.1       2014-12-06 CRAN (R 3.2.0)                           
-##  rmarkdown                           0.3.3       2014-09-17 CRAN (R 3.2.0)                           
+##  rmarkdown                         * 0.3.3       2014-09-17 CRAN (R 3.2.0)                           
 ##  rngtools                            1.2.4       2014-03-06 CRAN (R 3.2.0)                           
 ##  rpart                               4.1.9       2015-02-24 CRAN (R 3.2.0)                           
 ##  Rsamtools                           1.19.47     2015-03-21 Bioconductor                             
