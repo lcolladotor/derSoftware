@@ -24,6 +24,7 @@ library('TxDb.Hsapiens.UCSC.hg19.knownGene')
 library('GenomicRanges')
 library('derfinder')
 library('Rsamtools')
+library('GenomicAlignments')
 
 ## Load data
 load('../simulation_info.Rdata')
