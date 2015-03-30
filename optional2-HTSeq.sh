@@ -40,6 +40,7 @@ do
 #$ -m e
 #$ -l mem_free=50G,h_vmem=100G,h_fsize=30G
 #$ -hold_jid sortSam-${EXPERIMENT}
+#$ -N ${sname}
 
 echo "**** Job starts ****"
 date

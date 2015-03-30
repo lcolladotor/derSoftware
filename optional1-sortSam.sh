@@ -36,6 +36,7 @@ cat > ${ROOTDIR}/.${sname}.sh <<EOF
 #$ -cwd
 #$ -m e
 #$ -l mem_free=100G,h_vmem=200G,h_fsize=100G
+#$ -N ${sname}
 
 echo "**** Job starts ****"
 date
