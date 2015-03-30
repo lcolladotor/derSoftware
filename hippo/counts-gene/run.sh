@@ -3,7 +3,7 @@
 #$ -m e
 #$ -l mem_free=3G,h_vmem=15G,h_fsize=30G
 #$ -pe local 24
-#$ summOv-hippo-rerun
+#$ -N summOv-hippo-rerun
 
 echo "**** Job starts ****"
 date
