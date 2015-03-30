@@ -1,0 +1,98 @@
+---
+output:
+  knitrBootstrap::bootstrap_document:
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+  html_document:
+    toc: true
+    theme: united
+---
+
+Count at gene level
+===================
+
+This report defines the gene sets for the simulation data. The first set uses all the exons from the transcripts used in the simulation, while the second drops one transcript for the genes that have two of them. 
+
+# Define gene sets
+
+The following code defines the two gene sets.
+
+
+```{r 'setup', bootstrap.show.message = FALSE}
+## Load packages
+library('TxDb.Hsapiens.UCSC.hg19.knownGene')
+library('GenomicRanges')
+library('derfinder')
+library('Rsamtools')
+
+## Load data
+load('../simulation_info.Rdata')
+
+## Find transcripts
+txdb <- keepSeqlevels(TxDb.Hsapiens.UCSC.hg19.knownGene, 'chr22')
+
+## Exons by gene
+ex <- exonsBy(txdb, by = 'gene')
+
+## Define gene sets: complete and incomplete
+gene_comp <- ex[unique(chosen$gene_id)]
+
+## Transcripts by gene
+tx <- transcriptsBy(txdb, 'gene')
+
+## For each gene with 2 transcripts, choose only 1 to use
+tx_inc <- tx[unique(chosen$gene_id)]
+set.seed(20150330)
+for(i in which(sapply(tx_inc, length) == 2)) {
+    tx_inc[[i]] <- tx_inc[[i]][sample(1:2, 1)]
+}
+
+## Check that it's all genes with 1 isoform
+table(sapply(tx_inc, length))
+
+## Get tx ids
+tx_ids <- sapply(tx_inc, function(x) { mcols(x)$tx_id })
+
+## Define incomplete gene set
+gene_inc <- exonsBy(txdb, by = 'tx')[as.character(tx_ids)]
+names(gene_inc) <- names(tx_inc)
+
+## Save info
+save(tx_inc, gene_comp, gene_inc, file = 'gene_sets.Rdata')
+```
+
+
+# Count
+
+The following code finds the BAM files and produces the gene count matrices using `summarizeOverlaps()`. For more information, check [RNA-Seq workflow: gene-level exploratory analysis and differential expression](/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout).
+
+```{r 'counting'}
+## Make bamFileList
+files <- files <- rawFiles(datadir ='/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout',
+    samplepatt = "sample", fileterm = "accepted_hits.bam")
+bai <- paste0(files, ".bai")
+bList <- BamFileList(files, bai)
+
+## Compute the overlaps
+message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- complete"))
+summOv_comp <- summarizeOverlaps(gene_comp, bList, mode = "Union",
+    singleEnd = FALSE, ignore.strand = TRUE, fragments = TRUE)
+
+message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- incomplete"))
+summOv_inc <- summarizeOverlaps(gene_inc, bList, mode = "Union",
+    singleEnd = FALSE, ignore.strand = TRUE, fragments = TRUE)
+    
+## Save the results
+save(summOv_comp, file = 'summOv_comp.Rdata')
+save(summOv_inc, file = 'summOv_inc.Rdata')
+```
+
+# Reproducibility
+
+```{r}
+## Reproducibility info
+Sys.time()
+proc.time()
+options(width = 120)
+devtools::session_info()
+```
