@@ -5,7 +5,7 @@ library('Rsamtools')
 library('GenomicAlignments')
 
 ## Exons by gene
-ex <- exonsBy(txdb, by = 'gene')
+ex <- exonsBy(TxDb.Hsapiens.UCSC.hg19.knownGene, by = 'gene')
 
 ## Make bamFileList
 files <- rawFiles(datadir='/dcs01/ajaffe/Hippo/TopHat', samplepatt="out$",
