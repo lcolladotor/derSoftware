@@ -23,6 +23,7 @@ library('derfinderHelper')
 library('derfinderPlot')
 library('bumphunter')
 library('limma')
+library('qvalue')
 load('../simulation_info.Rdata')
 load('../regionMatrix/regionMat-cut5.Rdata')
 load('../derAnalysis/run2-v1.0.10/groupInfo.Rdata')
@@ -77,18 +78,18 @@ rownames(y) <- NULL
 fit <- lmFit(y, models$mod)
 fit0 <- lmFit(y, models$mod0)
 ff <- getF(fit,fit0, y)
-fullRegionGR$sigBonf <- factor(p.adjust(ff$f_pval,"bonf") < 0.05, levels = c('TRUE', 'FALSE'))
+fullRegionGR$sigQval <- factor(qvalue(ff$f_pval)$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
 
 ## Find overlaps with DE regions
 ctov <- countOverlaps(tx, fullRegionGR)
 
 ## Check result with sig regs
-bonf <-  fullRegionGR[fullRegionGR$sigBonf == 'TRUE']
-min.ov <- min(min(width(bonf)), min(width(tx)))
-ctov.bonf <- countOverlaps(tx, bonf, minoverlap =  min.ov)
+qval <-  fullRegionGR[fullRegionGR$sigQval == 'TRUE']
+min.ov <- min(min(width(qval)), min(width(tx)))
+ctov.qval <- countOverlaps(tx, qval, minoverlap =  min.ov)
 
 ## Use appropriate set
-ctov.use <- if (identical(ctov > 0, ctov.bonf > 0)) ctov else ctov.bonf
+ctov.use <- if (identical(ctov > 0, ctov.qval > 0)) ctov else ctov.qval
 ```
 
 
@@ -102,21 +103,21 @@ Table showing the results between whether the transcript was set to be different
 addmargins(table('DE status' = chosen$DE, 'Overlaps DE region' = ctov > 0))
 ```
 
-The results are `r ifelse(identical(ctov > 0, ctov.bonf > 0), 'the same', 'not the same')` using a minimum overlap of `r min.ov` bp between transcripts and candidate regions with a Bonferroni adjusted p-value < 0.05. Thus, we will use `r ifelse(identical(ctov > 0, ctov.bonf > 0), 'all DE regions', 'only the DE regions with Bonferroni adjusted p-value < 0.05')`.
+The results are `r ifelse(identical(ctov > 0, ctov.qval > 0), 'the same', 'not the same')` using a minimum overlap of `r min.ov` bp between transcripts and candidate regions with a q-value < 0.05. Thus, we will use `r ifelse(identical(ctov > 0, ctov.qval > 0), 'all DE regions', 'only the DE regions with q-value < 0.05')`.
 
 
 ```{r 'stricter', bootstrap.show.code = FALSE}
-addmargins(table('DE status' = chosen$DE, 'Overlaps DE region (sig Bonf.)' = ctov.bonf > 0))
+addmargins(table('DE status' = chosen$DE, 'Overlaps DE region (sig q-value)' = ctov.qval > 0))
 ```
 
-At a finer level, there is a difference in the number of exons per transcript overlapping all candidate regions vs the regions with Bonferroni adjusted p-value < 0.05.
+At a finer level, there is a difference in the number of exons per transcript overlapping all candidate regions vs the regions with q-value < 0.05.
 
 ```{r 'detaildiff', bootstrap.show.code = FALSE}
 ## Verify things are working properly
-# table(countOverlaps(tx, fullRegionGR, minoverlap = min.ov) - ctov.bonf)
+# table(countOverlaps(tx, fullRegionGR, minoverlap = min.ov) - ctov.qval)
 
 ## Difference in overlaps found
-table(ctov - ctov.bonf)
+table(ctov - ctov.qval)
 ```
 
 ### By case
@@ -188,12 +189,13 @@ width(tx[ idx$success$de[sum(width(success.de)) <= 110] ])
 
 ```{r 'plotsFun', bootstrap.show.code = FALSE}
 gs <- makeGenomicState(txdb, chrs = '22', verbose = FALSE)
+annoTrans <- annotateTranscripts(txdb = txdb)
 makePlots <- function(reg, gs) {
     ## Prep
     strand(reg) <- '*'
     regCov <- getRegionCoverage(fullCov = fullCov, regions = reg, verbose = FALSE)
     annoReg <- annotateRegions(reg, gs$fullGenome, verbose = FALSE)
-    annoNear <- annotateNearest(reg, 'hg19')
+    annoNear <- matchGenes(reg, subject = annoTrans)
 
     ## Actually make the plots with F-stat track
     prev.name <- ''
@@ -335,7 +337,7 @@ The minimum number of reads per transcript for a given sample is `r min(readmat)
 
 ## Exonic segments
 
-Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DE regions overlap such segments and viceversa. We would expect that the DE regions with a Bonferroni adjusted p-value < 0.05 would only overlap segments that were set to be DE.
+Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DE regions overlap such segments and viceversa. We would expect that the DE regions with a q-value < 0.05 would only overlap segments that were set to be DE.
 
 
 ```{r 'segments', bootstrap.show.code = FALSE}
@@ -361,21 +363,21 @@ segs <- unlist(segments)
 ### Segments vs DE regions
 
 
-We can check the if the exonic segments overlap one or more DE region similarly to what we did earlier at the transcript and gene level. The results change depending on whether only the DE regions with significant Bonferroni adjusted p-value or all of the DE regions are used.
+We can check the if the exonic segments overlap one or more DE region similarly to what we did earlier at the transcript and gene level. The results change depending on whether only the DE regions with significant q-value or all of the DE regions are used.
 
 
 ```{r, 'segsvsders', bootstrap.show.code = FALSE}
-addmargins(table('DE status' = segs$DE, 'Overlaps DE region (sig Bonf)' = countOverlaps(segs, bonf) > 0))
+addmargins(table('DE status' = segs$DE, 'Overlaps DE region (sig q-value)' = countOverlaps(segs, qval) > 0))
 
 addmargins(table('DE status' = segs$DE, 'Overlaps DE region' = countOverlaps(segs, fullRegionGR) > 0))
 ```
 
-Using the DE regions with significant Bonferroni adjusted p-values, there are `r sum(segs$DE & !countOverlaps(segs, bonf) > 0)` false negative cases. From the exploration shown below, half of them seem short. Most of the false negative segments correspond to genes from the _oneDE_ scenario. Thus revealing that the complexity of that scenario makes it challenging to identify significant DE regions.
+Using the DE regions with significant q-values, there are `r sum(segs$DE & !countOverlaps(segs, qval) > 0)` false negative cases. From the exploration shown below, half of them seem short. Most of the false negative segments correspond to genes from the _oneDE_ scenario. Thus revealing that the complexity of that scenario makes it challenging to identify significant DE regions.
 
 
 ```{r 'seg.fn'}
-## Explore false negative segments using DE regions with sig Bonf
-seg.fn <- which(segs$DE & !countOverlaps(segs, bonf) > 0)
+## Explore false negative segments using DE regions with sig q-value
+seg.fn <- which(segs$DE & !countOverlaps(segs, qval) > 0)
 
 ## Around half of these segments are short
 summary(width(segs[seg.fn]))
@@ -426,8 +428,8 @@ table(countOverlaps(fullRegionGR, segs))
 ## Widths of DE regions not overlapping any segment
 width(fullRegionGR[is.na(fullRegionGR$overlap)])
 
-## Do these DE regions have a significant Bonferroni adjusted p-value?
-table(fullRegionGR$sigBonf[is.na(fullRegionGR$overlap)])
+## Do these DE regions have a significant q-value?
+table(fullRegionGR$sigQval[is.na(fullRegionGR$overlap)])
 ```
 
 #### Minimum 10bp
@@ -455,8 +457,8 @@ table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 10], segs, minoverlap = 
 ## Widths of DE regions not overlapping any segment
 width(fullRegionGR[is.na(fullRegionGR$overlap10) & width(fullRegionGR) >= 10])
 
-## Do these DE regions have a significant Bonferroni adjusted p-value?
-table(fullRegionGR$sigBonf[is.na(fullRegionGR$overlap10) & width(fullRegionGR) >= 10])
+## Do these DE regions have a significant q-value?
+table(fullRegionGR$sigQval[is.na(fullRegionGR$overlap10) & width(fullRegionGR) >= 10])
 ```
 
 #### Minimum 20bp
@@ -484,8 +486,8 @@ table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 20], segs, minoverlap = 
 ## Widths of DE regions not overlapping any segment
 width(fullRegionGR[is.na(fullRegionGR$overlap20) & width(fullRegionGR) >= 20])
 
-## Do these DE regions have a significant Bonferroni adjusted p-value?
-table(fullRegionGR$sigBonf[is.na(fullRegionGR$overlap20) & width(fullRegionGR) >= 20])
+## Do these DE regions have a significant q-value?
+table(fullRegionGR$sigQval[is.na(fullRegionGR$overlap20) & width(fullRegionGR) >= 20])
 ```
 
 
@@ -495,8 +497,8 @@ However, the main result is whether the DE regions overlap segments expected to 
 
 
 ```{r 'segsresult', bootstrap.show.code = FALSE}
-## Check by whether the DE region has a Bonferroni adjusted p-value < 0.05
-addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap, 'Bonf. p-value < 0.05' = fullRegionGR$sigBonf))
+## Check by whether the DE region has a q-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap, 'q-value < 0.05' = fullRegionGR$sigQval))
 ```
 
 Regardless of whether the DE region p-value is significant, we see that `r round(sum(!fullRegionGR$overlap, na.rm = TRUE) / sum(!is.na(fullRegionGR$overlap)) * 100, 2)` percent of the DE regions overlapping at least one segment, incorrectly overlap a segment set not to be DE. 
@@ -507,8 +509,8 @@ Regardless of whether the DE region p-value is significant, we see that `r round
 Out of the `r length(fullRegionGR)` DE regions, only `r sum(width(fullRegionGR) >= 10)` are at least 10bp long. They are compared against `r sum(width(segs) >= 10)` exonic segments at least 10bp long out of the total `r length(segs)`. Only `r table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 10], segs, minoverlap = 10))['0']` DE regions 10bp or longer do not overlap any exonic segment regardless of its DE status.
 
 ```{r 'segsresult10', bootstrap.show.code = FALSE}
-## Check by whether the DE region has a Bonferroni adjusted p-value < 0.05
-addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap10, 'Bonf. p-value < 0.05' = fullRegionGR$sigBonf))
+## Check by whether the DE region has a q-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap10, 'q-value < 0.05' = fullRegionGR$sigQval))
 ```
 
 Regardless of whether the DE region p-value is significant, we see that `r round(sum(!fullRegionGR$overlap10, na.rm = TRUE) / sum(!is.na(fullRegionGR$overlap10)) * 100, 2)` percent of the DE regions overlapping at least one segment (min overlap 10bp), incorrectly overlap a segment set not to be DE. 
@@ -518,15 +520,15 @@ Regardless of whether the DE region p-value is significant, we see that `r round
 Out of the `r length(fullRegionGR)` DE regions, only `r sum(width(fullRegionGR) >= 20)` are at least 20bp long. They are compared against `r sum(width(segs) >= 20)` exonic segments at least 20bp long out of the total `r length(segs)`. Only `r table(countOverlaps(fullRegionGR[width(fullRegionGR) >= 20], segs, minoverlap = 20))['0']` DE regions 20bp or longer do not overlap any exonic segment regardless of its DE status.
 
 ```{r 'segsresult20', bootstrap.show.code = FALSE}
-## Check by whether the DE region has a Bonferroni adjusted p-value < 0.05
-addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap20, 'Bonf. p-value < 0.05' = fullRegionGR$sigBonf))
+## Check by whether the DE region has a q-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegionGR$overlap20, 'q-value < 0.05' = fullRegionGR$sigQval))
 ```
 
 Regardless of whether the DE region p-value is significant, we see that `r round(sum(!fullRegionGR$overlap20, na.rm = TRUE) / sum(!is.na(fullRegionGR$overlap20)) * 100, 2)` percent of the DE regions overlapping at least one segment (min overlap 20bp), incorrectly overlap a segment set not to be DE. 
 
 ### Conclusions
 
-`r ifelse(table(fullRegionGR$overlap, fullRegionGR$sigBonf)[1,1] == 0, 'None of the DE regionss with a Bonferroni adjusted p-value < 0.05 overlaps a segment set not to be DE, which is what we would expect.', 'We were not expecting to see DE regions with a Bonferroni adjusted p-value < 0.05 overlaping a segment set no to be DE.')`
+`r ifelse(table(fullRegionGR$overlap, fullRegionGR$sigQval)[1,1] / colSums(table(fullRegionGR$overlap, fullRegionGR$sigQval))[1] < 0.05 , 'The observed FDR is lower than 0.05, which is what we would expect.', 'The observed FDR is >= 0.05, which is not what we would expect.')`
 
 
 
