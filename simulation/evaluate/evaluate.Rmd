@@ -45,13 +45,14 @@ tx <- tx[match(chosen$ucsckg_id, names(tx))]
 ## Find overlaps with DERs
 ctov <- countOverlaps(tx, fullRegions)
 
-## Check result with FWER sig 
-fwer <-  fullRegions[fullRegions$significantFWER == 'TRUE']
-min.ov <- min(min(width(fwer)), min(width(tx)))
-ctov.fwer <- countOverlaps(tx, fwer, minoverlap =  min.ov)
+## Check result with Q-value sig 
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fdr <-  fullRegions[fullRegions$significantFDR == 'TRUE']
+min.ov <- min(min(width(fdr)), min(width(tx)))
+ctov.fdr <- countOverlaps(tx, fdr, minoverlap =  min.ov)
 
 ## Use appropriate set
-ctov.use <- if (identical(ctov > 0, ctov.fwer > 0)) ctov else ctov.fwer
+ctov.use <- if (identical(ctov > 0, ctov.fdr > 0)) ctov else ctov.fdr
 ```
 
 
@@ -65,21 +66,21 @@ Table showing the results between whether the transcript was set to be different
 addmargins(table('DE status' = chosen$DE, 'Overlaps DER' = ctov > 0))
 ```
 
-The results are `r ifelse(identical(ctov > 0, ctov.fwer > 0), 'the same', 'not the same')` using a minimum overlap of `r min.ov` bp between transcripts and candidate DERs with a FWER adjusted p-value < 0.05. Thus, we will use `r ifelse(identical(ctov > 0, ctov.fwer > 0), 'all DERs', 'only the DERs with FWER adjusted p-value < 0.05')`.
+The results are `r ifelse(identical(ctov > 0, ctov.fdr > 0), 'the same', 'not the same')` using a minimum overlap of `r min.ov` bp between transcripts and candidate DERs with a Q-value < 0.05. Thus, we will use `r ifelse(identical(ctov > 0, ctov.fdr > 0), 'all DERs', 'only the DERs with Q-value < 0.05')`.
 
 
 ```{r 'stricter', bootstrap.show.code = FALSE}
-addmargins(table('DE status' = chosen$DE, 'Overlaps DER (sig FWER)' = ctov.fwer > 0))
+addmargins(table('DE status' = chosen$DE, 'Overlaps DER (sig Q-value)' = ctov.fdr > 0))
 ```
 
-At a finer level, there is a difference in the number of exons per transcript overlapping all candidate DERs vs the DERs with FWER adjusted p-value < 0.05.
+At a finer level, there is a difference in the number of exons per transcript overlapping all candidate DERs vs the DERs with Q-value < 0.05.
 
 ```{r 'detaildiff', bootstrap.show.code = FALSE}
 ## Verify things are working properly
-# table(countOverlaps(tx, fullRegions, minoverlap = min.ov) - ctov.fwer)
+# table(countOverlaps(tx, fullRegions, minoverlap = min.ov) - ctov.fdr)
 
 ## Difference in overlaps found
-table(ctov - ctov.fwer)
+table(ctov - ctov.fdr)
 ```
 
 ### By case
@@ -151,12 +152,13 @@ width(tx[ idx$success$de[sum(width(success.de)) <= 110] ])
 
 ```{r 'plotsFun', bootstrap.show.code = FALSE}
 gs <- makeGenomicState(txdb, chrs = '22', verbose = FALSE)
+annoTrans <- annotateTranscripts(txdb = txdb)
 makePlots <- function(reg, gs) {
     ## Prep
     strand(reg) <- '*'
     regCov <- getRegionCoverage(fullCov = fullCov, regions = reg, verbose = FALSE)
     annoReg <- annotateRegions(reg, gs$fullGenome, verbose = FALSE)
-    annoNear <- annotateNearest(reg, 'hg19')
+    annoNear <- matchGenes(reg, subject = annoTrans)
 
     ## Actually make the plots with F-stat track
     prev.name <- ''
@@ -298,7 +300,7 @@ The minimum number of reads per transcript for a given sample is `r min(readmat)
 
 ## Exonic segments
 
-Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DERs overlap such segments and viceversa. We would expect that the DERs with a FWER adjusted p-value < 0.05 would only overlap segments that were set to be DE.
+Next we can evaluate the simulation by classifying the exonic segments as whether they should be DE or not. Then, we can find if the DERs overlap such segments and viceversa. We would expect that the DERs with a Q-value < 0.05 would only overlap segments that were set to be DE.
 
 
 ```{r 'segments', bootstrap.show.code = FALSE}
@@ -324,22 +326,22 @@ segs <- unlist(segments)
 ### Segments vs DERs
 
 
-We can check the if the exonic segments overlap one or more DERs similarly to what we did earlier at the transcript and gene level. The results change depending on whether only the DERs with significant FWER adjusted p-value or all of the DERs are used.
+We can check the if the exonic segments overlap one or more DERs similarly to what we did earlier at the transcript and gene level. The results change depending on whether only the DERs with significant Q-value or all of the DERs are used.
 
 
 ```{r, 'segsvsders', bootstrap.show.code = FALSE}
-addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FWER)' = countOverlaps(segs, fwer) > 0))
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig Q-value)' = countOverlaps(segs, fdr) > 0))
 
 addmargins(table('DE status' = segs$DE, 'Overlaps DER' = countOverlaps(segs, fullRegions) > 0))
 ```
 
 
-Using the DERs with significant FWER adjusted p-values, there are `r sum(segs$DE & !countOverlaps(segs, fwer) > 0)` false negative cases. From the exploration shown below, half of them seem short. Most of the false negative segments correspond to genes from the _oneDE_ scenario. Thus revealing that the complexity of that scenario makes it challenging to identify significant DERs.
+Using the DERs with significant Q-values, there are `r sum(segs$DE & !countOverlaps(segs, fdr) > 0)` false negative cases. From the exploration shown below, half of them seem short. Most of the false negative segments correspond to genes from the _oneDE_ scenario. Thus revealing that the complexity of that scenario makes it challenging to identify significant DERs.
 
 
 ```{r 'seg.fn'}
-## Explore false negative segments using DERs with sig FWER
-seg.fn <- which(segs$DE & !countOverlaps(segs, fwer) > 0)
+## Explore false negative segments using DERs with sig Q-value
+seg.fn <- which(segs$DE & !countOverlaps(segs, fdr) > 0)
 
 ## Around half of these segments are short
 summary(width(segs[seg.fn]))
@@ -387,8 +389,8 @@ table(countOverlaps(fullRegions, segs))
 ## Widths of DERs not overlapping any segment
 width(fullRegions[is.na(fullRegions$overlap)])
 
-## Do these DERs have a significant FWER adjusted p-value?
-table(fullRegions$significantFWER[is.na(fullRegions$overlap)])
+## Do these DERs have a significant Q-value?
+table(fullRegions$significantFDR[is.na(fullRegions$overlap)])
 ```
 
 #### Minimum 10bp
@@ -416,8 +418,8 @@ table(countOverlaps(fullRegions[width(fullRegions) >= 10], segs, minoverlap = 10
 ## Widths of DERs not overlapping any segment
 width(fullRegions[is.na(fullRegions$overlap10) & width(fullRegions) >= 10])
 
-## Do these DERs have a significant FWER adjusted p-value?
-table(fullRegions$significantFWER[is.na(fullRegions$overlap10) & width(fullRegions) >= 10])
+## Do these DERs have a significant Q-value?
+table(fullRegions$significantFDR[is.na(fullRegions$overlap10) & width(fullRegions) >= 10])
 ```
 
 #### Minimum 20bp
@@ -445,8 +447,8 @@ table(countOverlaps(fullRegions[width(fullRegions) >= 20], segs, minoverlap = 20
 ## Widths of DERs not overlapping any segment
 width(fullRegions[is.na(fullRegions$overlap20) & width(fullRegions) >= 20])
 
-## Do these DERs have a significant FWER adjusted p-value?
-table(fullRegions$significantFWER[is.na(fullRegions$overlap20) & width(fullRegions) >= 20])
+## Do these DERs have a significant Q-value?
+table(fullRegions$significantFDR[is.na(fullRegions$overlap20) & width(fullRegions) >= 20])
 ```
 
 
@@ -456,8 +458,8 @@ However, the main result is whether the DERs overlap segments expected to be DE.
 
 
 ```{r 'segsresult', bootstrap.show.code = FALSE}
-## Check by whether the DER has a FWER adjusted p-value < 0.05
-addmargins(table('Overlaps a DE segment' = fullRegions$overlap, 'FWER p-value < 0.05' = fullRegions$significantFWER))
+## Check by whether the DER has a Q-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegions$overlap, 'Q-value < 0.05' = fullRegions$significantFDR))
 ```
 
 Regardless of whether the DER p-value is significant, we see that `r round(sum(!fullRegions$overlap, na.rm = TRUE) / sum(!is.na(fullRegions$overlap)) * 100, 2)` percent of the DERs overlapping at least one segment, incorrectly overlap a segment set not to be DE. 
@@ -468,8 +470,8 @@ Regardless of whether the DER p-value is significant, we see that `r round(sum(!
 Out of the `r length(fullRegions)` DERs, only `r sum(width(fullRegions) >= 10)` are at least 10bp long. They are compared against `r sum(width(segs) >= 10)` exonic segments at least 10bp long out of the total `r length(segs)`. Only `r table(countOverlaps(fullRegions[width(fullRegions) >= 10], segs, minoverlap = 10))['0']` DER 10bp or longer does not overlap any exonic segment regardless of its DE status.
 
 ```{r 'segsresult10', bootstrap.show.code = FALSE}
-## Check by whether the DER has a FWER adjusted p-value < 0.05
-addmargins(table('Overlaps a DE segment' = fullRegions$overlap10, 'FWER p-value < 0.05' = fullRegions$significantFWER))
+## Check by whether the DER has a Q-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegions$overlap10, 'Q-value < 0.05' = fullRegions$significantFDR))
 ```
 
 Regardless of whether the DER p-value is significant, we see that `r round(sum(!fullRegions$overlap10, na.rm = TRUE) / sum(!is.na(fullRegions$overlap10)) * 100, 2)` percent of the DERs overlapping at least one segment (min overlap 10bp), incorrectly overlap a segment set not to be DE. 
@@ -479,16 +481,15 @@ Regardless of whether the DER p-value is significant, we see that `r round(sum(!
 Out of the `r length(fullRegions)` DERs, only `r sum(width(fullRegions) >= 20)` are at least 20bp long. They are compared against `r sum(width(segs) >= 20)` exonic segments at least 20bp long out of the total `r length(segs)`. Only `r table(countOverlaps(fullRegions[width(fullRegions) >= 20], segs, minoverlap = 20))['0']` DER 20bp or longer does not overlap any exonic segment regardless of its DE status.
 
 ```{r 'segsresult20', bootstrap.show.code = FALSE}
-## Check by whether the DER has a FWER adjusted p-value < 0.05
-addmargins(table('Overlaps a DE segment' = fullRegions$overlap20, 'FWER p-value < 0.05' = fullRegions$significantFWER))
+## Check by whether the DER has a Q-value < 0.05
+addmargins(table('Overlaps a DE segment' = fullRegions$overlap20, 'Q-value < 0.05' = fullRegions$significantFDR))
 ```
 
 Regardless of whether the DER p-value is significant, we see that `r round(sum(!fullRegions$overlap20, na.rm = TRUE) / sum(!is.na(fullRegions$overlap20)) * 100, 2)` percent of the DERs overlapping at least one segment (min overlap 20bp), incorrectly overlap a segment set not to be DE. 
 
 ### Conclusions
 
-`r ifelse(table(fullRegions$overlap, fullRegions$significantFWER)[1,1] == 0, 'None of the DERs with a FWER adjusted p-value < 0.05 overlaps a segment set not to be DE, which is what we would expect.', 'We were not expecting to see DERs with an adjusted p-value < 0.05 overlaping a segment set no to be DE.')`
-
+`r ifelse(table(fullRegions$overlap, fullRegions$significantFDR)[1,1] / colSums(table(fullRegions$overlap, fullRegions$significantFDR))[1] < 0.05 , 'The observed FDR is lower than 0.05, which is what we would expect.', 'The observed FDR is >= 0.05, which is not what we would expect.')`
 
 
 # Reproducibility
