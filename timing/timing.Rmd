@@ -141,6 +141,14 @@ Secondly, points are colored by which analysis type they belong to. Note that th
 ## Walltime and memory adjusted by number of cores (it's an approximation)
 ggplot(all, aes(x=timeByCore, y=memByCore, colour=analysis, shape=software)) + geom_point() + facet_grid(~ experiment) + xlab("Wall time (hrs) multiplied by the number of cores") + ylab("Memory (GB) divided by the number of cores") + scale_colour_brewer(palette="Dark2")
 ggplot(all, aes(x=log2(timeByCore), y=memByCore, colour=analysis, shape=software)) + geom_point() + facet_grid(~ experiment) + xlab("Wall time (hrs) multiplied by the number of cores (log2)") + ylab("Memory (GB) divided by the number of cores") + scale_colour_brewer(palette="Dark2")
+
+## For supp text
+time <- ggplot(subset(all, !software %in% c('TopHat', 'regionReport') & analysis != 'misc'), aes(x=log2(timeByCore), y=log2(memByCore), colour=analysis, shape=software)) + geom_point() + facet_grid(~ experiment) + xlab("Wall time (hrs) multiplied by the number of cores (log2)") + ylab("GB memory divided by number of cores (log2)") + scale_colour_brewer(palette="Set1") + theme_bw(base_size = 18) + theme(legend.position=c(.7, .85), legend.box = 'horizontal')
+time
+pdf(file = 'time.pdf', width = 10)
+time
+dev.off()
+#system('open time.pdf')
 ```
 
 ## Without cores information
@@ -256,6 +264,8 @@ peaks <- lapply(names(analysisInfo), function(analysis) {
     return(res_analysis)
 })
 peaks <- do.call(rbind, peaks)
+
+save(peaks, file = 'peaks.Rdata')
 ```
 
 We can further summarize the resources used by each analysis by identified the maximum memory used in the steps required for a particular analysis and the total wall time for running all the steps when all the jobs of a particular step are running simultaneously. Thus giving us the total actual wall time to run a specific analysis and the maximum memory required.
