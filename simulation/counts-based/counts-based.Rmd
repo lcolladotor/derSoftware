@@ -118,6 +118,7 @@ library('TxDb.Hsapiens.UCSC.hg19.knownGene')
 library('derfinder')
 library('derfinderHelper')
 library('derfinderPlot')
+library('qvalue')
 #library('bumphunter')
 load('../simulation_info.Rdata')
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
@@ -172,7 +173,7 @@ segs <- unlist(segments)
 
 ## derfinder-original
 
-The original derfinder implementation does not support multi-group comparisons. So we performed all pair comparisons for the three groups. We can extract those that are differentially expressed (states 3 and 4) with a p-value $<$ 0.05.
+The original derfinder implementation does not support multi-group comparisons. So we performed all pair comparisons for the three groups. We can extract those that are differentially expressed (states 3 and 4) with a FDR adjusted p-value $<$ 0.05.
 
 ```{r 'original', bootstrap.show.code = FALSE}
 load('../deranalysis-original/chr22/regions-merged-chr22-AB.Rdata')
@@ -192,16 +193,17 @@ original <- lapply(names(original), function(x) {
     return(original[[x]])
 })
 
-## Identify regions significantly DE
+
+## Identify DE regions
 ori.de <- lapply(original, function(x) {
     state.idx <- x$state > 2
-    pval.idx <- x$pvalue < 0.05
-    pval.idx[is.na(pval.idx)] <- FALSE
-    x[state.idx & pval.idx]
+    x[state.idx & !is.na(x$pvalue)]
 })
 
-## Collapse all the significant DERs.
+## Adjust p-values for FDR and select significant ones
 ori.de.sig <- do.call(c, ori.de)
+ori.de.sig$qvalue <- qvalue(ori.de.sig$pvalue)$qvalue
+ori.de.sig <- ori.de.sig[ori.de.sig$qvalue < 0.05]
 ```
 
 Due to the simulation setup, only one of the three groups is differentially expressed at a time. One option is to compare the exonic segments versus the resulting DERs and ask if the exonic segments overlap at least one DER as shown below.
@@ -215,11 +217,12 @@ addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 1' 
 
 The results from the new implementation are shown below (extracted from [evaluate.html](../evaluate/evaluate.html)). The original implementation has 2 false positive (versus 0 in the new implemenation) and less false negatives.
 
-```{r 'newFWER', bootstrap.show.code = FALSE}
+```{r 'newFDR', bootstrap.show.code = FALSE}
 ## Compare against new derfinder:
-## Check result with FWER sig 
-fwer <-  fullRegions[fullRegions$significantFWER == 'TRUE']
-addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FWER) -- new' = countOverlaps(segs, fwer) > 0))
+## Check result with FDR sig 
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fdr <-  fullRegions[fullRegions$significantFDR == 'TRUE']
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FDR) -- new' = countOverlaps(segs, fdr) > 0))
 ```
 
 However, because of the simulation setup, with the original implementation we would actually expect at least two DERs to overlap each exonic segment that was set to be DE. When doing this comparison, we get the same numbers as with the new implementation.
@@ -233,7 +236,7 @@ However, because of the simulation setup, with the original implementation we wo
 addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 2' = countOverlaps(segs, ori.de.sig) > 1))
 
 identical(
-    addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, fwer) > 0)),
+    addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, fdr) > 0)),
     addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, ori.de.sig) > 1))
 )
 ```
@@ -241,7 +244,7 @@ identical(
 While the global numbers match, the agreement at the exonic segment level is not perfect between the original and new implementations.
 
 ```{r 'newVsOnly2', bootstrap.show.code = FALSE}
-addmargins(table('new' = countOverlaps(segs, fwer) > 0, 'original -- min 2' = countOverlaps(segs, ori.de.sig) > 1))
+addmargins(table('new' = countOverlaps(segs, fdr) > 0, 'original -- min 2' = countOverlaps(segs, ori.de.sig) > 1))
 ```
 
 The following code was adapted from [evaluate.html](../evaluate/evaluate.html) and explores the false negatives when requiring at least 2 DERs to overlap each exonic segment. As with the new implementation, the original implementation struggles in genes where one of the transcripts was set to be DE while the other wasn't.
@@ -350,22 +353,22 @@ identical(count_comp(edger, ptype = 'holm'), count_comp(edger, ptype = 'bonferro
 
 ```{r 'ov-comp-setup', bootstrap.show.code = FALSE}
 ## Some formatting and subsets
-fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegions$sigFDR <- as.logical(fullRegions$significantFDR)
 fullRegs20 <- fullRegions[width(fullRegions) >= 20]
 
 ## Overlap table for all 4 cases
 ov_table <- function(ders, counts, query = 'der', minov = 0) {
     if(query == 'der') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
+            res <- addmargins(table('Significant DER (FDR)' = ders$sigFDR, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
         } else {
-            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
+            res <- addmargins(table(ders$sigFDR, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FDR)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
         }
     } else if (query == 'counts') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FDR)' = countOverlaps(counts, ders[ders$sigFDR]) > 0))
         } else {
-            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFDR], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FDR, min ', minov, 'bp)'))))
         }
     }
     return(res)
@@ -374,9 +377,9 @@ ov_table <- function(ders, counts, query = 'der', minov = 0) {
 ## Explore mistmatched cases for DERs vs Exons direction
 explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFDR)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFWER)
+        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFDR)
     } else{
         stop('invalid case')
     }
@@ -408,9 +411,9 @@ explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
 explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     counts <- counts[width(counts) >= minov]
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !counts$sig)
+        i <- which(countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & !counts$sig)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & counts$sig)
+        i <- which(!countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & counts$sig)
     } else{
         stop('invalid case')
     }
@@ -418,19 +421,19 @@ explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     
     if(case == 'FALSE-TRUE') {
         res <- list(
-            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)),
             width_exon = summary(width(counts[i])),
-            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
-            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
+            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
             i = i
         )
     } else {
         res <- list(
             width_exon = summary(width(counts[i])),
             distance_nearest_sum = summary(mcols(distanceToNearest(counts[i], ders, ignore.strand = TRUE))$distance),
-             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE))$distance),
             distance_nearest = distanceToNearest(counts[i], ders, ignore.strand = TRUE),
-            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE),
             i = i
         )
     }
@@ -740,7 +743,7 @@ width(agree)
 
 ## DERs this exon overlaps
 width(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])
-mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFWER
+mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFDR
 
 ## Case
 gene[gene$gene_id == unique(names(segs[subjectHits(findOverlaps(agree,segs))])), ]
@@ -795,7 +798,7 @@ width(agree_notde)
 
 ## DERs this exon overlaps
 width(fullRegions[subjectHits(findOverlaps(agree_notde, fullRegions))])
-mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFWER
+mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFDR
 
 ## Case
 gene[gene$gene_id == unique(names(segs[subjectHits(findOverlaps(agree_notde, segs))])), ]
@@ -854,11 +857,15 @@ emp_fpr <- function(info, ptype) {
     m <- count_comp(info, ptype)
     round(m[1, 2] / m[1, 3] * 100, 2)
 }
+emp_fdr <- function(info, ptype) {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[3, 2] * 100, 2)
+}
 ```
 
-When adjusting p-values to control the FDR, both `DESeq2` and `edgeR-robust` result in higher empirical power than `derfinder`: `r emp_power(deseq, 'padj')` and `r emp_power(edger, 'padj')` respectively versus `r round(100 * 132 / 169, 2)`. However, both `DESeq2` and `edgeR-robust` have non-zero false positive rates: `r emp_fpr(deseq, 'padj')` and `r emp_fpr(edger, 'padj')` respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.
+When adjusting p-values to control the FDR, both `DESeq2` and `edgeR-robust` result in higher empirical power than `derfinder`: `r emp_power(deseq, 'padj')` and `r emp_power(edger, 'padj')` respectively versus `r round(100 * 132 / 169, 2)`. However, both `DESeq2` and `edgeR-robust` have non-zero false positive rates: `r emp_fpr(deseq, 'padj')` and `r emp_fpr(edger, 'padj')` respectively. Their false discovery rate is: `r emp_fdr(deseq, 'padj')` and `r emp_fdr(edger, 'padj')` respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.
 
-We knew from [evaluate.html](../evaluate/evaluate.html) that `derfinder` struggled in the scenario where a two isoform gene had only one of them set to be differentially expressed. `DESeq2` and `edgeR-robust` are able to correctly identify such exons as differentially expressed in most cases, but they also introduce some occasional false positives whose coverage plots do not reveal apparent differences between the groups.
+We knew from [evaluate.html](../evaluate/evaluate.html) that `derfinder` struggled in the scenario where a two transcript gene had only one of them set to be differentially expressed. `DESeq2` and `edgeR-robust` are able to correctly identify such exons as differentially expressed in most cases, but they also introduce some occasional false positives whose coverage plots do not reveal apparent differences between the groups.
 
 
 # Reproducibility
