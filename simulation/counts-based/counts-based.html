@@ -986,7 +986,7 @@ system.time( dse <- DESeq(dse, test = 'LRT', reduced = ~ 1) )</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   0.997   0.024   1.034
+##   0.812   0.020   0.832
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1019,7 +1019,7 @@ system.time(dw <- estimateGLMRobustDisp(d, design = design, prior.df = 10, maxit
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   2.169   0.073   2.254
+##   1.907   0.050   1.957
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1057,35 +1057,35 @@ save(edger, file = 'edger.Rdata')</code></pre>
 ##     Vignettes contain introductory material; view with
 ##     'browseVignettes()'. To cite Bioconductor, see
 ##     'citation("Biobase")', and for packages 'citation("pkgname")'.
-## 
-## 
-## Attaching package: 'AnnotationDbi'
-## 
-## The following object is masked from 'package:GenomeInfoDb':
-## 
-##     species
-</code></pre>
-<button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
-</button>
-<pre style=""><code class="warning r">## Warning: multiple methods tables found for 'score'
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
 <pre style="display:none"><code class="source r">#library('knitr')
-library('derfinder')
-library('derfinderHelper')
-library('derfinderPlot')</code></pre>
-<button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
+library('derfinder')</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
 </button>
-<pre style=""><code class="warning r">## Warning: multiple methods tables found for 'score'
+<pre style="display:none"><code class="message r">## Want to contribute a new feature? Fork derfinder at
+##  https://github.com/lcolladotor/derfinder/fork
+## Then submit a pull request =)
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style="display:none"><code class="source r">#library('bumphunter')
+<pre style="display:none"><code class="source r">library('derfinderHelper')
+library('derfinderPlot')</code></pre>
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
+</button>
+<pre style="display:none"><code class="message r">## Find out what's changed in derfinderPlot with
+## news(Version == "1.1.6", package = "derfinderPlot")
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-up"></span> R source
+</button>
+<pre style="display:none"><code class="source r">library('qvalue')
+#library('bumphunter')
 load('../simulation_info.Rdata')
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
 load('../derAnalysis/run2-v1.0.10/models.Rdata')
@@ -1134,7 +1134,7 @@ names(segments) <- gene$gene_id
 segs <- unlist(segments)</code></pre>
 </div>
 <h2>derfinder-original</h2>
-<p>The original derfinder implementation does not support multi-group comparisons. So we performed all pair comparisons for the three groups. We can extract those that are differentially expressed (states 3 and 4) with a p-value <span class="math"> &lt; </span> 0.05.</p>
+<p>The original derfinder implementation does not support multi-group comparisons. So we performed all pair comparisons for the three groups. We can extract those that are differentially expressed (states 3 and 4) with a FDR adjusted p-value <span class="math"> &lt; </span> 0.05.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1156,16 +1156,17 @@ original <- lapply(names(original), function(x) {
     return(original[[x]])
 })
 
-## Identify regions significantly DE
+
+## Identify DE regions
 ori.de <- lapply(original, function(x) {
     state.idx <- x$state > 2
-    pval.idx <- x$pvalue < 0.05
-    pval.idx[is.na(pval.idx)] <- FALSE
-    x[state.idx & pval.idx]
+    x[state.idx & !is.na(x$pvalue)]
 })
 
-## Collapse all the significant DERs.
-ori.de.sig <- do.call(c, ori.de)</code></pre>
+## Adjust p-values for FDR and select significant ones
+ori.de.sig <- do.call(c, ori.de)
+ori.de.sig$qvalue <- qvalue(ori.de.sig$pvalue)$qvalue
+ori.de.sig <- ori.de.sig[ori.de.sig$qvalue < 0.05]</code></pre>
 </div>
 <p>Due to the simulation setup, only one of the three groups is differentially expressed at a time. One option is to compare the exonic segments versus the resulting DERs and ask if the exonic segments overlap at least one DER as shown below.</p>
 <div class="row">
@@ -1179,36 +1180,37 @@ addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 1' 
 </button>
 <pre style=""><code class="output r">##          Overlaps DER (sig) -- original, min 1
 ## DE status FALSE TRUE Sum
-##     FALSE   109    2 111
-##     TRUE     12  157 169
-##     Sum     121  159 280
+##     FALSE    96   15 111
+##     TRUE     11  158 169
+##     Sum     107  173 280
 </code></pre>
 </div>
-<p>The results from the new implementation are shown below (extracted from <a href="../evaluate/evaluate.html">evaluate.html</a>). The original implementation has 2 false positive (versus 0 in the new implemenation) and less false negatives.</p>
+<p>The results from the new implementation are shown below (extracted from <a href="../evaluate/evaluate.html">evaluate.html</a>). The original implementation has 15 false positive (versus 0 in the new implemenation) and less false negatives (11 versus 30).</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
 <pre style="display:none"><code class="source r">## Compare against new derfinder:
-## Check result with FWER sig 
-fwer <-  fullRegions[fullRegions$significantFWER == 'TRUE']
-addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FWER) -- new' = countOverlaps(segs, fwer) > 0))</code></pre>
+## Check result with FDR sig 
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fdr <-  fullRegions[fullRegions$significantFDR == 'TRUE']
+addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FDR) -- new' = countOverlaps(segs, fdr) > 0))</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##          Overlaps DER (sig FWER) -- new
+<pre style=""><code class="output r">##          Overlaps DER (sig FDR) -- new
 ## DE status FALSE TRUE Sum
 ##     FALSE   111    0 111
-##     TRUE     37  132 169
-##     Sum     148  132 280
+##     TRUE     30  139 169
+##     Sum     141  139 280
 </code></pre>
 </div>
-<p>However, because of the simulation setup, with the original implementation we would actually expect at least two DERs to overlap each exonic segment that was set to be DE. When doing this comparison, we get the same numbers as with the new implementation.</p>
+<p>However, because of the simulation setup, with the original implementation we would actually expect at least two DERs to overlap each exonic segment that was set to be DE. When doing this comparison, we get 3 false positives and 28 false negatives versus 0 and 30 in the new implementation.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style="display:none"><code class="source r">## Identical results to derfinder-original if we ask segments to overlap 
+<pre style="display:none"><code class="source r">## Identical results? to derfinder-original if we ask segments to overlap 
 ## two DERs given that we are doing 3 group comparisons with 1 group
 ## higher/lower than the other two
 addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 2' = countOverlaps(segs, ori.de.sig) > 1))</code></pre>
@@ -1217,37 +1219,37 @@ addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 2' 
 </button>
 <pre style=""><code class="output r">##          Overlaps DER (sig) -- original, min 2
 ## DE status FALSE TRUE Sum
-##     FALSE   111    0 111
-##     TRUE     37  132 169
-##     Sum     148  132 280
+##     FALSE   108    3 111
+##     TRUE     28  141 169
+##     Sum     136  144 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
 <pre style="display:none"><code class="source r">identical(
-    addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, fwer) > 0)),
+    addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, fdr) > 0)),
     addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig)' = countOverlaps(segs, ori.de.sig) > 1))
 )</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] TRUE
+<pre style=""><code class="output r">## [1] FALSE
 </code></pre>
 </div>
-<p>While the global numbers match, the agreement at the exonic segment level is not perfect between the original and new implementations.</p>
+<p>While the global numbers are similar, the agreement at the exonic segment level is not perfect between the original and new implementations as shown below.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style="display:none"><code class="source r">addmargins(table('new' = countOverlaps(segs, fwer) > 0, 'original -- min 2' = countOverlaps(segs, ori.de.sig) > 1))</code></pre>
+<pre style="display:none"><code class="source r">addmargins(table('new' = countOverlaps(segs, fdr) > 0, 'original -- min 2' = countOverlaps(segs, ori.de.sig) > 1))</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##        original -- min 2
 ## new     FALSE TRUE Sum
-##   FALSE   136   12 148
-##   TRUE     12  120 132
-##   Sum     148  132 280
+##   FALSE   129   12 141
+##   TRUE      7  132 139
+##   Sum     136  144 280
 </code></pre>
 </div>
 <p>The following code was adapted from <a href="../evaluate/evaluate.html">evaluate.html</a> and explores the false negatives when requiring at least 2 DERs to overlap each exonic segment. As with the new implementation, the original implementation struggles in genes where one of the transcripts was set to be DE while the other wasn't.</p>
@@ -1264,7 +1266,7 @@ summary(width(segs[seg.fn]))</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     5.0    78.0   158.0   181.7   216.0   853.0
+##     5.0    69.0   155.5   191.5   223.2   853.0
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1272,7 +1274,7 @@ summary(width(segs[seg.fn]))</code></pre>
 <pre style=""><code class="source r">## new:
 ##
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     5.0    81.0   136.0   233.4   245.0  1844.0
+##     5.0    73.5   119.0   242.7   241.0  1844.0
 chosen[chosen$gene_id == '6523', ]</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
@@ -1287,15 +1289,15 @@ chosen[chosen$gene_id == '6523', ]</code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button>
-<pre style=""><code class="source r">## 8 / 37 of the segmeents are from gene with id 6523
-## new is 11 / 37 for the same gene
+<pre style=""><code class="source r">## 6 / 28 of the segmeents are from gene with id 6523
+## new is 9 / 30 for the same gene
 tail(sort(table(names(segs[seg.fn]))))</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## 
-##   3761   3976   4689 339669   6948   6523 
-##      2      2      2      3      6      8
+##   7494  10738 339669   3976   6948   6523 
+##      1      2      2      2      4      6
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1307,7 +1309,7 @@ table(tapply(subset(chosen, gene_id %in% names(seg.fn))$case, subset(chosen, gen
 </button>
 <pre style=""><code class="output r">## 
 ##   bothDE    oneDE singleDE 
-##        2       11        5
+##        2       11        4
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1315,7 +1317,7 @@ table(tapply(subset(chosen, gene_id %in% names(seg.fn))$case, subset(chosen, gen
 <pre style=""><code class="source r">## new:
 ## 
 ##   bothDE    oneDE singleDE 
-##        3       10        6
+##        1       10        5
 
 ## Type of gene where the segments come from. Mostly oneDE genes
 table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_id == x]) }))</code></pre>
@@ -1324,7 +1326,7 @@ table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_i
 </button>
 <pre style=""><code class="output r">## 
 ##   bothDE    oneDE singleDE 
-##        2       30        5
+##        2       22        4
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1332,7 +1334,7 @@ table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_i
 <pre style=""><code class="source r">## new:
 ## 
 ##   bothDE    oneDE singleDE 
-##        3       28        6</code></pre>
+##        1       24        5</code></pre>
 </div>
 <h2>Counts-based</h2>
 <p>Just as a verification step, the exonic segments used are disjoint as well as the exons used for the counts-based methods. Also, each exonic segment overlaps only one exon.</p>
@@ -1503,22 +1505,22 @@ count_comp(edger, ptype = 'holm')</code></pre>
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
 <pre style="display:none"><code class="source r">## Some formatting and subsets
-fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegions$sigFDR <- as.logical(fullRegions$significantFDR)
 fullRegs20 <- fullRegions[width(fullRegions) >= 20]
 
 ## Overlap table for all 4 cases
 ov_table <- function(ders, counts, query = 'der', minov = 0) {
     if(query == 'der') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
+            res <- addmargins(table('Significant DER (FDR)' = ders$sigFDR, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
         } else {
-            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
+            res <- addmargins(table(ders$sigFDR, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FDR)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
         }
     } else if (query == 'counts') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FDR)' = countOverlaps(counts, ders[ders$sigFDR]) > 0))
         } else {
-            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFDR], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FDR, min ', minov, 'bp)'))))
         }
     }
     return(res)
@@ -1527,9 +1529,9 @@ ov_table <- function(ders, counts, query = 'der', minov = 0) {
 ## Explore mistmatched cases for DERs vs Exons direction
 explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFDR)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFWER)
+        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFDR)
     } else{
         stop('invalid case')
     }
@@ -1561,9 +1563,9 @@ explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
 explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     counts <- counts[width(counts) >= minov]
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !counts$sig)
+        i <- which(countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & !counts$sig)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & counts$sig)
+        i <- which(!countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & counts$sig)
     } else{
         stop('invalid case')
     }
@@ -1571,19 +1573,19 @@ explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     
     if(case == 'FALSE-TRUE') {
         res <- list(
-            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)),
             width_exon = summary(width(counts[i])),
-            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
-            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
+            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
             i = i
         )
     } else {
         res <- list(
             width_exon = summary(width(counts[i])),
             distance_nearest_sum = summary(mcols(distanceToNearest(counts[i], ders, ignore.strand = TRUE))$distance),
-             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE))$distance),
             distance_nearest = distanceToNearest(counts[i], ders, ignore.strand = TRUE),
-            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE),
             i = i
         )
     }
@@ -1619,11 +1621,11 @@ ov_table(fullRegions, deseq)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    15  332 347
-##                  TRUE      0  122 122
-##                  Sum      15  454 469
+<pre style=""><code class="output r">##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    15  301 316
+##                 TRUE      0  153 153
+##                 Sum      15  454 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1636,16 +1638,16 @@ noNA(explore_ov(fullRegions, deseq)[1:3])</code></pre>
 <pre style=""><code class="output r">## $n_overlaps
 ## 
 ##   1   2 
-## 324   8 
+## 293   8 
 ## 
 ## $width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    1.00    1.00    3.00   10.06    9.25   88.00 
+##   1.000   1.000   2.000   5.236   6.000  37.000 
 ## 
 ## $ders_per_exon_table
 ## 
-##  1  2  3  4  5  6  7  9 10 11 16 39 89 
-## 15  8 11  2  3  5  4  1  2  2  1  1  1
+##  1  2  3  4  5  6  7  9 10 11 15 36 76 
+## 14 11  8  2  4  5  2  2  1  2  1  1  1
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1664,11 +1666,11 @@ ov_table(fullRegs20, deseq, minov = 20L)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+<pre style=""><code class="output r">##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1681,16 +1683,16 @@ noNA(explore_ov(fullRegs20, deseq, minov = 20L)[1:3])</code></pre>
 <pre style=""><code class="output r">## $n_overlaps
 ## 
 ##  1  2 
-## 45  1 
+## 14  1 
 ## 
 ## $width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   20.00   30.00   40.50   46.89   65.50   88.00 
+##   20.00   22.50   25.00   26.27   30.00   37.00 
 ## 
 ## $ders_per_exon_table
 ## 
-##  1  2  3 19 
-## 13  6  1  1
+##  1  6 
+## 10  1
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1702,13 +1704,13 @@ noNA(explore_ov(fullRegs20, deseq, minov = 20L)[1:3])</code></pre>
 <pre style=""><code class="output r">## [1] "No such cases"
 </code></pre>
 </div>
-<p>Most of the non-significant DERs that overlap a significant exon are shorter than 20bp with the longest being 88bp long. When restricting the analysis to 20bp or longer DERs, 19 of the 46 overlap a single exon. It is an exon from a gene with two isoforms where only one of them was set to be DE. As can be seen in the figure below, the F-statistics curve oscillates and a lower cutoff could have resulted in significant DERs in this exon.</p>
+<p>Most of the non-significant DERs that overlap a significant exon are shorter than 20bp with the longest being 37bp long. When restricting the analysis to 20bp or longer DERs, 6 the DERs overlap a single exon. It is an exon from a gene with two isoforms where only one of them was set to be DE. As can be seen in the figure below, the F-statistics curve oscillates and a lower cutoff could have resulted in significant DERs in this exon.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
 <pre style="display:none"><code class="source r">## Identify long exon
-long_exon <- deseq[which(deseq$sig)[as.integer(names(explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon)[explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon == 19])]]
+long_exon <- deseq[which(deseq$sig)[as.integer(names(explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon)[explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon == 6])]]
 
 ## What was it set to be?
 mcols(segs[subjectHits(findOverlaps(long_exon, segs))])$DE</code></pre>
@@ -1803,11 +1805,11 @@ ov_table(fullRegions, deseq, 'counts')</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                    Overlaps sig DER (FWER)
+<pre style=""><code class="output r">##                    Overlaps sig DER (FDR)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   120    0 120
-##               TRUE     30  121 151
-##               Sum     150  121 271
+##               TRUE     22  129 151
+##               Sum     142  129 271
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1828,15 +1830,15 @@ noNA(explore_ov_counts(fullRegions, deseq)[1:3])</code></pre>
 </button>
 <pre style=""><code class="output r">## $width_exon
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    60.0   105.2   143.0   470.5   226.8  4971.0 
+##    60.0   105.0   123.5   551.0   219.0  4971.0 
 ## 
 ## $distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0  248200    2281 2986000 
+##       0       0       0  338500  401300 2986000 
 ## 
 ## $distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##      88    3430   28740  332100  441800 3512000
+##     240    7876   99000  448000  531800 3512000
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1846,11 +1848,11 @@ ov_table(fullRegions, deseq, 'counts', 20L)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                    Overlaps sig DER (FWER, min 20bp)
+<pre style=""><code class="output r">##                    Overlaps sig DER (FDR, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   119    0 119
-##               TRUE     31  120 151
-##               Sum     150  120 270
+##               TRUE     22  129 151
+##               Sum     141  129 270
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1871,15 +1873,15 @@ noNA(explore_ov_counts(fullRegions, deseq, minov = 20L)[1:3])</code></pre>
 </button>
 <pre style=""><code class="output r">## $width_exon
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    60.0   105.0   136.0   457.8   224.5  4971.0 
+##    60.0   105.0   123.5   551.0   219.0  4971.0 
 ## 
 ## $distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0  240200    1833 2986000 
+##       0       0       0  338500  401300 2986000 
 ## 
 ## $distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0    2174   28200  321300  381300 3512000
+##     240    7876   99000  448000  531800 3512000
 </code></pre>
 </div>
 <p>We can further explore the cases where significant DE exons did not overlap a significant DER and compare against the exonic segments.</p>
@@ -1898,7 +1900,7 @@ length(i) - length(i.simple)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] 6
+<pre style=""><code class="output r">## [1] 4
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1910,7 +1912,7 @@ table(mcols(segs)$DE[subjectHits(findOverlaps(deseq[i.simple], segs ))])</code><
 </button>
 <pre style=""><code class="output r">## 
 ## FALSE  TRUE 
-##     3    21
+##     3    15
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1921,8 +1923,8 @@ table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findO
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## 
-##   bothDE    oneDE singleDE 
-##        2        4        4
+##    oneDE singleDE 
+##        3        3
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1933,8 +1935,8 @@ table(sapply(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], seg
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## 
-##   bothDE    oneDE singleDE 
-##        2       15        4
+##    oneDE singleDE 
+##       12        3
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1961,7 +1963,7 @@ table(sapply(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], seg
 ##           2           1
 </code></pre>
 </div>
-<p>Out of the 30 cases in disagreement (min overlap 0 bp), 6 of them are due to overlapping exons from both strands. 21 of these exons are correctly detected by <code>DESeq2</code> whereas 3 are not. The ones incorrectly identified by <code>derfinder</code> to not be DE are mostly (15 / 21) from genes with two isoforms with only one of them DE.</p>
+<p>Out of the 22 cases in disagreement (min overlap 0 bp), 4 of them are due to overlapping exons from both strands. 15 of these exons are correctly detected by <code>DESeq2</code> whereas 3 are not. The ones incorrectly identified by <code>derfinder</code> to not be DE are mostly (12 / 15) from genes with two isoforms with only one of them DE.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2042,11 +2044,11 @@ ov_table(fullRegions, edger)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    13  334 347
-##                  TRUE      0  122 122
-##                  Sum      13  456 469
+<pre style=""><code class="output r">##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    13  303 316
+##                 TRUE      0  153 153
+##                 Sum      13  456 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2059,16 +2061,16 @@ noNA(explore_ov(fullRegions, edger)[1:3])</code></pre>
 <pre style=""><code class="output r">## $n_overlaps
 ## 
 ##   1   2 
-## 326   8 
+## 295   8 
 ## 
 ## $width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    1.00    1.00    3.00   10.02    9.00   88.00 
+##   1.000   1.000   2.000   5.228   6.000  37.000 
 ## 
 ## $ders_per_exon_table
 ## 
-##  1  2  3  4  5  6  7  9 10 11 16 39 89 
-## 15  9 11  2  3  5  4  1  2  2  1  1  1
+##  1  2  3  4  5  6  7  9 10 11 15 36 76 
+## 14 12  8  2  4  5  2  2  1  2  1  1  1
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2087,11 +2089,11 @@ ov_table(fullRegs20, edger, minov = 20L)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+<pre style=""><code class="output r">##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2104,16 +2106,16 @@ noNA(explore_ov(fullRegs20, edger, minov = 20L)[1:3])</code></pre>
 <pre style=""><code class="output r">## $n_overlaps
 ## 
 ##  1  2 
-## 45  1 
+## 14  1 
 ## 
 ## $width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   20.00   30.00   40.50   46.89   65.50   88.00 
+##   20.00   22.50   25.00   26.27   30.00   37.00 
 ## 
 ## $ders_per_exon_table
 ## 
-##  1  2  3 19 
-## 13  6  1  1
+##  1  6 
+## 10  1
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2137,11 +2139,11 @@ ov_table(fullRegions, edger, 'counts')</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                    Overlaps sig DER (FWER)
+<pre style=""><code class="output r">##                    Overlaps sig DER (FDR)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   114    0 114
-##               TRUE     36  121 157
-##               Sum     150  121 271
+##               TRUE     28  129 157
+##               Sum     142  129 271
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2162,15 +2164,15 @@ noNA(explore_ov_counts(fullRegions, edger)[1:3])</code></pre>
 </button>
 <pre style=""><code class="output r">## $width_exon
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    13.0   105.0   143.0   417.2   236.2  4971.0 
+##    13.0   100.8   123.5   465.3   222.2  4971.0 
 ## 
 ## $distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0  207900    7527 2986000 
+##       0       0     873  267300    9045 2986000 
 ## 
 ## $distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##      88    5382   61000  295200  267600 3512000
+##     240    8392   95680  375600  509100 3512000
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2180,11 +2182,11 @@ ov_table(fullRegions, edger, 'counts', 20L)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##                    Overlaps sig DER (FWER, min 20bp)
+<pre style=""><code class="output r">##                    Overlaps sig DER (FDR, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   114    0 114
-##               TRUE     36  120 156
-##               Sum     150  120 270
+##               TRUE     27  129 156
+##               Sum     141  129 270
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2205,15 +2207,15 @@ noNA(explore_ov_counts(fullRegions, edger, minov = 20L)[1:3])</code></pre>
 </button>
 <pre style=""><code class="output r">## $width_exon
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    60.0   105.0   143.0   419.1   236.2  4971.0 
+##    60.0   105.0   128.0   482.1   224.5  4971.0 
 ## 
 ## $distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0  207800    7527 2986000 
+##       0       0     809  277100    9577 2986000 
 ## 
 ## $distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0    4812   61000  295000  267600 3512000
+##     240    8914   95990  389400  515900 3512000
 </code></pre>
 </div>
 <p>As before, we can further explore the mismatched cases where <code>edgeR-robust</code> finds DE signal but <code>derfinder</code> does not.</p>
@@ -2232,7 +2234,7 @@ length(j) - length(j.simple)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] 7
+<pre style=""><code class="output r">## [1] 5
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2244,7 +2246,7 @@ table(mcols(segs)$DE[subjectHits(findOverlaps(edger[j.simple], segs ))])</code><
 </button>
 <pre style=""><code class="output r">## 
 ## FALSE  TRUE 
-##     7    22
+##     7    16
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2255,8 +2257,8 @@ table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findO
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## 
-##   bothDE    oneDE singleDE 
-##        2        5        4
+##    oneDE singleDE 
+##        4        3
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2267,8 +2269,8 @@ table(sapply(names(segs)[intersect(subjectHits(findOverlaps(edger[j.simple], seg
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## 
-##   bothDE    oneDE singleDE 
-##        2       16        4
+##    oneDE singleDE 
+##       13        3
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2356,7 +2358,7 @@ width(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])</code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style="display:none"><code class="source r">mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFWER</code></pre>
+<pre style="display:none"><code class="source r">mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFDR</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
@@ -2456,7 +2458,7 @@ width(fullRegions[subjectHits(findOverlaps(agree_notde, fullRegions))])</code></
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
 </button>
-<pre style="display:none"><code class="source r">mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFWER</code></pre>
+<pre style="display:none"><code class="source r">mcols(fullRegions[subjectHits(findOverlaps(agree, fullRegions))])$sigFDR</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
@@ -2527,7 +2529,7 @@ agree_notde_plot()</code></pre>
 </div>
 </div>
 <h1>Conclusions</h1>
-<p>Globally, the results between the original implementation and our implementation of <code>derfinder</code> match, with both resulting in the same empirical power and absence of false positives. Both struggle in the scenario where one of the two isoforms of a gene was set to be differentially expressed.</p>
+<p>Globally, the results between the original implementation and our implementation of <code>derfinder</code> are very similar, with both resulting in the same empirical power and absence of false positives. Both struggle in the scenario where one of the two isoforms of a gene was set to be differentially expressed.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2539,10 +2541,14 @@ agree_notde_plot()</code></pre>
 emp_fpr <- function(info, ptype) {
     m <- count_comp(info, ptype)
     round(m[1, 2] / m[1, 3] * 100, 2)
+}
+emp_fdr <- function(info, ptype) {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[3, 2] * 100, 2)
 }</code></pre>
 </div>
-<p>When adjusting p-values to control the FDR, both <code>DESeq2</code> and <code>edgeR-robust</code> result in higher empirical power than <code>derfinder</code>: 95.86 and 96.45 respectively versus 78.11. However, both <code>DESeq2</code> and <code>edgeR-robust</code> have non-zero false positive rates: 6.31 and 11.71 respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.</p>
-<p>We knew from <a href="../evaluate/evaluate.html">evaluate.html</a> that <code>derfinder</code> struggled in the scenario where a two isoform gene had only one of them set to be differentially expressed. <code>DESeq2</code> and <code>edgeR-robust</code> are able to correctly identify such exons as differentially expressed in most cases, but they also introduce some occasional false positives whose coverage plots do not reveal apparent differences between the groups.</p>
+<p>When adjusting p-values to control the FDR, both <code>DESeq2</code> and <code>edgeR-robust</code> result in higher empirical power than <code>derfinder</code>: 95.86 and 96.45 respectively versus 82.25. However, both <code>DESeq2</code> and <code>edgeR-robust</code> have non-zero false positive rates: 6.31 and 11.71 respectively. Their false discovery rate is: 4.14 and 7.39 respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.</p>
+<p>We knew from <a href="../evaluate/evaluate.html">evaluate.html</a> that <code>derfinder</code> struggled in the scenario where a two transcript gene had only one of them set to be differentially expressed. <code>DESeq2</code> and <code>edgeR-robust</code> are able to correctly identify such exons as differentially expressed in most cases, but they also introduce some occasional false positives whose coverage plots do not reveal apparent differences between the groups.</p>
 <h1>Reproducibility</h1>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
@@ -2553,7 +2559,7 @@ Sys.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-03-12 01:31:06 EDT"
+<pre style=""><code class="output r">## [1] "2015-04-06 21:38:54 EDT"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2563,7 +2569,7 @@ Sys.time()</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-## 123.141   3.038 131.610
+## 106.257   2.013 118.414
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2596,104 +2602,100 @@ devtools::session_info()</code></pre>
 </button>
 <pre style=""><code class="output r">##  package                           * version     date       source                                    
 ##  acepack                             1.3.3.3     2013-05-03 CRAN (R 3.2.0)                            
-##  annotate                            1.45.2      2015-03-01 Bioconductor                              
-##  AnnotationDbi                     * 1.29.17     2015-01-21 Bioconductor                              
-##  base64enc                           0.1.2       2014-06-26 CRAN (R 3.2.0)                            
-##  BatchJobs                           1.4         2014-09-24 CRAN (R 3.2.0)                            
-##  BBmisc                              1.7         2014-06-21 CRAN (R 3.2.0)                            
-##  Biobase                           * 2.27.2      2015-02-28 Bioconductor                              
-##  BiocGenerics                      * 0.13.6      2015-03-01 Bioconductor                              
-##  BiocParallel                        1.1.13      2015-01-27 Bioconductor                              
+##  annotate                            1.45.4      2015-03-21 Bioconductor                              
+##  AnnotationDbi                     * 1.29.21     2015-04-03 Bioconductor                              
+##  Biobase                           * 2.27.3      2015-03-27 Bioconductor                              
+##  BiocGenerics                      * 0.13.11     2015-04-03 Bioconductor                              
+##  BiocParallel                        1.1.21      2015-03-24 Bioconductor                              
 ##  biomaRt                             2.23.5      2014-11-22 Bioconductor                              
-##  Biostrings                          2.35.11     2015-02-22 Bioconductor                              
-##  biovizBase                          1.15.2      2015-01-14 Bioconductor                              
+##  Biostrings                          2.35.12     2015-03-26 Bioconductor                              
+##  biovizBase                          1.15.3      2015-03-30 Bioconductor                              
 ##  bitops                              1.0.6       2013-08-17 CRAN (R 3.2.0)                            
-##  brew                                1.0.6       2011-04-13 CRAN (R 3.2.0)                            
-##  BSgenome                            1.35.17     2015-02-13 Bioconductor                              
-##  bumphunter                          1.7.4       2015-01-15 Bioconductor                              
-##  checkmate                           1.5.0       2014-10-19 CRAN (R 3.2.0)                            
-##  cluster                             1.15.3      2014-09-04 CRAN (R 3.2.0)                            
-##  codetools                           0.2.9       2014-08-21 CRAN (R 3.2.0)                            
-##  colorspace                          1.2.4       2013-09-30 CRAN (R 3.2.0)                            
+##  BSgenome                            1.35.20     2015-03-27 Bioconductor                              
+##  bumphunter                          1.7.6       2015-03-13 Github (lcolladotor/bumphunter@37d10e7)   
+##  cluster                             2.0.1       2015-01-31 CRAN (R 3.2.0)                            
+##  codetools                           0.2.11      2015-03-10 CRAN (R 3.2.0)                            
+##  colorout                          * 1.0.2       2014-11-03 local                                     
+##  colorspace                          1.2.6       2015-03-11 CRAN (R 3.2.0)                            
 ##  DBI                                 0.3.1       2014-09-24 CRAN (R 3.2.0)                            
-##  derfinder                         * 1.1.16      2015-01-20 Bioconductor                              
-##  derfinderHelper                   * 1.1.5       2014-11-05 Bioconductor                              
-##  derfinderPlot                     * 1.1.5       2015-02-22 Github (lcolladotor/derfinderPlot@ba647da)
-##  DESeq2                            * 1.7.33      2015-02-28 Bioconductor                              
+##  derfinder                         * 1.1.18      2015-04-01 Bioconductor                              
+##  derfinderHelper                   * 1.1.6       2015-03-15 Bioconductor                              
+##  derfinderPlot                     * 1.1.6       2015-03-14 Github (lcolladotor/derfinderPlot@1319754)
+##  DESeq2                            * 1.7.50      2015-04-04 Bioconductor                              
 ##  devtools                            1.6.1       2014-10-07 CRAN (R 3.2.0)                            
 ##  dichromat                           2.0.0       2013-01-24 CRAN (R 3.2.0)                            
-##  digest                              0.6.4       2013-12-03 CRAN (R 3.2.0)                            
+##  digest                              0.6.8       2014-12-31 CRAN (R 3.2.0)                            
 ##  doRNG                               1.6         2014-03-07 CRAN (R 3.2.0)                            
-##  edgeR                             * 3.9.11      2015-02-09 Bioconductor                              
+##  edgeR                             * 3.9.15      2015-04-03 Bioconductor                              
 ##  evaluate                            0.5.5       2014-04-29 CRAN (R 3.2.0)                            
-##  fail                                1.2         2013-09-19 CRAN (R 3.2.0)                            
 ##  foreach                             1.4.2       2014-04-11 CRAN (R 3.2.0)                            
-##  foreign                             0.8.61      2014-03-28 CRAN (R 3.2.0)                            
+##  foreign                             0.8.63      2015-02-20 CRAN (R 3.2.0)                            
 ##  formatR                             1.0         2014-08-25 CRAN (R 3.2.0)                            
-##  Formula                             1.1.2       2014-07-13 CRAN (R 3.2.0)                            
+##  Formula                             1.2.0       2015-01-20 CRAN (R 3.2.0)                            
+##  futile.logger                       1.4         2015-03-21 CRAN (R 3.2.0)                            
+##  futile.options                      1.0.0       2010-04-06 CRAN (R 3.2.0)                            
 ##  genefilter                          1.49.2      2014-10-21 Bioconductor                              
 ##  geneplotter                         1.45.0      2014-10-14 Bioconductor                              
-##  GenomeInfoDb                      * 1.3.13      2015-02-13 Bioconductor                              
-##  GenomicAlignments                   1.3.29      2015-02-27 Bioconductor                              
-##  GenomicFeatures                   * 1.19.20     2015-03-02 Bioconductor                              
-##  GenomicFiles                        1.3.11      2015-01-23 Bioconductor                              
-##  GenomicRanges                     * 1.19.42     2015-03-01 Bioconductor                              
+##  GenomeInfoDb                      * 1.3.16      2015-03-27 Bioconductor                              
+##  GenomicAlignments                   1.3.33      2015-04-06 Bioconductor                              
+##  GenomicFeatures                   * 1.19.36     2015-03-30 Bioconductor                              
+##  GenomicFiles                        1.3.15      2015-04-01 Bioconductor                              
+##  GenomicRanges                     * 1.19.52     2015-04-04 Bioconductor                              
 ##  GGally                              0.4.8       2014-08-26 CRAN (R 3.2.0)                            
-##  ggbio                               1.15.1      2015-01-14 Bioconductor                              
+##  ggbio                               1.15.3      2015-04-02 Bioconductor                              
 ##  ggplot2                             1.0.0       2014-05-21 CRAN (R 3.2.0)                            
-##  graph                               1.45.2      2015-03-01 Bioconductor                              
+##  graph                               1.45.3      2015-04-03 Bioconductor                              
 ##  gridExtra                           0.9.1       2012-08-09 CRAN (R 3.2.0)                            
 ##  gtable                              0.1.2       2012-12-05 CRAN (R 3.2.0)                            
 ##  Hmisc                               3.14.5      2014-09-12 CRAN (R 3.2.0)                            
 ##  htmltools                           0.2.6       2014-09-08 CRAN (R 3.2.0)                            
-##  IRanges                           * 2.1.41      2015-03-01 Bioconductor                              
+##  IRanges                           * 2.1.43      2015-03-07 Bioconductor                              
 ##  iterators                           1.0.7       2014-04-11 CRAN (R 3.2.0)                            
 ##  knitr                               1.7         2014-10-13 CRAN (R 3.2.0)                            
 ##  knitrBootstrap                      1.0.0       2014-11-03 Github (jimhester/knitrBootstrap@76c41f0) 
-##  lattice                             0.20.29     2014-04-04 CRAN (R 3.2.0)                            
+##  lambda.r                            1.1.7       2015-03-20 CRAN (R 3.2.0)                            
+##  lattice                             0.20.31     2015-03-30 CRAN (R 3.2.0)                            
 ##  latticeExtra                        0.6.26      2013-08-15 CRAN (R 3.2.0)                            
-##  limma                             * 3.23.10     2015-03-02 Bioconductor                              
+##  limma                             * 3.23.12     2015-04-05 Bioconductor                              
 ##  locfit                              1.5.9.1     2013-04-20 CRAN (R 3.2.0)                            
 ##  markdown                            0.7.4       2014-08-24 CRAN (R 3.2.0)                            
-##  MASS                                7.3.35      2014-09-30 CRAN (R 3.2.0)                            
-##  Matrix                              1.1.4       2014-06-15 CRAN (R 3.2.0)                            
-##  matrixStats                         0.10.3      2014-10-15 CRAN (R 3.2.0)                            
-##  mime                                0.2         2014-09-26 CRAN (R 3.2.0)                            
+##  MASS                                7.3.40      2015-03-21 CRAN (R 3.2.0)                            
+##  Matrix                              1.2.0       2015-04-04 CRAN (R 3.2.0)                            
+##  matrixStats                         0.14.0      2015-02-14 CRAN (R 3.2.0)                            
+##  mime                                0.3         2015-03-29 CRAN (R 3.2.0)                            
 ##  munsell                             0.4.2       2013-07-11 CRAN (R 3.2.0)                            
-##  nnet                                7.3.8       2014-03-28 CRAN (R 3.2.0)                            
-##  OrganismDbi                         1.9.4       2015-02-07 Bioconductor                              
+##  nnet                                7.3.9       2015-02-11 CRAN (R 3.2.0)                            
+##  OrganismDbi                         1.9.15      2015-03-30 Bioconductor                              
 ##  pkgmaker                            0.22        2014-05-14 CRAN (R 3.2.0)                            
 ##  plyr                                1.8.1       2014-02-26 CRAN (R 3.2.0)                            
 ##  proto                               0.3.10      2012-12-22 CRAN (R 3.2.0)                            
-##  qvalue                              1.41.0      2014-10-14 Bioconductor                              
-##  R.methodsS3                         1.6.1       2014-01-05 CRAN (R 3.2.0)                            
+##  qvalue                            * 1.99.1      2015-04-04 Bioconductor                              
 ##  RBGL                                1.43.0      2014-10-14 Bioconductor                              
-##  RColorBrewer                        1.0.5       2011-06-17 CRAN (R 3.2.0)                            
-##  Rcpp                              * 0.11.3      2014-09-29 CRAN (R 3.2.0)                            
-##  RcppArmadillo                     * 0.4.600.4.0 2015-01-25 CRAN (R 3.2.0)                            
-##  RCurl                               1.95.4.3    2014-07-29 CRAN (R 3.2.0)                            
+##  RColorBrewer                        1.1.2       2014-12-07 CRAN (R 3.2.0)                            
+##  Rcpp                              * 0.11.5      2015-03-06 CRAN (R 3.2.0)                            
+##  RcppArmadillo                     * 0.4.650.1.1 2015-02-26 CRAN (R 3.2.0)                            
+##  RCurl                               1.95.4.5    2014-12-28 CRAN (R 3.2.0)                            
 ##  registry                            0.2         2012-01-24 CRAN (R 3.2.0)                            
 ##  reshape                             0.8.5       2014-04-23 CRAN (R 3.2.0)                            
-##  reshape2                            1.4         2014-04-23 CRAN (R 3.2.0)                            
-##  rmarkdown                         * 0.3.3       2014-09-17 CRAN (R 3.2.0)                            
+##  reshape2                            1.4.1       2014-12-06 CRAN (R 3.2.0)                            
+##  rmarkdown                           0.3.3       2014-09-17 CRAN (R 3.2.0)                            
 ##  rngtools                            1.2.4       2014-03-06 CRAN (R 3.2.0)                            
-##  rpart                               4.1.8       2014-03-28 CRAN (R 3.2.0)                            
-##  Rsamtools                           1.19.38     2015-02-28 Bioconductor                              
+##  rpart                               4.1.9       2015-02-24 CRAN (R 3.2.0)                            
+##  Rsamtools                           1.19.49     2015-03-27 Bioconductor                              
 ##  RSQLite                             1.0.0       2014-10-25 CRAN (R 3.2.0)                            
-##  rstudioapi                          0.1         2014-03-27 CRAN (R 3.2.0)                            
-##  rtracklayer                         1.27.8      2015-03-02 Bioconductor                              
-##  S4Vectors                         * 0.5.21      2015-02-22 Bioconductor                              
+##  rstudioapi                          0.2         2014-12-31 CRAN (R 3.2.0)                            
+##  rtracklayer                         1.27.11     2015-04-01 Bioconductor                              
+##  S4Vectors                         * 0.5.22      2015-03-06 Bioconductor                              
 ##  scales                              0.2.4       2014-04-22 CRAN (R 3.2.0)                            
-##  sendmailR                           1.2.1       2014-09-21 CRAN (R 3.2.0)                            
 ##  stringr                             0.6.2       2012-12-06 CRAN (R 3.2.0)                            
-##  survival                            2.37.7      2014-01-22 CRAN (R 3.2.0)                            
+##  survival                            2.38.1      2015-02-24 CRAN (R 3.2.0)                            
 ##  TxDb.Hsapiens.UCSC.hg19.knownGene * 3.0.0       2014-09-26 Bioconductor                              
-##  VariantAnnotation                   1.13.38     2015-02-28 Bioconductor                              
+##  VariantAnnotation                   1.13.46     2015-03-26 Bioconductor                              
 ##  XML                                 3.98.1.1    2013-06-20 CRAN (R 3.2.0)                            
 ##  xtable                              1.7.4       2014-09-12 CRAN (R 3.2.0)                            
 ##  XVector                           * 0.7.4       2015-02-08 Bioconductor                              
 ##  yaml                                2.1.13      2014-06-12 CRAN (R 3.2.0)                            
-##  zlibbioc                            1.13.1      2015-02-11 Bioconductor
+##  zlibbioc                            1.13.3      2015-03-23 Bioconductor
 </code></pre>
 </div>
 </div>
@@ -2737,9 +2739,6 @@ Type
 </li>
 <li class="active">
 <a href="#" class="toggle-global output" type="output">output</a>
-</li>
-<li class="active">
-<a href="#" class="toggle-global warning" type="warning">warning</a>
 </li>
 <li>
 <a href="#" type="all-output" class="toggle-global">All</a>

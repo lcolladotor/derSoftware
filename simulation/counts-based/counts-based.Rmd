@@ -215,7 +215,7 @@ Due to the simulation setup, only one of the three groups is differentially expr
 addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 1' = countOverlaps(segs, ori.de.sig) > 0))
 ```
 
-The results from the new implementation are shown below (extracted from [evaluate.html](../evaluate/evaluate.html)). The original implementation has 2 false positive (versus 0 in the new implemenation) and less false negatives.
+The results from the new implementation are shown below (extracted from [evaluate.html](../evaluate/evaluate.html)). The original implementation has 15 false positive (versus 0 in the new implemenation) and less false negatives (11 versus 30).
 
 ```{r 'newFDR', bootstrap.show.code = FALSE}
 ## Compare against new derfinder:
@@ -225,12 +225,12 @@ fdr <-  fullRegions[fullRegions$significantFDR == 'TRUE']
 addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig FDR) -- new' = countOverlaps(segs, fdr) > 0))
 ```
 
-However, because of the simulation setup, with the original implementation we would actually expect at least two DERs to overlap each exonic segment that was set to be DE. When doing this comparison, we get the same numbers as with the new implementation.
+However, because of the simulation setup, with the original implementation we would actually expect at least two DERs to overlap each exonic segment that was set to be DE. When doing this comparison, we get 3 false positives and 28 false negatives versus 0 and 30 in the new implementation.
 
 
 
 ```{r 'only2', bootstrap.show.code = FALSE}
-## Identical results to derfinder-original if we ask segments to overlap 
+## Identical results? to derfinder-original if we ask segments to overlap 
 ## two DERs given that we are doing 3 group comparisons with 1 group
 ## higher/lower than the other two
 addmargins(table('DE status' = segs$DE, 'Overlaps DER (sig) -- original, min 2' = countOverlaps(segs, ori.de.sig) > 1))
@@ -241,7 +241,7 @@ identical(
 )
 ```
 
-While the global numbers match, the agreement at the exonic segment level is not perfect between the original and new implementations.
+While the global numbers are similar, the agreement at the exonic segment level is not perfect between the original and new implementations as shown below. 
 
 ```{r 'newVsOnly2', bootstrap.show.code = FALSE}
 addmargins(table('new' = countOverlaps(segs, fdr) > 0, 'original -- min 2' = countOverlaps(segs, ori.de.sig) > 1))
@@ -260,11 +260,11 @@ summary(width(segs[seg.fn]))
 ## new:
 ##
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     5.0    81.0   136.0   233.4   245.0  1844.0
+##     5.0    73.5   119.0   242.7   241.0  1844.0
 chosen[chosen$gene_id == '6523', ]
 
-## 8 / 37 of the segmeents are from gene with id 6523
-## new is 11 / 37 for the same gene
+## 6 / 28 of the segmeents are from gene with id 6523
+## new is 9 / 30 for the same gene
 tail(sort(table(names(segs[seg.fn]))))
 
 ## Cases of the genes with at least one FN segment
@@ -272,7 +272,7 @@ table(tapply(subset(chosen, gene_id %in% names(seg.fn))$case, subset(chosen, gen
 ## new:
 ## 
 ##   bothDE    oneDE singleDE 
-##        3       10        6
+##        1       10        5
 
 ## Type of gene where the segments come from. Mostly oneDE genes
 table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_id == x]) }))
@@ -280,7 +280,7 @@ table(sapply(names(segs[seg.fn]), function(x) { unique(chosen$case[chosen$gene_i
 ## new:
 ## 
 ##   bothDE    oneDE singleDE 
-##        3       28        6
+##        1       24        5
 ```
 
 
@@ -482,11 +482,11 @@ noNA(explore_ov(fullRegs20, deseq, minov = 20L)[1:3])
 noNA(explore_ov(fullRegs20, deseq, 'TRUE-FALSE', minov = 20L)[1:3])
 ```
 
-Most of the non-significant DERs that overlap a significant exon are shorter than 20bp with the longest being 88bp long. When restricting the analysis to 20bp or longer DERs, 19 of the 46 overlap a single exon. It is an exon from a gene with two isoforms where only one of them was set to be DE. As can be seen in the figure below, the F-statistics curve oscillates and a lower cutoff could have resulted in significant DERs in this exon.
+Most of the non-significant DERs that overlap a significant exon are shorter than 20bp with the longest being 37bp long. When restricting the analysis to 20bp or longer DERs, 6 the DERs overlap a single exon. It is an exon from a gene with two isoforms where only one of them was set to be DE. As can be seen in the figure below, the F-statistics curve oscillates and a lower cutoff could have resulted in significant DERs in this exon.
 
 ```{r 'vis-long-exon', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
 ## Identify long exon
-long_exon <- deseq[which(deseq$sig)[as.integer(names(explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon)[explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon == 19])]]
+long_exon <- deseq[which(deseq$sig)[as.integer(names(explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon)[explore_ov(fullRegs20, deseq, minov = 20L)$ders_per_exon == 6])]]
 
 ## What was it set to be?
 mcols(segs[subjectHits(findOverlaps(long_exon, segs))])$DE
@@ -592,7 +592,7 @@ table(gene$case[gene$gene_id %in% unique(names(segs)[intersect(subjectHits(findO
 table(sapply(names(segs)[intersect(subjectHits(findOverlaps(deseq[i.simple], segs )), which(!mcols(segs)$DE))], function(x) { gene$case[gene$gene_id == x] }))
 ```
 
-Out of the 30 cases in disagreement (min overlap 0 bp), 6 of them are due to overlapping exons from both strands. 21 of these exons are correctly detected by `DESeq2` whereas 3 are not. The ones incorrectly identified by `derfinder` to not be DE are mostly (15 / 21) from genes with two isoforms with only one of them DE.
+Out of the 22 cases in disagreement (min overlap 0 bp), 4 of them are due to overlapping exons from both strands. 15 of these exons are correctly detected by `DESeq2` whereas 3 are not. The ones incorrectly identified by `derfinder` to not be DE are mostly (12 / 15) from genes with two isoforms with only one of them DE.
 
 
 ```{r 'vis-long-deseq2-error', fig.width = 10, fig.height = 7, bootstrap.show.code = FALSE}
@@ -845,7 +845,7 @@ agree_notde_plot()
 
 # Conclusions
 
-Globally, the results between the original implementation and our implementation of `derfinder` match, with both resulting in the same empirical power and absence of false positives. Both struggle in the scenario where one of the two isoforms of a gene was set to be differentially expressed.
+Globally, the results between the original implementation and our implementation of `derfinder` are very similar, with both resulting in the same empirical power and absence of false positives. Both struggle in the scenario where one of the two isoforms of a gene was set to be differentially expressed.
 
 
 ```{r 'empirical', bootstrap.show.code = FALSE}
@@ -863,7 +863,7 @@ emp_fdr <- function(info, ptype) {
 }
 ```
 
-When adjusting p-values to control the FDR, both `DESeq2` and `edgeR-robust` result in higher empirical power than `derfinder`: `r emp_power(deseq, 'padj')` and `r emp_power(edger, 'padj')` respectively versus `r round(100 * 132 / 169, 2)`. However, both `DESeq2` and `edgeR-robust` have non-zero false positive rates: `r emp_fpr(deseq, 'padj')` and `r emp_fpr(edger, 'padj')` respectively. Their false discovery rate is: `r emp_fdr(deseq, 'padj')` and `r emp_fdr(edger, 'padj')` respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.
+When adjusting p-values to control the FDR, both `DESeq2` and `edgeR-robust` result in higher empirical power than `derfinder`: `r emp_power(deseq, 'padj')` and `r emp_power(edger, 'padj')` respectively versus `r round(100 * 139 / 169, 2)`. However, both `DESeq2` and `edgeR-robust` have non-zero false positive rates: `r emp_fpr(deseq, 'padj')` and `r emp_fpr(edger, 'padj')` respectively. Their false discovery rate is: `r emp_fdr(deseq, 'padj')` and `r emp_fdr(edger, 'padj')` respectively. Note that the number of false positives is reduced to 1 in both cases when controlling the FWER.
 
 We knew from [evaluate.html](../evaluate/evaluate.html) that `derfinder` struggled in the scenario where a two transcript gene had only one of them set to be differentially expressed. `DESeq2` and `edgeR-robust` are able to correctly identify such exons as differentially expressed in most cases, but they also introduce some occasional false positives whose coverage plots do not reveal apparent differences between the groups.
 
