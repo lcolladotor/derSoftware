@@ -25,6 +25,7 @@ load("../derAnalysis/run2-v1.0.10/groupInfo.Rdata")
 load('../simulation_info.Rdata')
 load('../counts-gene/summOv_comp.Rdata')
 load('../counts-gene/summOv_inc.Rdata')
+load('../counts-gene/summOv_rand.Rdata')
 load('../counts-gene/gene_sets.Rdata')
 if(file.exists("../derAnalysis/run2-v1.0.10/colsubset.Rdat")) {
     load("../derAnalysis/run2-v1.0.10/colsubset.Rdata")
@@ -97,7 +98,8 @@ run_edger <- function(counts, genes, file, groupInfo) {
 Define the gene sets.
 
 ```{r defineSets}
-genes <- list('complete' = gene_comp, 'incomplete' = gene_inc)
+genes <- list('complete' = gene_comp, 'incomplete' = gene_inc,
+    'incomplete_random' = gene_rand)
 ```
 
 
@@ -109,7 +111,8 @@ Load counting data produced by `summarizeOverlaps()`. Also checks that the names
 
 ```{r count}
 ## Count from summarizeOverlaps()
-counts <- list('complete' = summOv_comp, 'incomplete' = summOv_inc)
+counts <- list('complete' = summOv_comp, 'incomplete' = summOv_inc,
+    'incomplete_random' = summOv_rand)
 counts <- lapply(counts, function(x) { assay(x)[, paste0('sample', 1:30)]})
 
 ## Check names
@@ -263,6 +266,24 @@ sapply(deseq, emp_fpr, ptype = 'holm')
 sapply(edger, emp_fpr, ptype = 'holm')
 ```
 
+#### Empirical FDR
+
+The empirical False Discovery Rate (FDR) is shown below for `DESeq2` and `edgeR`. First for controlling the FDR and next for controlling the FWER.
+
+```{r empFDR}
+emp_fdr <- function(info, ptype = 'padj') {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[3, 2] * 100, 2)
+}
+
+sapply(deseq, emp_fdr)
+sapply(edger, emp_fdr)
+
+## Adjusting p-values by Holm method
+sapply(deseq, emp_fdr, ptype = 'holm')
+sapply(edger, emp_fdr, ptype = 'holm')
+```
+
 
 ### Overlap
 
@@ -272,22 +293,23 @@ As with previous reports ([all-exons.html](../all-exons/all-exons.html) and [cou
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
 
 ## Some formatting and subsets
-fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fullRegions$sigFDR <- as.logical(fullRegions$significantFDR)
 fullRegs20 <- fullRegions[width(fullRegions) >= 20]
 
 ## Overlap table for all 4 cases
 ov_table <- function(ders, counts, query = 'der', minov = 0) {
     if(query == 'der') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE gene' = countOverlaps(ders, counts[mcols(counts)$sig]) > 0))
+            res <- addmargins(table('Significant DER (FDR)' = ders$sigFDR, 'Overlaps sig DE gene' = countOverlaps(ders, counts[mcols(counts)$sig]) > 0))
         } else {
-            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE gene (min ', minov, 'bp)'))))
+            res <- addmargins(table(ders$sigFDR, countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FDR)', paste0('Overlaps sig DE gene (min ', minov, 'bp)'))))
         }
     } else if (query == 'counts') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DE gene' = mcols(counts)$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+            res <- addmargins(table('Significant DE gene' = mcols(counts)$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFDR]) > 0))
         } else {
-            res <- addmargins(table(mcols(counts)$sig[sapply(width(counts), sum) >= minov], countOverlaps(counts[sapply(width(counts), sum) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE gene', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+            res <- addmargins(table(mcols(counts)$sig[sapply(width(counts), sum) >= minov], countOverlaps(counts[sapply(width(counts), sum) >= minov], ders[ders$sigFDR], minoverlap = minov) > 0, dnn = c('Significant DE gene', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
         }
     }
     return(res)
@@ -296,9 +318,9 @@ ov_table <- function(ders, counts, query = 'der', minov = 0) {
 ## Explore mistmatched cases for DERs vs genes direction
 explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+        i <- which(countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & !ders$sigFDR)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & ders$sigFWER)
+        i <- which(!countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & ders$sigFDR)
     } else{
         stop('invalid case')
     }
@@ -330,9 +352,9 @@ explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
 explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     counts <- counts[sapply(width(counts), sum) >= minov]
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !mcols(counts)$sig)
+        i <- which(countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & !mcols(counts)$sig)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & mcols(counts)$sig)
+        i <- which(!countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & mcols(counts)$sig)
     } else{
         stop('invalid case')
     }
@@ -340,19 +362,19 @@ explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     
     if(case == 'FALSE-TRUE') {
         res <- list(
-            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)),
             width_gene = summary(sapply(width(counts[i]), sum)),
-            genes_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
-            genes_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            genes_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
+            genes_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
             i = i
         )
     } else {
         res <- list(
             width_gene = summary(sapply(width(counts[i]), sum)),
             distance_nearest_sum = summary(mcols(distanceToNearest(unlist(counts[i]), ders, ignore.strand = TRUE))$distance),
-             distance_nearest_sig_sum = summary(mcols(distanceToNearest(unlist(counts[i]), ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(unlist(counts[i]), ders[ders$sigFDR], ignore.strand = TRUE))$distance),
             distance_nearest = distanceToNearest(unlist(counts[i]), ders, ignore.strand = TRUE),
-            distance_nearest_sig = distanceToNearest(unlist(counts[i]), ders[ders$sigFWER], ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(unlist(counts[i]), ders[ders$sigFDR], ignore.strand = TRUE),
             i = i
         )
     }

@@ -946,6 +946,7 @@ load("../derAnalysis/run2-v1.0.10/groupInfo.Rdata")
 load('../simulation_info.Rdata')
 load('../counts-gene/summOv_comp.Rdata')
 load('../counts-gene/summOv_inc.Rdata')
+load('../counts-gene/summOv_rand.Rdata')
 load('../counts-gene/gene_sets.Rdata')
 if(file.exists("../derAnalysis/run2-v1.0.10/colsubset.Rdat")) {
     load("../derAnalysis/run2-v1.0.10/colsubset.Rdata")
@@ -1016,7 +1017,8 @@ run_edger <- function(counts, genes, file, groupInfo) {
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button>
-<pre style=""><code class="source r">genes <- list('complete' = gene_comp, 'incomplete' = gene_inc)</code></pre>
+<pre style=""><code class="source r">genes <- list('complete' = gene_comp, 'incomplete' = gene_inc,
+    'incomplete_random' = gene_rand)</code></pre>
 </div>
 <h2>Counting</h2>
 <p>Load counting data produced by <code>summarizeOverlaps()</code>. Also checks that the names of the genes are in the correct order and identifies the genes that have 0 counts in all samples.</p>
@@ -1025,7 +1027,8 @@ run_edger <- function(counts, genes, file, groupInfo) {
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button>
 <pre style=""><code class="source r">## Count from summarizeOverlaps()
-counts <- list('complete' = summOv_comp, 'incomplete' = summOv_inc)
+counts <- list('complete' = summOv_comp, 'incomplete' = summOv_inc,
+    'incomplete_random' = summOv_rand)
 counts <- lapply(counts, function(x) { assay(x)[, paste0('sample', 1:30)]})
 
 ## Check names
@@ -1058,6 +1061,9 @@ lapply(counts, function(x) {
 ## [1] "100422998" "100423034"
 ## 
 ## $incomplete
+## [1] "100422998" "100423034"
+## 
+## $incomplete_random
 ## [1] "100422998" "100423034"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
@@ -1124,12 +1130,18 @@ system.time( deseq <- mapply(run_deseq, counts, genes, names(genes), MoreArgs = 
 ## mean-dispersion relationship
 ## final dispersion estimates
 ## fitting model and testing
+## estimating size factors
+## estimating dispersions
+## gene-wise dispersion estimates
+## mean-dispersion relationship
+## final dispersion estimates
+## fitting model and testing
 </code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   1.869   0.031   1.906
+##   2.604   0.029   2.654
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1140,7 +1152,7 @@ system.time( edger <- mapply(run_edger, counts, genes, names(genes), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   1.775   0.012   1.790
+##   2.523   0.014   2.548
 </code></pre>
 </div>
 <h3>Agreement</h3>
@@ -1169,6 +1181,13 @@ mapply(agree, deseq, edger, SIMPLIFY = FALSE)</code></pre>
 ##                         FALSE    20    1  21
 ##                         TRUE      0   37  37
 ##                         Sum      20   38  58
+## 
+## $incomplete_random
+##                              Significant DE gene -- edgeR
+## Significant DE gene -- DESeq2 FALSE TRUE Sum
+##                         FALSE    20    0  20
+##                         TRUE      1   34  35
+##                         Sum      21   34  55
 </code></pre>
 </div>
 <p>There are only 2 and 1 disagreements between <code>DESeq2</code> and <code>edgeR</code> for the complete and incomplete gene sets respectively.</p>
@@ -1248,6 +1267,13 @@ lapply(deseq, count_comp)</code></pre>
 ##     FALSE    88   23 111
 ##     TRUE     24  145 169
 ##     Sum     112  168 280
+## 
+## $incomplete_random
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE    90   21 111
+##     TRUE      5  164 169
+##     Sum      95  185 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1269,6 +1295,13 @@ lapply(deseq, count_comp)</code></pre>
 ##     FALSE    87   24 111
 ##     TRUE     24  145 169
 ##     Sum     111  169 280
+## 
+## $incomplete_random
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   108    3 111
+##     TRUE      5  164 169
+##     Sum     113  167 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1291,6 +1324,13 @@ lapply(deseq, count_comp, ptype = 'holm')</code></pre>
 ##     FALSE   111    0 111
 ##     TRUE     24  145 169
 ##     Sum     135  145 280
+## 
+## $incomplete_random
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   111    0 111
+##     TRUE      5  164 169
+##     Sum     116  164 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1312,6 +1352,13 @@ lapply(deseq, count_comp, ptype = 'holm')</code></pre>
 ##     FALSE   111    0 111
 ##     TRUE     24  145 169
 ##     Sum     135  145 280
+## 
+## $incomplete_random
+##          Overlaps DE exon
+## DE status FALSE TRUE Sum
+##     FALSE   108    3 111
+##     TRUE      5  164 169
+##     Sum     113  167 280
 </code></pre>
 </div>
 <h4>Empirical Power</h4>
@@ -1330,8 +1377,8 @@ sapply(deseq, emp_power)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##      97.04      85.80
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             97.04             85.80             97.04
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1340,8 +1387,8 @@ sapply(deseq, emp_power)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##      97.04      85.80
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             97.04             85.80             97.04
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1351,8 +1398,8 @@ sapply(deseq, emp_power, ptype = 'holm')</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##      97.04      85.80
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             97.04             85.80             97.04
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1361,8 +1408,8 @@ sapply(deseq, emp_power, ptype = 'holm')</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##      97.04      85.80
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             97.04             85.80             97.04
 </code></pre>
 </div>
 <h4>Empirical FPR</h4>
@@ -1380,8 +1427,8 @@ sapply(deseq, emp_fpr)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##      18.92      20.72
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             18.92             20.72             18.92
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1390,8 +1437,8 @@ sapply(deseq, emp_fpr)</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##      25.23      21.62
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             25.23             21.62              2.70
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1401,8 +1448,8 @@ sapply(deseq, emp_fpr, ptype = 'holm')</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##          0          0
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##                 0                 0                 0
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1411,8 +1458,58 @@ sapply(deseq, emp_fpr, ptype = 'holm')</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">##   complete incomplete 
-##        2.7        0.0
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##               2.7               0.0               2.7
+</code></pre>
+</div>
+<h4>Empirical FDR</h4>
+<p>The empirical False Discovery Rate (FDR) is shown below for <code>DESeq2</code> and <code>edgeR</code>. First for controlling the FDR and next for controlling the FWER.</p>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">emp_fdr <- function(info, ptype = 'padj') {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[3, 2] * 100, 2)
+}
+
+sapply(deseq, emp_fdr)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             11.35             13.69             11.35
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">sapply(edger, emp_fdr)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##             14.58             14.20              1.80
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">## Adjusting p-values by Holm method
+sapply(deseq, emp_fdr, ptype = 'holm')</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##                 0                 0                 0
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">sapply(edger, emp_fdr, ptype = 'holm')</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##          complete        incomplete incomplete_random 
+##               1.8               0.0               1.8
 </code></pre>
 </div>
 <h3>Overlap</h3>
@@ -1424,22 +1521,23 @@ sapply(deseq, emp_fpr, ptype = 'holm')</code></pre>
 <pre style="display:none"><code class="source r">load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
 
 ## Some formatting and subsets
-fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fullRegions$sigFDR <- as.logical(fullRegions$significantFDR)
 fullRegs20 <- fullRegions[width(fullRegions) >= 20]
 
 ## Overlap table for all 4 cases
 ov_table <- function(ders, counts, query = 'der', minov = 0) {
     if(query == 'der') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE gene' = countOverlaps(ders, counts[mcols(counts)$sig]) > 0))
+            res <- addmargins(table('Significant DER (FDR)' = ders$sigFDR, 'Overlaps sig DE gene' = countOverlaps(ders, counts[mcols(counts)$sig]) > 0))
         } else {
-            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE gene (min ', minov, 'bp)'))))
+            res <- addmargins(table(ders$sigFDR, countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FDR)', paste0('Overlaps sig DE gene (min ', minov, 'bp)'))))
         }
     } else if (query == 'counts') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DE gene' = mcols(counts)$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+            res <- addmargins(table('Significant DE gene' = mcols(counts)$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFDR]) > 0))
         } else {
-            res <- addmargins(table(mcols(counts)$sig[sapply(width(counts), sum) >= minov], countOverlaps(counts[sapply(width(counts), sum) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE gene', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+            res <- addmargins(table(mcols(counts)$sig[sapply(width(counts), sum) >= minov], countOverlaps(counts[sapply(width(counts), sum) >= minov], ders[ders$sigFDR], minoverlap = minov) > 0, dnn = c('Significant DE gene', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
         }
     }
     return(res)
@@ -1448,9 +1546,9 @@ ov_table <- function(ders, counts, query = 'der', minov = 0) {
 ## Explore mistmatched cases for DERs vs genes direction
 explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+        i <- which(countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & !ders$sigFDR)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & ders$sigFWER)
+        i <- which(!countOverlaps(ders, counts[mcols(counts)$sig], minoverlap = minov) > 0 & ders$sigFDR)
     } else{
         stop('invalid case')
     }
@@ -1482,9 +1580,9 @@ explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
 explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     counts <- counts[sapply(width(counts), sum) >= minov]
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !mcols(counts)$sig)
+        i <- which(countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & !mcols(counts)$sig)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & mcols(counts)$sig)
+        i <- which(!countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & mcols(counts)$sig)
     } else{
         stop('invalid case')
     }
@@ -1492,19 +1590,19 @@ explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     
     if(case == 'FALSE-TRUE') {
         res <- list(
-            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)),
             width_gene = summary(sapply(width(counts[i]), sum)),
-            genes_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
-            genes_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            genes_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
+            genes_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
             i = i
         )
     } else {
         res <- list(
             width_gene = summary(sapply(width(counts[i]), sum)),
             distance_nearest_sum = summary(mcols(distanceToNearest(unlist(counts[i]), ders, ignore.strand = TRUE))$distance),
-             distance_nearest_sig_sum = summary(mcols(distanceToNearest(unlist(counts[i]), ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(unlist(counts[i]), ders[ders$sigFDR], ignore.strand = TRUE))$distance),
             distance_nearest = distanceToNearest(unlist(counts[i]), ders, ignore.strand = TRUE),
-            distance_nearest_sig = distanceToNearest(unlist(counts[i]), ders[ders$sigFWER], ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(unlist(counts[i]), ders[ders$sigFDR], ignore.strand = TRUE),
             i = i
         )
     }
@@ -1530,18 +1628,25 @@ lapply(deseq, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $complete
-##                       Overlaps sig DE gene
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    23  324 347
-##                  TRUE      1  121 122
-##                  Sum      24  445 469
+##                      Overlaps sig DE gene
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    22  294 316
+##                 TRUE      2  151 153
+##                 Sum      24  445 469
 ## 
 ## $incomplete
-##                       Overlaps sig DE gene
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    48  299 347
-##                  TRUE      5  117 122
-##                  Sum      53  416 469
+##                      Overlaps sig DE gene
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    44  272 316
+##                 TRUE      9  144 153
+##                 Sum      53  416 469
+## 
+## $incomplete_random
+##                      Overlaps sig DE gene
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    21  295 316
+##                 TRUE      1  152 153
+##                 Sum      22  447 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1553,18 +1658,25 @@ lapply(deseq, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $complete
-##                       Overlaps sig DE gene (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     2   45  47
-##                  TRUE      2  120 122
-##                  Sum       4  165 169
+##                      Overlaps sig DE gene (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      3  150 153
+##                 Sum       4  165 169
 ## 
 ## $incomplete
-##                       Overlaps sig DE gene (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     6   41  47
-##                  TRUE      5  117 122
-##                  Sum      11  158 169
+##                      Overlaps sig DE gene (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     2   14  16
+##                 TRUE      9  144 153
+##                 Sum      11  158 169
+## 
+## $incomplete_random
+##                      Overlaps sig DE gene (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      2  151 153
+##                 Sum       3  166 169
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1577,18 +1689,25 @@ lapply(edger, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $complete
-##                       Overlaps sig DE gene
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    21  326 347
-##                  TRUE      1  121 122
-##                  Sum      22  447 469
+##                      Overlaps sig DE gene
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    20  296 316
+##                 TRUE      2  151 153
+##                 Sum      22  447 469
 ## 
 ## $incomplete
-##                       Overlaps sig DE gene
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    48  299 347
-##                  TRUE      5  117 122
-##                  Sum      53  416 469
+##                      Overlaps sig DE gene
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    44  272 316
+##                 TRUE      9  144 153
+##                 Sum      53  416 469
+## 
+## $incomplete_random
+##                      Overlaps sig DE gene
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    27  289 316
+##                 TRUE      1  152 153
+##                 Sum      28  441 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1600,18 +1719,25 @@ lapply(edger, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $complete
-##                       Overlaps sig DE gene (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     2   45  47
-##                  TRUE      2  120 122
-##                  Sum       4  165 169
+##                      Overlaps sig DE gene (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      3  150 153
+##                 Sum       4  165 169
 ## 
 ## $incomplete
-##                       Overlaps sig DE gene (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     6   41  47
-##                  TRUE      5  117 122
-##                  Sum      11  158 169
+##                      Overlaps sig DE gene (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     2   14  16
+##                 TRUE      9  144 153
+##                 Sum      11  158 169
+## 
+## $incomplete_random
+##                      Overlaps sig DE gene (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      2  151 153
+##                 Sum       3  166 169
 </code></pre>
 </div>
 <p>The results are identical between <code>DESeq2</code> and <code>edgeR</code> with surprisingly slightly better agreements in with the incomplete gene set instead of the complete one when requiring a minimum overlap of 20bp.</p>
@@ -1631,32 +1757,48 @@ lapply(edger, function(x) {
 ## $complete$n_overlaps
 ## 
 ##  1 
-## 46 
+## 16 
 ## 
 ## $complete$width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   11.00   30.00   40.50   46.28   65.50   88.00 
+##   11.00   21.75   24.50   25.31   30.00   37.00 
 ## 
 ## $complete$ders_per_gene_table
 ## 
-##  1  2  3  4 22 
-##  4  1  2  3  1 
+## 1 2 6 
+## 4 3 1 
 ## 
 ## 
 ## $incomplete
 ## $incomplete$n_overlaps
 ## 
 ##  1 
-## 41 
+## 14 
 ## 
 ## $incomplete$width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   20.00   30.00   42.00   47.51   66.00   88.00 
+##   20.00   23.25   26.00   26.57   30.00   37.00 
 ## 
 ## $incomplete$ders_per_gene_table
 ## 
-##  1  3  4 21 
-##  5  1  3  1
+## 1 2 6 
+## 4 2 1 
+## 
+## 
+## $incomplete_random
+## $incomplete_random$n_overlaps
+## 
+##  1 
+## 44 
+## 
+## $incomplete_random$width_der
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   10.00   13.75   16.00   18.36   22.25   37.00 
+## 
+## $incomplete_random$ders_per_gene_table
+## 
+##  1  2  5 10 21 
+##  2  3  1  1  1
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1670,29 +1812,43 @@ lapply(edger, function(x) {
 <pre style=""><code class="output r">## $complete
 ## $complete$width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   113.0   113.5   114.0   114.0   114.5   115.0 
+##      39      76     113      89     114     115 
 ## 
 ## $complete$distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0       0       0       0       0       0 
+##       0       0       0    9754   14630   29260 
 ## 
 ## $complete$distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0      33      66      66      99     132 
+##       0      66     132    9798   14700   29260 
 ## 
 ## 
 ## $incomplete
 ## $incomplete$width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##      49      71      87     107      96     232 
+##   39.00   41.00   67.00   80.22   87.00  232.00 
 ## 
 ## $incomplete$distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##      29    1810    1991    2413    2997    5236 
+##      19     190    1991    5461    5236   29260 
 ## 
 ## $incomplete$distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##      29    1810    1991    2413    2997    5236
+##      19     190    1991    5461    5236   29260 
+## 
+## 
+## $incomplete_random
+## $incomplete_random$width_der
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    39.0    57.5    76.0    76.0    94.5   113.0 
+## 
+## $incomplete_random$distance_nearest_sum
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0    7316   14630   14630   21950   29260 
+## 
+## $incomplete_random$distance_nearest_sig_sum
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0    7316   14630   14630   21950   29260
 </code></pre>
 </div>
 <h4>Query: genes</h4>
@@ -1721,6 +1877,13 @@ lapply(deseq, function(x) {
 ##               FALSE    21    0  21
 ##               TRUE      7   30  37
 ##               Sum      28   30  58
+## 
+## $incomplete_random
+##                    Overlaps sig DER (FWER)
+## Significant DE gene FALSE TRUE Sum
+##               FALSE    19    1  20
+##               TRUE      6   29  35
+##               Sum      25   30  55
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1744,6 +1907,13 @@ lapply(deseq, function(x) {
 ##               FALSE    21    0  21
 ##               TRUE      7   30  37
 ##               Sum      28   30  58
+## 
+## $incomplete_random
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE gene FALSE TRUE Sum
+##               FALSE    19    1  20
+##               TRUE      6   29  35
+##               Sum      25   30  55
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1768,6 +1938,13 @@ lapply(edger, function(x) {
 ##               FALSE    20    0  20
 ##               TRUE      8   30  38
 ##               Sum      28   30  58
+## 
+## $incomplete_random
+##                    Overlaps sig DER (FWER)
+## Significant DE gene FALSE TRUE Sum
+##               FALSE    20    1  21
+##               TRUE      5   29  34
+##               Sum      25   30  55
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1791,6 +1968,13 @@ lapply(edger, function(x) {
 ##               FALSE    20    0  20
 ##               TRUE      8   30  38
 ##               Sum      28   30  58
+## 
+## $incomplete_random
+##                    Overlaps sig DER (FWER, min 20bp)
+## Significant DE gene FALSE TRUE Sum
+##               FALSE    20    1  21
+##               TRUE      5   29  34
+##               Sum      25   30  55
 </code></pre>
 </div>
 <p>As opposed to when DERs were used as the query, this time there is a small disagreement between <code>DESeq2</code> and <code>edgeR</code> when requiring a minimum 20bp overlap. Overlap, the most common disagreement case against the DERs is when a significant DE gene does not overlap a significant DER.</p>
@@ -1835,7 +2019,21 @@ lapply(deseq, function(x) {
 ## 
 ## $incomplete$distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   85170   92840   99560  330500  288000 3512000
+##   85170   92840   99560  330500  288000 3512000 
+## 
+## 
+## $incomplete_random
+## $incomplete_random$width_gene
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      66      86   12520   15650   27890   39850 
+## 
+## $incomplete_random$distance_nearest_sum
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       0       0       0  594500  587600 2986000 
+## 
+## $incomplete_random$distance_nearest_sig_sum
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   85170  227300  502400  818500  587700 3512000
 </code></pre>
 </div>
 <h1>Conclusions</h1>
@@ -1851,7 +2049,7 @@ Sys.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-03-30 17:49:49 EDT"
+<pre style=""><code class="output r">## [1] "2015-04-06 22:40:04 EDT"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1861,7 +2059,7 @@ Sys.time()</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##  29.200   0.326  29.611
+##  33.179   0.313  34.099
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1895,20 +2093,21 @@ devtools::session_info()</code></pre>
 <pre style=""><code class="output r">##  package                           * version     date       source                                   
 ##  acepack                             1.3.3.3     2013-05-03 CRAN (R 3.2.0)                           
 ##  annotate                            1.45.4      2015-03-21 Bioconductor                             
-##  AnnotationDbi                     * 1.29.20     2015-03-19 Bioconductor                             
+##  AnnotationDbi                     * 1.29.21     2015-04-03 Bioconductor                             
 ##  Biobase                           * 2.27.3      2015-03-27 Bioconductor                             
-##  BiocGenerics                      * 0.13.10     2015-03-27 Bioconductor                             
+##  BiocGenerics                      * 0.13.11     2015-04-03 Bioconductor                             
 ##  BiocParallel                        1.1.21      2015-03-24 Bioconductor                             
 ##  biomaRt                             2.23.5      2014-11-22 Bioconductor                             
 ##  Biostrings                          2.35.12     2015-03-26 Bioconductor                             
 ##  bitops                              1.0.6       2013-08-17 CRAN (R 3.2.0)                           
 ##  cluster                             2.0.1       2015-01-31 CRAN (R 3.2.0)                           
+##  colorout                          * 1.0.2       2014-11-03 local                                    
 ##  colorspace                          1.2.6       2015-03-11 CRAN (R 3.2.0)                           
 ##  DBI                                 0.3.1       2014-09-24 CRAN (R 3.2.0)                           
-##  DESeq2                            * 1.7.45      2015-03-25 Bioconductor                             
+##  DESeq2                            * 1.7.50      2015-04-04 Bioconductor                             
 ##  devtools                            1.6.1       2014-10-07 CRAN (R 3.2.0)                           
 ##  digest                              0.6.8       2014-12-31 CRAN (R 3.2.0)                           
-##  edgeR                             * 3.9.14      2015-03-27 Bioconductor                             
+##  edgeR                             * 3.9.15      2015-04-03 Bioconductor                             
 ##  evaluate                            0.5.5       2014-04-29 CRAN (R 3.2.0)                           
 ##  foreign                             0.8.63      2015-02-20 CRAN (R 3.2.0)                           
 ##  formatR                             1.0         2014-08-25 CRAN (R 3.2.0)                           
@@ -1918,9 +2117,9 @@ devtools::session_info()</code></pre>
 ##  genefilter                          1.49.2      2014-10-21 Bioconductor                             
 ##  geneplotter                         1.45.0      2014-10-14 Bioconductor                             
 ##  GenomeInfoDb                      * 1.3.16      2015-03-27 Bioconductor                             
-##  GenomicAlignments                   1.3.32      2015-03-18 Bioconductor                             
+##  GenomicAlignments                   1.3.33      2015-04-06 Bioconductor                             
 ##  GenomicFeatures                   * 1.19.36     2015-03-30 Bioconductor                             
-##  GenomicRanges                     * 1.19.48     2015-03-27 Bioconductor                             
+##  GenomicRanges                     * 1.19.52     2015-04-04 Bioconductor                             
 ##  ggplot2                             1.0.0       2014-05-21 CRAN (R 3.2.0)                           
 ##  gtable                              0.1.2       2012-12-05 CRAN (R 3.2.0)                           
 ##  Hmisc                               3.14.5      2014-09-12 CRAN (R 3.2.0)                           
@@ -1929,9 +2128,9 @@ devtools::session_info()</code></pre>
 ##  knitr                               1.7         2014-10-13 CRAN (R 3.2.0)                           
 ##  knitrBootstrap                      1.0.0       2014-11-03 Github (jimhester/knitrBootstrap@76c41f0)
 ##  lambda.r                            1.1.7       2015-03-20 CRAN (R 3.2.0)                           
-##  lattice                             0.20.30     2015-02-22 CRAN (R 3.2.0)                           
+##  lattice                             0.20.31     2015-03-30 CRAN (R 3.2.0)                           
 ##  latticeExtra                        0.6.26      2013-08-15 CRAN (R 3.2.0)                           
-##  limma                             * 3.23.11     2015-03-15 Bioconductor                             
+##  limma                             * 3.23.12     2015-04-05 Bioconductor                             
 ##  locfit                              1.5.9.1     2013-04-20 CRAN (R 3.2.0)                           
 ##  markdown                            0.7.4       2014-08-24 CRAN (R 3.2.0)                           
 ##  MASS                                7.3.40      2015-03-21 CRAN (R 3.2.0)                           
@@ -1944,12 +2143,12 @@ devtools::session_info()</code></pre>
 ##  RcppArmadillo                     * 0.4.650.1.1 2015-02-26 CRAN (R 3.2.0)                           
 ##  RCurl                               1.95.4.5    2014-12-28 CRAN (R 3.2.0)                           
 ##  reshape2                            1.4.1       2014-12-06 CRAN (R 3.2.0)                           
-##  rmarkdown                         * 0.3.3       2014-09-17 CRAN (R 3.2.0)                           
+##  rmarkdown                           0.3.3       2014-09-17 CRAN (R 3.2.0)                           
 ##  rpart                               4.1.9       2015-02-24 CRAN (R 3.2.0)                           
 ##  Rsamtools                           1.19.49     2015-03-27 Bioconductor                             
 ##  RSQLite                             1.0.0       2014-10-25 CRAN (R 3.2.0)                           
 ##  rstudioapi                          0.2         2014-12-31 CRAN (R 3.2.0)                           
-##  rtracklayer                         1.27.10     2015-03-27 Bioconductor                             
+##  rtracklayer                         1.27.11     2015-04-01 Bioconductor                             
 ##  S4Vectors                         * 0.5.22      2015-03-06 Bioconductor                             
 ##  scales                              0.2.4       2014-04-22 CRAN (R 3.2.0)                           
 ##  stringr                             0.6.2       2012-12-06 CRAN (R 3.2.0)                           
