@@ -965,12 +965,12 @@ tx_ids <- sapply(tx_inc, function(x) { mcols(x)$tx_id })
 gene_inc <- exonsBy(txdb, by = 'tx')[as.character(tx_ids)]
 names(gene_inc) <- names(tx_inc)
 
-## Define a second incomplete gene set where 10% of the transcripts are 
+## Define a second incomplete gene set where 20% of the transcripts are 
 ## dropped at random, regardless of the simulation scenario
 tx_rand <- tx[unique(chosen$gene_id)]
 tx_rand_list <- unlist(tx_rand)
 set.seed(20150406)
-tx_rand_chosen <- tx_rand_list[sample(seq_len(length(tx_rand_list)), size = round(length(tx_rand_list) * 0.9))]
+tx_rand_chosen <- tx_rand_list[sample(seq_len(length(tx_rand_list)), size = round(length(tx_rand_list) * 0.8))]
 gene_rand <- split(tx_rand_chosen, names(tx_rand_chosen))
 
 ## Save info
@@ -991,7 +991,7 @@ bList <- BamFileList(files, bai)
 ## Compute the overlaps
 message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- complete"))</code></pre><button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
-</button><pre style=""><code class="message r">## 2015-04-07 02:50:48 summarizeOverlaps: Running summarizeOverlaps() -- complete
+</button><pre style=""><code class="message r">## 2015-04-07 03:02:13 summarizeOverlaps: Running summarizeOverlaps() -- complete
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">summOv_comp <- summarizeOverlaps(gene_comp, bList, mode = "Union",
@@ -999,7 +999,7 @@ message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- com
 
 message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- incomplete"))</code></pre><button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
-</button><pre style=""><code class="message r">## 2015-04-07 02:51:31 summarizeOverlaps: Running summarizeOverlaps() -- incomplete
+</button><pre style=""><code class="message r">## 2015-04-07 03:02:48 summarizeOverlaps: Running summarizeOverlaps() -- incomplete
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">summOv_inc <- summarizeOverlaps(gene_inc, bList, mode = "Union",
@@ -1007,7 +1007,7 @@ message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- inc
     
 message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- incomplete random"))</code></pre><button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
-</button><pre style=""><code class="message r">## 2015-04-07 02:52:11 summarizeOverlaps: Running summarizeOverlaps() -- incomplete random
+</button><pre style=""><code class="message r">## 2015-04-07 03:03:26 summarizeOverlaps: Running summarizeOverlaps() -- incomplete random
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">summOv_rand <- summarizeOverlaps(gene_rand, bList, mode = "Union",
@@ -1025,13 +1025,13 @@ save(summOv_rand, file = 'summOv_rand.Rdata')</code></pre></div>
 </button><pre style=""><code class="source r">## Reproducibility info
 Sys.time()</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## [1] "2015-04-07 02:52:56 EDT"
+</button><pre style=""><code class="output r">## [1] "2015-04-07 03:04:00 EDT"
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">proc.time()</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button><pre style=""><code class="output r">##    user  system elapsed 
-## 723.088  17.879 247.240
+## 665.083  16.400 206.142
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">options(width = 120)
