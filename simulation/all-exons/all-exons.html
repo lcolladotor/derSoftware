@@ -934,10 +934,11 @@
 <pre style="display:none"><code class="source r">library('GenomicRanges')
 library('Rsubread')
 library('derfinder')</code></pre>
-<button class="warning R toggle btn btn-xs btn-warning">
-<span class="glyphicon glyphicon-chevron-down"></span> R warning
+<button class="message R toggle btn btn-xs btn-info">
+<span class="glyphicon glyphicon-chevron-up"></span> R message
 </button>
-<pre style=""><code class="warning r">## Warning: multiple methods tables found for 'score'
+<pre style="display:none"><code class="message r">## Find out what's changed in derfinder with
+## news(Version == "1.1.18", package = "derfinder")
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1121,15 +1122,15 @@ counts <- lapply(exons, calc_cov)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##  29.116  11.281  40.451 
+##  29.183  11.595  40.844 
 ##    user  system elapsed 
-##  26.805  16.604  43.462 
+##  25.777  17.335  43.172 
 ##    user  system elapsed 
-##  22.544  15.126  37.858 
+##  22.375  14.922  37.548 
 ##    user  system elapsed 
-##  21.549  13.242  34.848 
+##  20.869  13.253  34.149 
 ##    user  system elapsed 
-##  18.592  10.711  29.331
+##  19.292  10.671  29.985
 </code></pre>
 </div>
 <h2>DE</h2>
@@ -1183,7 +1184,7 @@ system.time( deseq <- mapply(run_deseq, counts, exons, names(exons), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   7.558   0.033   7.614
+##   7.260   0.044   7.351
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1194,7 +1195,7 @@ system.time( edger <- mapply(run_edger, counts, exons, names(exons), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##  17.077   0.245  17.403
+##  14.039   0.150  14.209
 </code></pre>
 </div>
 <h2>Agreement</h2>
@@ -1446,6 +1447,35 @@ sapply(deseq, emp_fpr)</code></pre>
 ##         15.32         15.32         12.61          6.31         10.81
 </code></pre>
 </div>
+<h4>Empirical FDR</h4>
+<p>The empirical False Discovery Rate (FDR) is shown below for <code>DESeq2</code> and <code>edgeR</code>.</p>
+<div class="row">
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">emp_fdr <- function(info, ptype = 'padj') {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[3, 2] * 100, 2)
+}
+
+sapply(deseq, emp_fdr)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  genomicState          txdb        byGene      disjoint featureCounts 
+##          4.12          4.12          5.26          2.00          3.75
+</code></pre>
+<button class="source R toggle btn btn-xs btn-primary">
+<span class="glyphicon glyphicon-chevron-down"></span> R source
+</button>
+<pre style=""><code class="source r">sapply(edger, emp_fdr)</code></pre>
+<button class="output R toggle btn btn-xs btn-success">
+<span class="glyphicon glyphicon-chevron-down"></span> R output
+</button>
+<pre style=""><code class="output r">##  genomicState          txdb        byGene      disjoint featureCounts 
+##          9.44          9.44          7.95          4.52          7.19
+</code></pre>
+</div>
 <h3>Overlap</h3>
 <p>As in <a href="../counts-based/counts.based.html">counts.based.html</a> we can compare the DERs and exons directly.</p>
 <div class="row">
@@ -1455,22 +1485,23 @@ sapply(deseq, emp_fpr)</code></pre>
 <pre style="display:none"><code class="source r">load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
 
 ## Some formatting and subsets
-fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fullRegions$sigFDR <- as.logical(fullRegions$significantFDR)
 fullRegs20 <- fullRegions[width(fullRegions) >= 20]
 
 ## Overlap table for all 4 cases
 ov_table <- function(ders, counts, query = 'der', minov = 0) {
     if(query == 'der') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
+            res <- addmargins(table('Significant DER (FDR)' = ders$sigFDR, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
         } else {
-            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
+            res <- addmargins(table(ders$sigFDR, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FDR)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
         }
     } else if (query == 'counts') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFDR]) > 0))
         } else {
-            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFDR], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
         }
     }
     return(res)
@@ -1479,9 +1510,9 @@ ov_table <- function(ders, counts, query = 'der', minov = 0) {
 ## Explore mistmatched cases for DERs vs Exons direction
 explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFDR)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFWER)
+        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFDR)
     } else{
         stop('invalid case')
     }
@@ -1513,9 +1544,9 @@ explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
 explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     counts <- counts[width(counts) >= minov]
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !counts$sig)
+        i <- which(countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & !counts$sig)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & counts$sig)
+        i <- which(!countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & counts$sig)
     } else{
         stop('invalid case')
     }
@@ -1523,19 +1554,19 @@ explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     
     if(case == 'FALSE-TRUE') {
         res <- list(
-            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)),
             width_exon = summary(width(counts[i])),
-            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
-            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
+            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
             i = i
         )
     } else {
         res <- list(
             width_exon = summary(width(counts[i])),
             distance_nearest_sum = summary(mcols(distanceToNearest(counts[i], ders, ignore.strand = TRUE))$distance),
-             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE))$distance),
             distance_nearest = distanceToNearest(counts[i], ders, ignore.strand = TRUE),
-            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE),
             i = i
         )
     }
@@ -1561,39 +1592,39 @@ lapply(deseq, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $genomicState
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    15  332 347
-##                  TRUE      0  122 122
-##                  Sum      15  454 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    15  301 316
+##                 TRUE      0  153 153
+##                 Sum      15  454 469
 ## 
 ## $txdb
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    15  332 347
-##                  TRUE      0  122 122
-##                  Sum      15  454 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    15  301 316
+##                 TRUE      0  153 153
+##                 Sum      15  454 469
 ## 
 ## $byGene
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    15  332 347
-##                  TRUE      0  122 122
-##                  Sum      15  454 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    15  301 316
+##                 TRUE      0  153 153
+##                 Sum      15  454 469
 ## 
 ## $disjoint
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    44  303 347
-##                  TRUE      5  117 122
-##                  Sum      49  420 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    38  278 316
+##                 TRUE     11  142 153
+##                 Sum      49  420 469
 ## 
 ## $featureCounts
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    21  326 347
-##                  TRUE      6  116 122
-##                  Sum      27  442 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    21  295 316
+##                 TRUE      6  147 153
+##                 Sum      27  442 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1605,39 +1636,39 @@ lapply(deseq, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $genomicState
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 ## 
 ## $txdb
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 ## 
 ## $byGene
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 ## 
 ## $disjoint
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     9   38  47
-##                  TRUE      5  117 122
-##                  Sum      14  155 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     3   13  16
+##                 TRUE     11  142 153
+##                 Sum      14  155 169
 ## 
 ## $featureCounts
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      6  116 122
-##                  Sum       7  162 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      6  147 153
+##                 Sum       7  162 169
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1650,39 +1681,39 @@ lapply(edger, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $genomicState
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    15  332 347
-##                  TRUE      0  122 122
-##                  Sum      15  454 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    15  301 316
+##                 TRUE      0  153 153
+##                 Sum      15  454 469
 ## 
 ## $txdb
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    13  334 347
-##                  TRUE      0  122 122
-##                  Sum      13  456 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    13  303 316
+##                 TRUE      0  153 153
+##                 Sum      13  456 469
 ## 
 ## $byGene
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    19  328 347
-##                  TRUE      0  122 122
-##                  Sum      19  450 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    19  297 316
+##                 TRUE      0  153 153
+##                 Sum      19  450 469
 ## 
 ## $disjoint
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    40  307 347
-##                  TRUE      5  117 122
-##                  Sum      45  424 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    34  282 316
+##                 TRUE     11  142 153
+##                 Sum      45  424 469
 ## 
 ## $featureCounts
-##                       Overlaps sig DE exon
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE    18  329 347
-##                  TRUE      6  116 122
-##                  Sum      24  445 469
+##                      Overlaps sig DE exon
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE    18  298 316
+##                 TRUE      6  147 153
+##                 Sum      24  445 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1694,39 +1725,39 @@ lapply(edger, function(x) {
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">## $genomicState
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 ## 
 ## $txdb
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 ## 
 ## $byGene
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      0  122 122
-##                  Sum       1  168 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      0  153 153
+##                 Sum       1  168 169
 ## 
 ## $disjoint
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     9   38  47
-##                  TRUE      5  117 122
-##                  Sum      14  155 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     3   13  16
+##                 TRUE     11  142 153
+##                 Sum      14  155 169
 ## 
 ## $featureCounts
-##                       Overlaps sig DE exon (min 20bp)
-## Significant DER (FWER) FALSE TRUE Sum
-##                  FALSE     1   46  47
-##                  TRUE      6  116 122
-##                  Sum       7  162 169
+##                      Overlaps sig DE exon (min 20bp)
+## Significant DER (FDR) FALSE TRUE Sum
+##                 FALSE     1   15  16
+##                 TRUE      6  147 153
+##                 Sum       7  162 169
 </code></pre>
 </div>
 <h4>Query: exons</h4>
@@ -1746,36 +1777,36 @@ lapply(deseq, function(x) {
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   118    0 118
-##               TRUE     31  121 152
-##               Sum     149  121 270
+##               TRUE     23  129 152
+##               Sum     141  129 270
 ## 
 ## $txdb
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   132    0 132
-##               TRUE     35  142 177
-##               Sum     167  142 309
+##               TRUE     26  151 177
+##               Sum     158  151 309
 ## 
 ## $byGene
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   133    0 133
-##               TRUE     39  144 183
-##               Sum     172  144 316
+##               TRUE     27  156 183
+##               Sum     160  156 316
 ## 
 ## $disjoint
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   128    1 129
-##               TRUE     27  127 154
-##               Sum     155  128 283
+##               TRUE     22  132 154
+##               Sum     150  133 283
 ## 
 ## $featureCounts
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   118    0 118
-##               TRUE     29  116 145
-##               Sum     147  116 263
+##               TRUE     21  124 145
+##               Sum     139  124 263
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1790,36 +1821,36 @@ lapply(deseq, function(x) {
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   118    0 118
-##               TRUE     31  120 151
-##               Sum     149  120 269
+##               TRUE     22  129 151
+##               Sum     140  129 269
 ## 
 ## $txdb
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   132    0 132
-##               TRUE     35  141 176
-##               Sum     167  141 308
+##               TRUE     25  151 176
+##               Sum     157  151 308
 ## 
 ## $byGene
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   133    0 133
-##               TRUE     39  143 182
-##               Sum     172  143 315
+##               TRUE     26  156 182
+##               Sum     159  156 315
 ## 
 ## $disjoint
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   127    0 127
-##               TRUE     29  123 152
-##               Sum     156  123 279
+##               TRUE     23  129 152
+##               Sum     150  129 279
 ## 
 ## $featureCounts
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   117    0 117
-##               TRUE     30  115 145
-##               Sum     147  115 262
+##               TRUE     21  124 145
+##               Sum     138  124 262
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1835,36 +1866,36 @@ lapply(edger, function(x) {
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   109    0 109
-##               TRUE     40  121 161
-##               Sum     149  121 270
+##               TRUE     32  129 161
+##               Sum     141  129 270
 ## 
 ## $txdb
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   122    0 122
-##               TRUE     45  142 187
-##               Sum     167  142 309
+##               TRUE     36  151 187
+##               Sum     158  151 309
 ## 
 ## $byGene
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   128    0 128
-##               TRUE     44  144 188
-##               Sum     172  144 316
+##               TRUE     32  156 188
+##               Sum     160  156 316
 ## 
 ## $disjoint
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   124    0 124
-##               TRUE     31  128 159
-##               Sum     155  128 283
+##               TRUE     26  133 159
+##               Sum     150  133 283
 ## 
 ## $featureCounts
 ##                    Overlaps sig DER (FWER)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   112    0 112
-##               TRUE     35  116 151
-##               Sum     147  116 263
+##               TRUE     27  124 151
+##               Sum     139  124 263
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1879,36 +1910,36 @@ lapply(edger, function(x) {
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   109    0 109
-##               TRUE     40  120 160
-##               Sum     149  120 269
+##               TRUE     31  129 160
+##               Sum     140  129 269
 ## 
 ## $txdb
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   122    0 122
-##               TRUE     45  141 186
-##               Sum     167  141 308
+##               TRUE     35  151 186
+##               Sum     157  151 308
 ## 
 ## $byGene
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   128    0 128
-##               TRUE     44  143 187
-##               Sum     172  143 315
+##               TRUE     31  156 187
+##               Sum     159  156 315
 ## 
 ## $disjoint
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   122    0 122
-##               TRUE     34  123 157
-##               Sum     156  123 279
+##               TRUE     28  129 157
+##               Sum     150  129 279
 ## 
 ## $featureCounts
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE exon FALSE TRUE Sum
 ##               FALSE   112    0 112
-##               TRUE     35  115 150
-##               Sum     147  115 262
+##               TRUE     26  124 150
+##               Sum     138  124 262
 </code></pre>
 </div>
 <h1>Conclusions</h1>
@@ -1925,7 +1956,7 @@ Sys.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-03-30 17:20:20 EDT"
+<pre style=""><code class="output r">## [1] "2015-04-06 22:32:59 EDT"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1935,7 +1966,7 @@ Sys.time()</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-## 203.967  68.756 273.307
+## 198.395  69.557 274.286
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -1969,25 +2000,26 @@ devtools::session_info()</code></pre>
 <pre style=""><code class="output r">##  package                           * version     date       source                                   
 ##  acepack                             1.3.3.3     2013-05-03 CRAN (R 3.2.0)                           
 ##  annotate                            1.45.4      2015-03-21 Bioconductor                             
-##  AnnotationDbi                     * 1.29.20     2015-03-19 Bioconductor                             
-##  Biobase                           * 2.27.2      2015-02-28 Bioconductor                             
-##  BiocGenerics                      * 0.13.8      2015-03-19 Bioconductor                             
+##  AnnotationDbi                     * 1.29.21     2015-04-03 Bioconductor                             
+##  Biobase                           * 2.27.3      2015-03-27 Bioconductor                             
+##  BiocGenerics                      * 0.13.11     2015-04-03 Bioconductor                             
 ##  BiocParallel                        1.1.21      2015-03-24 Bioconductor                             
 ##  biomaRt                             2.23.5      2014-11-22 Bioconductor                             
-##  Biostrings                          2.35.11     2015-02-22 Bioconductor                             
+##  Biostrings                          2.35.12     2015-03-26 Bioconductor                             
 ##  bitops                              1.0.6       2013-08-17 CRAN (R 3.2.0)                           
 ##  bumphunter                          1.7.6       2015-03-13 Github (lcolladotor/bumphunter@37d10e7)  
 ##  cluster                             2.0.1       2015-01-31 CRAN (R 3.2.0)                           
 ##  codetools                           0.2.11      2015-03-10 CRAN (R 3.2.0)                           
+##  colorout                          * 1.0.2       2014-11-03 local                                    
 ##  colorspace                          1.2.6       2015-03-11 CRAN (R 3.2.0)                           
 ##  DBI                                 0.3.1       2014-09-24 CRAN (R 3.2.0)                           
-##  derfinder                         * 1.1.17      2015-03-14 Github (lcolladotor/derfinder@3532e0c)   
+##  derfinder                         * 1.1.18      2015-04-01 Bioconductor                             
 ##  derfinderHelper                     1.1.6       2015-03-15 Bioconductor                             
-##  DESeq2                            * 1.7.43      2015-03-22 Bioconductor                             
+##  DESeq2                            * 1.7.50      2015-04-04 Bioconductor                             
 ##  devtools                            1.6.1       2014-10-07 CRAN (R 3.2.0)                           
 ##  digest                              0.6.8       2014-12-31 CRAN (R 3.2.0)                           
 ##  doRNG                               1.6         2014-03-07 CRAN (R 3.2.0)                           
-##  edgeR                             * 3.9.13      2015-03-12 Bioconductor                             
+##  edgeR                             * 3.9.15      2015-04-03 Bioconductor                             
 ##  evaluate                            0.5.5       2014-04-29 CRAN (R 3.2.0)                           
 ##  foreach                             1.4.2       2014-04-11 CRAN (R 3.2.0)                           
 ##  foreign                             0.8.63      2015-02-20 CRAN (R 3.2.0)                           
@@ -1997,11 +2029,11 @@ devtools::session_info()</code></pre>
 ##  futile.options                      1.0.0       2010-04-06 CRAN (R 3.2.0)                           
 ##  genefilter                          1.49.2      2014-10-21 Bioconductor                             
 ##  geneplotter                         1.45.0      2014-10-14 Bioconductor                             
-##  GenomeInfoDb                      * 1.3.15      2015-03-19 Bioconductor                             
-##  GenomicAlignments                   1.3.32      2015-03-18 Bioconductor                             
-##  GenomicFeatures                   * 1.19.33     2015-03-21 Bioconductor                             
-##  GenomicFiles                        1.3.14      2015-03-07 Bioconductor                             
-##  GenomicRanges                     * 1.19.47     2015-03-21 Bioconductor                             
+##  GenomeInfoDb                      * 1.3.16      2015-03-27 Bioconductor                             
+##  GenomicAlignments                   1.3.33      2015-04-06 Bioconductor                             
+##  GenomicFeatures                   * 1.19.36     2015-03-30 Bioconductor                             
+##  GenomicFiles                        1.3.15      2015-04-01 Bioconductor                             
+##  GenomicRanges                     * 1.19.52     2015-04-04 Bioconductor                             
 ##  ggplot2                             1.0.0       2014-05-21 CRAN (R 3.2.0)                           
 ##  gtable                              0.1.2       2012-12-05 CRAN (R 3.2.0)                           
 ##  Hmisc                               3.14.5      2014-09-12 CRAN (R 3.2.0)                           
@@ -2011,34 +2043,34 @@ devtools::session_info()</code></pre>
 ##  knitr                               1.7         2014-10-13 CRAN (R 3.2.0)                           
 ##  knitrBootstrap                      1.0.0       2014-11-03 Github (jimhester/knitrBootstrap@76c41f0)
 ##  lambda.r                            1.1.7       2015-03-20 CRAN (R 3.2.0)                           
-##  lattice                             0.20.30     2015-02-22 CRAN (R 3.2.0)                           
+##  lattice                             0.20.31     2015-03-30 CRAN (R 3.2.0)                           
 ##  latticeExtra                        0.6.26      2013-08-15 CRAN (R 3.2.0)                           
-##  limma                             * 3.23.11     2015-03-15 Bioconductor                             
+##  limma                             * 3.23.12     2015-04-05 Bioconductor                             
 ##  locfit                              1.5.9.1     2013-04-20 CRAN (R 3.2.0)                           
 ##  markdown                            0.7.4       2014-08-24 CRAN (R 3.2.0)                           
 ##  MASS                                7.3.40      2015-03-21 CRAN (R 3.2.0)                           
-##  Matrix                              1.1.5.1     2015-03-23 CRAN (R 3.2.0)                           
+##  Matrix                              1.2.0       2015-04-04 CRAN (R 3.2.0)                           
 ##  matrixStats                         0.14.0      2015-02-14 CRAN (R 3.2.0)                           
 ##  munsell                             0.4.2       2013-07-11 CRAN (R 3.2.0)                           
 ##  nnet                                7.3.9       2015-02-11 CRAN (R 3.2.0)                           
 ##  pkgmaker                            0.22        2014-05-14 CRAN (R 3.2.0)                           
 ##  plyr                                1.8.1       2014-02-26 CRAN (R 3.2.0)                           
 ##  proto                               0.3.10      2012-12-22 CRAN (R 3.2.0)                           
-##  qvalue                              1.43.0      2015-03-04 Bioconductor                             
+##  qvalue                              1.99.1      2015-04-04 Bioconductor                             
 ##  RColorBrewer                        1.1.2       2014-12-07 CRAN (R 3.2.0)                           
 ##  Rcpp                              * 0.11.5      2015-03-06 CRAN (R 3.2.0)                           
 ##  RcppArmadillo                     * 0.4.650.1.1 2015-02-26 CRAN (R 3.2.0)                           
 ##  RCurl                               1.95.4.5    2014-12-28 CRAN (R 3.2.0)                           
 ##  registry                            0.2         2012-01-24 CRAN (R 3.2.0)                           
 ##  reshape2                            1.4.1       2014-12-06 CRAN (R 3.2.0)                           
-##  rmarkdown                         * 0.3.3       2014-09-17 CRAN (R 3.2.0)                           
+##  rmarkdown                           0.3.3       2014-09-17 CRAN (R 3.2.0)                           
 ##  rngtools                            1.2.4       2014-03-06 CRAN (R 3.2.0)                           
 ##  rpart                               4.1.9       2015-02-24 CRAN (R 3.2.0)                           
-##  Rsamtools                           1.19.47     2015-03-21 Bioconductor                             
+##  Rsamtools                           1.19.49     2015-03-27 Bioconductor                             
 ##  RSQLite                             1.0.0       2014-10-25 CRAN (R 3.2.0)                           
 ##  rstudioapi                          0.2         2014-12-31 CRAN (R 3.2.0)                           
-##  Rsubread                          * 1.17.1      2014-11-01 Bioconductor                             
-##  rtracklayer                         1.27.9      2015-03-19 Bioconductor                             
+##  Rsubread                          * 1.17.2      2015-03-26 Bioconductor                             
+##  rtracklayer                         1.27.11     2015-04-01 Bioconductor                             
 ##  S4Vectors                         * 0.5.22      2015-03-06 Bioconductor                             
 ##  scales                              0.2.4       2014-04-22 CRAN (R 3.2.0)                           
 ##  stringr                             0.6.2       2012-12-06 CRAN (R 3.2.0)                           
@@ -2089,9 +2121,6 @@ Type
 </li>
 <li class="active">
 <a href="#" class="toggle-global message" type="message">message</a>
-</li>
-<li class="active">
-<a href="#" class="toggle-global warning" type="warning">warning</a>
 </li>
 <li class="active">
 <a href="#" class="toggle-global output" type="output">output</a>

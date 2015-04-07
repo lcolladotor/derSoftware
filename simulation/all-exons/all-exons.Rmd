@@ -283,6 +283,21 @@ sapply(deseq, emp_fpr)
 sapply(edger, emp_fpr)
 ```
 
+#### Empirical FDR
+
+The empirical False Discovery Rate (FDR) is shown below for `DESeq2` and `edgeR`.
+
+```{r empFDR}
+emp_fdr <- function(info, ptype = 'padj') {
+    m <- count_comp(info, ptype)
+    round(m[1, 2] / m[3, 2] * 100, 2)
+}
+
+sapply(deseq, emp_fdr)
+sapply(edger, emp_fdr)
+```
+
+
 
 ### Overlap
 
@@ -292,22 +307,23 @@ As in [counts.based.html](../counts-based/counts.based.html) we can compare the 
 load('../derAnalysis/run2-v1.0.10/fullRegions.Rdata')
 
 ## Some formatting and subsets
-fullRegions$sigFWER <- as.logical(fullRegions$significantFWER)
+fullRegions$significantFDR <- factor(fullRegions$qvalues < 0.05, levels = c('TRUE', 'FALSE'))
+fullRegions$sigFDR <- as.logical(fullRegions$significantFDR)
 fullRegs20 <- fullRegions[width(fullRegions) >= 20]
 
 ## Overlap table for all 4 cases
 ov_table <- function(ders, counts, query = 'der', minov = 0) {
     if(query == 'der') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DER (FWER)' = ders$sigFWER, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
+            res <- addmargins(table('Significant DER (FDR)' = ders$sigFDR, 'Overlaps sig DE exon' = countOverlaps(ders, counts[counts$sig]) > 0))
         } else {
-            res <- addmargins(table(ders$sigFWER, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FWER)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
+            res <- addmargins(table(ders$sigFDR, countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0, dnn = c('Significant DER (FDR)', paste0('Overlaps sig DE exon (min ', minov, 'bp)'))))
         }
     } else if (query == 'counts') {
         if(minov == 0) {
-            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFWER]) > 0))
+            res <- addmargins(table('Significant DE exon' = counts$sig, 'Overlaps sig DER (FWER)' = countOverlaps(counts, ders[ders$sigFDR]) > 0))
         } else {
-            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFWER], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
+            res <- addmargins(table(counts$sig[width(counts) >= minov], countOverlaps(counts[width(counts) >= minov], ders[ders$sigFDR], minoverlap = minov) > 0, dnn = c('Significant DE exon', paste0('Overlaps sig DER (FWER, min ', minov, 'bp)'))))
         }
     }
     return(res)
@@ -316,9 +332,9 @@ ov_table <- function(ders, counts, query = 'der', minov = 0) {
 ## Explore mistmatched cases for DERs vs Exons direction
 explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFWER)
+        i <- which(countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & !ders$sigFDR)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFWER)
+        i <- which(!countOverlaps(ders, counts[counts$sig], minoverlap = minov) > 0 & ders$sigFDR)
     } else{
         stop('invalid case')
     }
@@ -350,9 +366,9 @@ explore_ov <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
 explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     counts <- counts[width(counts) >= minov]
     if(case == 'FALSE-TRUE') {
-        i <- which(countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & !counts$sig)
+        i <- which(countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & !counts$sig)
     } else if (case == 'TRUE-FALSE') {
-        i <- which(!countOverlaps(counts, ders[ders$sigFWER], minoverlap = minov) > 0 & counts$sig)
+        i <- which(!countOverlaps(counts, ders[ders$sigFDR], minoverlap = minov) > 0 & counts$sig)
     } else{
         stop('invalid case')
     }
@@ -360,19 +376,19 @@ explore_ov_counts <- function(ders, counts, case = "FALSE-TRUE", minov = 0L) {
     
     if(case == 'FALSE-TRUE') {
         res <- list(
-            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)),
+            n_overlaps = table(countOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)),
             width_exon = summary(width(counts[i])),
-            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
-            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFWER], minoverlap = minov)))),
+            exons_per_der_table = table(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
+            exons_per_der = sort(table(subjectHits(findOverlaps(counts[i], ders[ders$sigFDR], minoverlap = minov)))),
             i = i
         )
     } else {
         res <- list(
             width_exon = summary(width(counts[i])),
             distance_nearest_sum = summary(mcols(distanceToNearest(counts[i], ders, ignore.strand = TRUE))$distance),
-             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE))$distance),
+             distance_nearest_sig_sum = summary(mcols(distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE))$distance),
             distance_nearest = distanceToNearest(counts[i], ders, ignore.strand = TRUE),
-            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFWER], ignore.strand = TRUE),
+            distance_nearest_sig = distanceToNearest(counts[i], ders[ders$sigFDR], ignore.strand = TRUE),
             i = i
         )
     }
