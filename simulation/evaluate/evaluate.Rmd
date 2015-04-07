@@ -127,7 +127,7 @@ The `r length(idx$failed$de)` _Failed.DE_ cases (false negatives) are mostly sho
 success.de <- tx[ idx$success$de  ]
 success.der <- tx[  idx$success$der ]
 
-## What happened with the 2 txs set to be DE that were not picked up?
+## What happened with the txs set to be DE that were not picked up?
 failed.de <- tx[ idx$failed$de  ]
 
 ## They are short transcripts
@@ -347,7 +347,7 @@ seg.fn <- which(segs$DE & !countOverlaps(segs, fdr) > 0)
 summary(width(segs[seg.fn]))
 chosen[chosen$gene_id == '6523', ]
 
-## 11 of the 37 segments are from gene with id 6523
+## 9 of the 30 segments are from gene with id 6523
 tail(sort(table(names(segs[seg.fn]))))
 
 ## Cases of the genes with at least one FN segment
