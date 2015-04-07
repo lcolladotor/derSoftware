@@ -58,8 +58,16 @@ tx_ids <- sapply(tx_inc, function(x) { mcols(x)$tx_id })
 gene_inc <- exonsBy(txdb, by = 'tx')[as.character(tx_ids)]
 names(gene_inc) <- names(tx_inc)
 
+## Define a second incomplete gene set where 10% of the transcripts are 
+## dropped at random, regardless of the simulation scenario
+tx_rand <- tx[unique(chosen$gene_id)]
+tx_rand_list <- unlist(tx_rand)
+set.seed(20150406)
+tx_rand_chosen <- tx_rand_list[sample(seq_len(length(tx_rand_list)), size = round(length(tx_rand_list) * 0.9))]
+gene_rand <- split(tx_rand_chosen, names(tx_rand_chosen))
+
 ## Save info
-save(tx_inc, gene_comp, gene_inc, file = 'gene_sets.Rdata')
+save(tx_inc, gene_comp, gene_inc, gene_rand, file = 'gene_sets.Rdata')
 ```
 
 
@@ -83,9 +91,14 @@ message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- inc
 summOv_inc <- summarizeOverlaps(gene_inc, bList, mode = "Union",
     singleEnd = FALSE, ignore.strand = TRUE, fragments = TRUE)
     
+message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- incomplete random"))
+summOv_rand <- summarizeOverlaps(gene_rand, bList, mode = "Union",
+    singleEnd = FALSE, ignore.strand = TRUE, fragments = TRUE)
+    
 ## Save the results
 save(summOv_comp, file = 'summOv_comp.Rdata')
 save(summOv_inc, file = 'summOv_inc.Rdata')
+save(summOv_rand, file = 'summOv_rand.Rdata')
 ```
 
 # Reproducibility
