@@ -991,7 +991,7 @@ bList <- BamFileList(files, bai)
 ## Compute the overlaps
 message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- complete"))</code></pre><button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
-</button><pre style=""><code class="message r">## 2015-04-06 22:20:46 summarizeOverlaps: Running summarizeOverlaps() -- complete
+</button><pre style=""><code class="message r">## 2015-04-07 02:50:48 summarizeOverlaps: Running summarizeOverlaps() -- complete
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">summOv_comp <- summarizeOverlaps(gene_comp, bList, mode = "Union",
@@ -999,7 +999,7 @@ message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- com
 
 message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- incomplete"))</code></pre><button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
-</button><pre style=""><code class="message r">## 2015-04-06 22:21:07 summarizeOverlaps: Running summarizeOverlaps() -- incomplete
+</button><pre style=""><code class="message r">## 2015-04-07 02:51:31 summarizeOverlaps: Running summarizeOverlaps() -- incomplete
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">summOv_inc <- summarizeOverlaps(gene_inc, bList, mode = "Union",
@@ -1007,7 +1007,7 @@ message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- inc
     
 message(paste(Sys.time(), "summarizeOverlaps: Running summarizeOverlaps() -- incomplete random"))</code></pre><button class="message R toggle btn btn-xs btn-info">
 <span class="glyphicon glyphicon-chevron-down"></span> R message
-</button><pre style=""><code class="message r">## 2015-04-06 22:21:23 summarizeOverlaps: Running summarizeOverlaps() -- incomplete random
+</button><pre style=""><code class="message r">## 2015-04-07 02:52:11 summarizeOverlaps: Running summarizeOverlaps() -- incomplete random
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">summOv_rand <- summarizeOverlaps(gene_rand, bList, mode = "Union",
@@ -1025,13 +1025,13 @@ save(summOv_rand, file = 'summOv_rand.Rdata')</code></pre></div>
 </button><pre style=""><code class="source r">## Reproducibility info
 Sys.time()</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
-</button><pre style=""><code class="output r">## [1] "2015-04-06 22:21:44 EDT"
+</button><pre style=""><code class="output r">## [1] "2015-04-07 02:52:56 EDT"
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">proc.time()</code></pre><button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button><pre style=""><code class="output r">##    user  system elapsed 
-## 425.117  14.180 140.587
+## 723.088  17.879 247.240
 </code></pre><button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">options(width = 120)
