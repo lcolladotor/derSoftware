@@ -1141,7 +1141,7 @@ system.time( deseq <- mapply(run_deseq, counts, genes, names(genes), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   2.604   0.029   2.654
+##   2.948   0.035   3.027
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1152,7 +1152,7 @@ system.time( edger <- mapply(run_edger, counts, genes, names(genes), MoreArgs = 
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##   2.523   0.014   2.548
+##   2.771   0.015   2.815
 </code></pre>
 </div>
 <h3>Agreement</h3>
@@ -1185,9 +1185,9 @@ mapply(agree, deseq, edger, SIMPLIFY = FALSE)</code></pre>
 ## $incomplete_random
 ##                              Significant DE gene -- edgeR
 ## Significant DE gene -- DESeq2 FALSE TRUE Sum
-##                         FALSE    20    0  20
-##                         TRUE      1   34  35
-##                         Sum      21   34  55
+##                         FALSE    18    1  19
+##                         TRUE      0   33  33
+##                         Sum      18   34  52
 </code></pre>
 </div>
 <p>There are only 2 and 1 disagreements between <code>DESeq2</code> and <code>edgeR</code> for the complete and incomplete gene sets respectively.</p>
@@ -1272,8 +1272,8 @@ lapply(deseq, count_comp)</code></pre>
 ##          Overlaps DE exon
 ## DE status FALSE TRUE Sum
 ##     FALSE    90   21 111
-##     TRUE      5  164 169
-##     Sum      95  185 280
+##     TRUE     17  152 169
+##     Sum     107  173 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1299,9 +1299,9 @@ lapply(deseq, count_comp)</code></pre>
 ## $incomplete_random
 ##          Overlaps DE exon
 ## DE status FALSE TRUE Sum
-##     FALSE   108    3 111
-##     TRUE      5  164 169
-##     Sum     113  167 280
+##     FALSE    80   31 111
+##     TRUE     17  152 169
+##     Sum      97  183 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1329,8 +1329,8 @@ lapply(deseq, count_comp, ptype = 'holm')</code></pre>
 ##          Overlaps DE exon
 ## DE status FALSE TRUE Sum
 ##     FALSE   111    0 111
-##     TRUE      5  164 169
-##     Sum     116  164 280
+##     TRUE     17  152 169
+##     Sum     128  152 280
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1357,8 +1357,8 @@ lapply(deseq, count_comp, ptype = 'holm')</code></pre>
 ##          Overlaps DE exon
 ## DE status FALSE TRUE Sum
 ##     FALSE   108    3 111
-##     TRUE      5  164 169
-##     Sum     113  167 280
+##     TRUE     17  152 169
+##     Sum     125  155 280
 </code></pre>
 </div>
 <h4>Empirical Power</h4>
@@ -1378,7 +1378,7 @@ sapply(deseq, emp_power)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             97.04             85.80             97.04
+##             97.04             85.80             89.94
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1388,7 +1388,7 @@ sapply(deseq, emp_power)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             97.04             85.80             97.04
+##             97.04             85.80             89.94
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1399,7 +1399,7 @@ sapply(deseq, emp_power, ptype = 'holm')</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             97.04             85.80             97.04
+##             97.04             85.80             89.94
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1409,7 +1409,7 @@ sapply(deseq, emp_power, ptype = 'holm')</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             97.04             85.80             97.04
+##             97.04             85.80             89.94
 </code></pre>
 </div>
 <h4>Empirical FPR</h4>
@@ -1438,7 +1438,7 @@ sapply(deseq, emp_fpr)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             25.23             21.62              2.70
+##             25.23             21.62             27.93
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1478,7 +1478,7 @@ sapply(deseq, emp_fdr)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             11.35             13.69             11.35
+##             11.35             13.69             12.14
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1488,7 +1488,7 @@ sapply(deseq, emp_fdr)</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##             14.58             14.20              1.80
+##             14.58             14.20             16.94
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1509,7 +1509,7 @@ sapply(deseq, emp_fdr, ptype = 'holm')</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##          complete        incomplete incomplete_random 
-##               1.8               0.0               1.8
+##              1.80              0.00              1.94
 </code></pre>
 </div>
 <h3>Overlap</h3>
@@ -1644,9 +1644,9 @@ lapply(deseq, function(x) {
 ## $incomplete_random
 ##                      Overlaps sig DE gene
 ## Significant DER (FDR) FALSE TRUE Sum
-##                 FALSE    21  295 316
-##                 TRUE      1  152 153
-##                 Sum      22  447 469
+##                 FALSE    24  292 316
+##                 TRUE     11  142 153
+##                 Sum      35  434 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1675,8 +1675,8 @@ lapply(deseq, function(x) {
 ##                      Overlaps sig DE gene (min 20bp)
 ## Significant DER (FDR) FALSE TRUE Sum
 ##                 FALSE     1   15  16
-##                 TRUE      2  151 153
-##                 Sum       3  166 169
+##                 TRUE     12  141 153
+##                 Sum      13  156 169
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1705,9 +1705,9 @@ lapply(edger, function(x) {
 ## $incomplete_random
 ##                      Overlaps sig DE gene
 ## Significant DER (FDR) FALSE TRUE Sum
-##                 FALSE    27  289 316
-##                 TRUE      1  152 153
-##                 Sum      28  441 469
+##                 FALSE    24  292 316
+##                 TRUE     11  142 153
+##                 Sum      35  434 469
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1736,8 +1736,8 @@ lapply(edger, function(x) {
 ##                      Overlaps sig DE gene (min 20bp)
 ## Significant DER (FDR) FALSE TRUE Sum
 ##                 FALSE     1   15  16
-##                 TRUE      2  151 153
-##                 Sum       3  166 169
+##                 TRUE     12  141 153
+##                 Sum      13  156 169
 </code></pre>
 </div>
 <p>The results are identical between <code>DESeq2</code> and <code>edgeR</code> with surprisingly slightly better agreements in with the incomplete gene set instead of the complete one when requiring a minimum overlap of 20bp.</p>
@@ -1789,16 +1789,16 @@ lapply(edger, function(x) {
 ## $incomplete_random$n_overlaps
 ## 
 ##  1 
-## 44 
+## 35 
 ## 
 ## $incomplete_random$width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   10.00   13.75   16.00   18.36   22.25   37.00 
+##   10.00   15.00   18.00   19.74   24.00   37.00 
 ## 
 ## $incomplete_random$ders_per_gene_table
 ## 
-##  1  2  5 10 21 
-##  2  3  1  1  1
+##  1  2  5 21 
+##  3  3  1  1
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1840,15 +1840,15 @@ lapply(edger, function(x) {
 ## $incomplete_random
 ## $incomplete_random$width_der
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    39.0    57.5    76.0    76.0    94.5   113.0 
+##   25.00   63.00   92.00   95.17  117.80  204.00 
 ## 
 ## $incomplete_random$distance_nearest_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0    7316   14630   14630   21950   29260 
+##       0    1961    3837    6002    6730   29260 
 ## 
 ## $incomplete_random$distance_nearest_sig_sum
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##       0    7316   14630   14630   21950   29260
+##       0    1961    3837    6002    6730   29260
 </code></pre>
 </div>
 <h4>Query: genes</h4>
@@ -1881,9 +1881,9 @@ lapply(deseq, function(x) {
 ## $incomplete_random
 ##                    Overlaps sig DER (FWER)
 ## Significant DE gene FALSE TRUE Sum
-##               FALSE    19    1  20
-##               TRUE      6   29  35
-##               Sum      25   30  55
+##               FALSE    18    1  19
+##               TRUE      6   27  33
+##               Sum      24   28  52
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1911,9 +1911,9 @@ lapply(deseq, function(x) {
 ## $incomplete_random
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE gene FALSE TRUE Sum
-##               FALSE    19    1  20
-##               TRUE      6   29  35
-##               Sum      25   30  55
+##               FALSE    18    1  19
+##               TRUE      6   27  33
+##               Sum      24   28  52
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1942,9 +1942,9 @@ lapply(edger, function(x) {
 ## $incomplete_random
 ##                    Overlaps sig DER (FWER)
 ## Significant DE gene FALSE TRUE Sum
-##               FALSE    20    1  21
-##               TRUE      5   29  34
-##               Sum      25   30  55
+##               FALSE    17    1  18
+##               TRUE      7   27  34
+##               Sum      24   28  52
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
@@ -1972,9 +1972,9 @@ lapply(edger, function(x) {
 ## $incomplete_random
 ##                    Overlaps sig DER (FWER, min 20bp)
 ## Significant DE gene FALSE TRUE Sum
-##               FALSE    20    1  21
-##               TRUE      5   29  34
-##               Sum      25   30  55
+##               FALSE    17    1  18
+##               TRUE      7   27  34
+##               Sum      24   28  52
 </code></pre>
 </div>
 <p>As opposed to when DERs were used as the query, this time there is a small disagreement between <code>DESeq2</code> and <code>edgeR</code> when requiring a minimum 20bp overlap. Overlap, the most common disagreement case against the DERs is when a significant DE gene does not overlap a significant DER.</p>
@@ -2049,7 +2049,7 @@ Sys.time()</code></pre>
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-04-06 22:40:04 EDT"
+<pre style=""><code class="output r">## [1] "2015-04-07 03:06:12 EDT"
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2059,7 +2059,7 @@ Sys.time()</code></pre>
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
 <pre style=""><code class="output r">##    user  system elapsed 
-##  33.179   0.313  34.099
+##  35.634   0.382  36.387
 </code></pre>
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-up"></span> R source
@@ -2101,7 +2101,6 @@ devtools::session_info()</code></pre>
 ##  Biostrings                          2.35.12     2015-03-26 Bioconductor                             
 ##  bitops                              1.0.6       2013-08-17 CRAN (R 3.2.0)                           
 ##  cluster                             2.0.1       2015-01-31 CRAN (R 3.2.0)                           
-##  colorout                          * 1.0.2       2014-11-03 local                                    
 ##  colorspace                          1.2.6       2015-03-11 CRAN (R 3.2.0)                           
 ##  DBI                                 0.3.1       2014-09-24 CRAN (R 3.2.0)                           
 ##  DESeq2                            * 1.7.50      2015-04-04 Bioconductor                             
@@ -2143,7 +2142,7 @@ devtools::session_info()</code></pre>
 ##  RcppArmadillo                     * 0.4.650.1.1 2015-02-26 CRAN (R 3.2.0)                           
 ##  RCurl                               1.95.4.5    2014-12-28 CRAN (R 3.2.0)                           
 ##  reshape2                            1.4.1       2014-12-06 CRAN (R 3.2.0)                           
-##  rmarkdown                           0.3.3       2014-09-17 CRAN (R 3.2.0)                           
+##  rmarkdown                         * 0.3.3       2014-09-17 CRAN (R 3.2.0)                           
 ##  rpart                               4.1.9       2015-02-24 CRAN (R 3.2.0)                           
 ##  Rsamtools                           1.19.49     2015-03-27 Bioconductor                             
 ##  RSQLite                             1.0.0       2014-10-25 CRAN (R 3.2.0)                           
