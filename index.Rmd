@@ -77,7 +77,7 @@ The [check-analysis-time.R](check-analysis-time.R) script was useful for checkin
 We expect that these scripts will be useful to `derfinder` users who want to automate the single-base level and/or expressed-regions level analyses for several data sets and/or have the jobs run automatically without having to check if each step has finished running.
 
 
-Note that all `bash` scripts are tailored for the Sun Grid Engine (SGE) cluster we have access to.
+Note that all `bash` scripts are tailored for the cluster we have access to which administer job queues with Sun Grid Engine (SGE).
 
 
 # Single-base level
@@ -138,6 +138,26 @@ Similarly to the previous report, the expressed-regions level analysis evaluatio
 
 The `R Markdown` source file for this report is [evaluate-regionMatrix.Rmd](simulation/evaluate-regionMat/evaluate-regionMatrix.Rmd)
 
+## Comparing versus other methods
+
+We have several scripts and reports for the comparison between `derfinder` and  `DESeq2`, `edgeR`-robust as well as the original implementation of _derfinder_. 
+
+This first set of scripts were used to run the original implementation of _derfinder_.
+
+* [dercount.sh](simulation/dercount/dercount.sh) is the shell script for counting that is required for the original implementation of _derfinder_ analysis.
+* [dertable.sh](simulation/dertable/dertable.sh) and [makeTableDB.R](simulation/dertable/makeTableDB.R) are the bash and R scripts needed for generating the SQL databases required for the original implementation of _derfinder_.
+* [derfinder-analysis.R](simulation/derfinder-original/derfinder-analysis.R) and [deranalysis.sh](simulation/derfinder-original/deranalysis.sh) are the R and bash scripts for running the original implementation of _derfinder_ on the simulated data set.
+
+The following scripts and reports show the comparison between these methods.
+
+* [counts-based](simulation/counts-based/counts-based.html) is an initial comparison of the disjoint exon counts-based methods, the original implementation of _derfinder_, and `derfinder` itself.  The `R Markdown` source is [counts-based.Rmd](simulation/counts-based/counts-based.Rmd).
+* [all-exons](simulation/all-exons/all-exons.html) determines differentially expressed disjoint exons for five exon sets. This was necessary to check the performance of different exon-level pipelines. The `R Markdown` source is [all-exons.Rmd](simulation/all-exons/all-exons.Rmd).
+* [counts-gene](simulation/counts-gene/counts-gene.html) is where the different gene sets are defined: a complete one, an incomplete one with only one transcript per gene, and one where 20 percent of transcripts are missing.  The `R Markdown` source is [counts-gene.Rmd](simulation/counts-gene/counts-gene.Rmd).
+* [counts-gene-eval](simulation/counts-gene-eval/counts-gene-eval.html) compares `derfinder` against the gene-level counts-based methods.  The `R Markdown` source is [counts-gene-eval.Rmd](simulation/counts-gene-eval/counts-gene-eval.Rmd).
+
+
+
+
 # Timing information
 
 
@@ -170,9 +190,9 @@ These scripts also include other exploratory code.
 
 ## Hippo vs previous results
 
-[compareVsPNAS](hippo/pnas/compareVsPNAS.html) is an HTML report comparing 29 regions that were previously found to be differentially expressed `r citep(bib[["zhou2011"]])` versus the `derfinder` single-base level results.
+[compareVsPNAS](hippo/pnas/compareVsPNAS.html) is an HTML report comparing 29 regions that were previously found to be differentially expressed `r citep(bib[["zhou2011"]])` versus the `derfinder` single-base level results. It also has code for identified differentially expressed disjoint exons. The additional script [counts-gene.R](hippo/counts-gene/counts-gene.R) has the code for gene counting with `summarizeOverlaps()`. [compareVsPNAS-gene](hippo/pnas/compareVsPNAS-gene.html) compares the results between `DESeq2` and `edgeR`-robust against `derfinder` at the gene level with 40 total plots: 10 for each case of agreement/disagreement. 
 
-View the [compareVsPNAS](hippo/pnas/compareVsPNAS.html) report or check the `R Markdown` file [compareVsPNAS.Rmd](hippo/pnas/compareVsPNAS.Rmd) run by the [runComparison.sh](hippo/pnas/runComparison.sh) script.
+View the [compareVsPNAS](hippo/pnas/compareVsPNAS.html) report or check the `R Markdown` file [compareVsPNAS.Rmd](hippo/pnas/compareVsPNAS.Rmd) run by the [runComparison.sh](hippo/pnas/runComparison.sh) script. Also view the [compareVsPNAS-gene](hippo/pnas/compareVsPNAS-gene.html) report and its linked `R Markdown` file [compareVsPNAS-gene.Rmd](hippo/pnas/compareVsPNAS-gene.Rmd).
 
 
 # Reproducibility

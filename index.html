@@ -891,7 +891,7 @@
 <p>All 13 <code>bash</code> scripts show at the top the way they were used. Some of them generate intermediate small <code>bash</code> scripts, for example one script per chromosome for the <em>analyzeChr</em> step. For some steps, there is a companion <code>R</code> or <code>R Markdown</code> code file when the code is more involved or an HTML file is generated in the particular step.</p>
 <p>The <a href="check-analysis-time.R" class="uri">check-analysis-time.R</a> script was useful for checking the progress of the <em>step3-analyzeChr</em> jobs and detect whenever a node in the cluster was presenting problems.</p>
 <p>We expect that these scripts will be useful to <code>derfinder</code> users who want to automate the single-base level and/or expressed-regions level analyses for several data sets and/or have the jobs run automatically without having to check if each step has finished running.</p>
-<p>Note that all <code>bash</code> scripts are tailored for the Sun Grid Engine (SGE) cluster we have access to.</p>
+<p>Note that all <code>bash</code> scripts are tailored for the cluster we have access to which administer job queues with Sun Grid Engine (SGE).</p>
 <h1>Single-base level</h1>
 <h2>Quick overview HTML reports</h2>
 <p>These HTML reports contain basic information on the <code>derfinder</code> <a id='cite-derfinder'></a>(<a href='http://www.biorxiv.org/content/early/2015/02/19/015370.abstract'>Collado-Torres, Frazee, Love, Irizarry, et al., 2015</a>) results from the public data sets used (<em>BrainSpan</em>, <em>Simulation</em>, and <em>Hippo</em>). These reports answer basic questions such as:</p>
@@ -930,6 +930,21 @@
 <h2>Expressed-regions level evaluation</h2>
 <p>Similarly to the previous report, the expressed-regions level analysis evaluation is described in the <a href="simulation/evaluate-regionMat/evaluate-regionMatrix.html">evaluate-regionMatrix</a> report. The code and language were slightly modified from the previous report.</p>
 <p>The <code>R Markdown</code> source file for this report is <a href="simulation/evaluate-regionMat/evaluate-regionMatrix.Rmd">evaluate-regionMatrix.Rmd</a></p>
+<h2>Comparing versus other methods</h2>
+<p>We have several scripts and reports for the comparison between <code>derfinder</code> and <code>DESeq2</code>, <code>edgeR</code>-robust as well as the original implementation of <em>derfinder</em>.</p>
+<p>This first set of scripts were used to run the original implementation of <em>derfinder</em>.</p>
+<ul>
+<li><a href="simulation/dercount/dercount.sh">dercount.sh</a> is the shell script for counting that is required for the original implementation of <em>derfinder</em> analysis.</li>
+<li><a href="simulation/dertable/dertable.sh">dertable.sh</a> and <a href="simulation/dertable/makeTableDB.R">makeTableDB.R</a> are the bash and R scripts needed for generating the SQL databases required for the original implementation of <em>derfinder</em>.</li>
+<li><a href="simulation/derfinder-original/derfinder-analysis.R">derfinder-analysis.R</a> and <a href="simulation/derfinder-original/deranalysis.sh">deranalysis.sh</a> are the R and bash scripts for running the original implementation of <em>derfinder</em> on the simulated data set.</li>
+</ul>
+<p>The following scripts and reports show the comparison between these methods.</p>
+<ul>
+<li><a href="simulation/counts-based/counts-based.html">counts-based</a> is an initial comparison of the disjoint exon counts-based methods, the original implementation of <em>derfinder</em>, and <code>derfinder</code> itself. The <code>R Markdown</code> source is <a href="simulation/counts-based/counts-based.Rmd">counts-based.Rmd</a>.</li>
+<li><a href="simulation/all-exons/all-exons.html">all-exons</a> determines differentially expressed disjoint exons for five exon sets. This was necessary to check the performance of different exon-level pipelines. The <code>R Markdown</code> source is <a href="simulation/all-exons/all-exons.Rmd">all-exons.Rmd</a>.</li>
+<li><a href="simulation/counts-gene/counts-gene.html">counts-gene</a> is where the different gene sets are defined: a complete one, an incomplete one with only one transcript per gene, and one where 20 percent of transcripts are missing. The <code>R Markdown</code> source is <a href="simulation/counts-gene/counts-gene.Rmd">counts-gene.Rmd</a>.</li>
+<li><a href="simulation/counts-gene-eval/counts-gene-eval.html">counts-gene-eval</a> compares <code>derfinder</code> against the gene-level counts-based methods. The <code>R Markdown</code> source is <a href="simulation/counts-gene-eval/counts-gene-eval.Rmd">counts-gene-eval.Rmd</a>.</li>
+</ul>
 <h1>Timing information</h1>
 <p>This HTML report has code for reading and processing the time and memory information for each job extracted with <a href="https://github.com/alyssafrazee/efficiency_analytics">efficiency_analytics</a> <a id='cite-eff'></a>(<a href='http://dx.doi.org/10.6084/m9.figshare.878000'>Frazee, 2014</a>). Several plots exploring the relationship between wall time and memory used by the cluster jobs are included. Some of the plots make explicit the number of cores used by each job. The report contains a detailed description of the analysis steps shown on the plots. It also contains tables summarizing the maximum memory and time for each analysis step if all the jobs for that particular step were running simultaneously. Finally, there is an interactive table with the timing results.</p>
 <p>View the <a href="timing/timing.html">timing</a> report or check the <code>R Markdown</code> file <a href="timing/timing.Rmd">timing.Rmd</a>.</p>
@@ -947,15 +962,15 @@
 </ul>
 <p>These scripts also include other exploratory code.</p>
 <h2>Hippo vs previous results</h2>
-<p><a href="hippo/pnas/compareVsPNAS.html">compareVsPNAS</a> is an HTML report comparing 29 regions that were previously found to be differentially expressed <a id='cite-zhou2011'></a>(<a href='#bib-zhou2011'>Zhou, Zhifeng, Yuan, Qiaoping, et al., 2011</a>) versus the <code>derfinder</code> single-base level results.</p>
-<p>View the <a href="hippo/pnas/compareVsPNAS.html">compareVsPNAS</a> report or check the <code>R Markdown</code> file <a href="hippo/pnas/compareVsPNAS.Rmd">compareVsPNAS.Rmd</a> run by the <a href="hippo/pnas/runComparison.sh">runComparison.sh</a> script.</p>
+<p><a href="hippo/pnas/compareVsPNAS.html">compareVsPNAS</a> is an HTML report comparing 29 regions that were previously found to be differentially expressed <a id='cite-zhou2011'></a>(<a href='#bib-zhou2011'>Zhou, Zhifeng, Yuan, Qiaoping, et al., 2011</a>) versus the <code>derfinder</code> single-base level results. It also has code for identified differentially expressed disjoint exons. The additional script <a href="hippo/counts-gene/counts-gene.R">counts-gene.R</a> has the code for gene counting with <code>summarizeOverlaps()</code>. <a href="hippo/pnas/compareVsPNAS-gene.html">compareVsPNAS-gene</a> compares the results between <code>DESeq2</code> and <code>edgeR</code>-robust against <code>derfinder</code> at the gene level with 40 total plots: 10 for each case of agreement/disagreement.</p>
+<p>View the <a href="hippo/pnas/compareVsPNAS.html">compareVsPNAS</a> report or check the <code>R Markdown</code> file <a href="hippo/pnas/compareVsPNAS.Rmd">compareVsPNAS.Rmd</a> run by the <a href="hippo/pnas/runComparison.sh">runComparison.sh</a> script. Also view the <a href="hippo/pnas/compareVsPNAS-gene.html">compareVsPNAS-gene</a> report and its linked <code>R Markdown</code> file <a href="hippo/pnas/compareVsPNAS-gene.Rmd">compareVsPNAS-gene.Rmd</a>.</p>
 <h1>Reproducibility</h1>
 <p>Date this page was generated.</p>
 <div class="row">
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## [1] "2015-04-10 16:24:34 EDT"
+<pre style=""><code class="output r">## [1] "2015-04-13 15:58:54 EDT"
 </code></pre>
 </div>
 <p>Wallclock time spent generating the report.</p>
@@ -963,7 +978,7 @@
 <button class="output R toggle btn btn-xs btn-success">
 <span class="glyphicon glyphicon-chevron-down"></span> R output
 </button>
-<pre style=""><code class="output r">## Time difference of 1.43 secs
+<pre style=""><code class="output r">## Time difference of 1.591 secs
 </code></pre>
 </div>
 <p><code>R</code> session information.</p>
