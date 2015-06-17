@@ -9,6 +9,6 @@ stopifnot(length(unique(srr)) == 36)
 sink('paired.txt')
 for(i in unique(srr)) {
     j <- files[srr == i]
-	cat(paste0(j[1], "\t", j[2], "\n"))
+	cat(paste0(j[1], "\t", j[2], "\t", i, "\n"))
 }
 sink()
