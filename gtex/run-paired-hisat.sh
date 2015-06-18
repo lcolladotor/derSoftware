@@ -10,6 +10,7 @@ P=4
 INDEX=/dcs01/ajaffe/Annotation/hg19_hisat/hg19_hisat
 
 mkdir -p ${WDIR}
+mkdir -p ${WDIR}/logs
 
 # Construct shell files
 cat paired.txt | while read x
@@ -50,7 +51,7 @@ echo "**** Creating BAM file index ****"
 date
 samtools index ${libname}.bam
 
-mv ${WDIR}/${sname}.* ${WDIR}/${libname}/
+mv ${WDIR}/${sname}.* ${WDIR}/logs/
 
 
 echo "**** Job ends ****"
