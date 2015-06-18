@@ -32,6 +32,8 @@ cat paired.txt | while read x
 echo "**** Job starts ****"
 date
 
+cd ${WDIR}
+
 # run hisat
 hisat --version
 hisat -x ${INDEX} -1 ${DATADIR}/${file1} -2 ${DATADIR}/${file2} --time -p ${P} -S ${libname}.sam
