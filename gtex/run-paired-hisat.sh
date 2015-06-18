@@ -38,6 +38,9 @@ cd ${WDIR}
 ## load samtools
 module load samtools/1.1
 
+## Load bowtie2
+module load bowtie2/2.2.5
+
 ## run hisat
 hisat --version
 hisat -x ${INDEX} -1 ${DATADIR}/${file1} -2 ${DATADIR}/${file2} --time -p ${P} -S ${libname}.sam
