@@ -26,7 +26,6 @@ cat paired.txt | while read x
     sname="${libname}.th"
 	cat > ${WDIR}/.${sname}.sh <<EOF
 #!/bin/bash
-#!/bin/bash
 #$ -cwd
 #$ -m e
 #$ -l mem_free=3G,h_vmem=10G,h_fsize=10G
