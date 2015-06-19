@@ -3,7 +3,7 @@
 # Directories
 MAINDIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX
 WDIR=${MAINDIR}/alignments
-DATADIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/FASTQ
+DATADIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tailFASTQ
 
 # Define variables
 P=4
@@ -22,7 +22,7 @@ cat paired.txt | while read x
 	file2=$(echo "$x" | cut -f2)
 	# Actually create the script
 	echo "Creating script for ${libname}"
-    sname="${libname}.hisat"
+    sname="${libname}.tailHisat"
 	cat > ${WDIR}/.${sname}.sh <<EOF
 #!/bin/bash
 #$ -cwd
