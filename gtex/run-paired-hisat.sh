@@ -2,8 +2,8 @@
 
 # Directories
 MAINDIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX
-WDIR=${MAINDIR}/tailAlignments
-DATADIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tailFASTQ
+WDIR=${MAINDIR}/alignments
+DATADIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/FASTQ
 
 # Define variables
 P=4
@@ -22,7 +22,7 @@ cat paired.txt | while read x
 	file2=$(echo "$x" | cut -f2)
 	# Actually create the script
 	echo "Creating script for ${libname}"
-    sname="${libname}.tailHisat"
+    sname="${libname}.hisat"
 	cat > ${WDIR}/.${sname}.sh <<EOF
 #!/bin/bash
 #$ -cwd
@@ -43,7 +43,7 @@ module load bowtie2/2.2.5
 
 ## run hisat
 hisat --version
-hisat -x ${INDEX} -1 ${DATADIR}/${file1} -2 ${DATADIR}/${file2} --time -p ${P} -S ${libname}.sam
+hisat -x ${INDEX} -1 ${DATADIR}/${file1} -2 ${DATADIR}/${file2} --time -p ${P} --reorder -S ${libname}.sam
 
 echo "**** Starting BAM file creation ****"
 date
