@@ -2,7 +2,7 @@
 
 # Directories
 MAINDIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX
-WDIR=${MAINDIR}/alignments
+WDIR=${MAINDIR}/tailAlignments
 DATADIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tailFASTQ
 
 # Define variables
