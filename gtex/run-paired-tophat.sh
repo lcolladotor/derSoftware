@@ -58,5 +58,5 @@ date
 EOF
 	call="qsub ${WDIR}/.${sname}.sh"
 	echo $call
-#	$call ## Submit manually for now
+	$call
 done
