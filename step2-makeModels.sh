@@ -36,7 +36,7 @@ mkdir -p ${WDIR}/${outdir}/logs
 
 # merge results
 cd ${WDIR}/${outdir}/
-module load R/3.2
+module load R/3.2.x
 Rscript ${ROOTDIR}/step2-makeModels.R -e "${EXPERIMENT}"
 
 # Move log files into the logs directory

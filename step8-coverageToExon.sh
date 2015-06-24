@@ -60,7 +60,7 @@ mkdir -p ${WDIR}/logs
 
 # Run coverageToExon()
 cd ${WDIR}
-module load R/3.2
+module load R/3.2.x
 Rscript ${ROOTDIR}/step8-coverageToExon.R -e "${EXPERIMENT}" -a "${anno}" -r ${RLENGTH} -c ${CORES}
 
 ## Move log files into the logs directory

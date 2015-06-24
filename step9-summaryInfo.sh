@@ -54,7 +54,7 @@ mkdir -p ${WDIR}/logs
 
 # Compare DERs vs regionMatrix
 cd ${WDIR}
-module load R/3.2
+module load R/3.2.x
 Rscript ${ROOTDIR}/step9-summaryInfo.R -s '${EXPERIMENT}' -r '${PREFIX}' -p '${EXAMPLES}' -v TRUE
 
 # Move log files into the logs directory

@@ -48,7 +48,7 @@ date
 mkdir -p ${WDIR}/logs
 
 ## Summarize overlaps
-module load R/3.2
+module load R/3.2.x
 Rscript -e "datadir <- '$DATADIR'; cores <- '$CORES'; source('optional3-summOv.R')"
 
 # Move log files into the logs directory

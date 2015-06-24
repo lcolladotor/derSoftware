@@ -88,7 +88,7 @@ mkdir -p ${WDIR}/${outdir}/logs
 
 # run analyzeChr()
 cd ${WDIR}/${PREFIX}/
-module load R/3.2
+module load R/3.2.x
 Rscript ${ROOTDIR}/step3-analyzeChr.R -d "${DATADIR}/${chr}CovInfo.Rdata" -c "${chrnum}" -m ${CORES} -e "${EXPERIMENT}"
 
 # Move log files into the logs directory
