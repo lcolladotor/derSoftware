@@ -51,7 +51,7 @@ cat > ${ROOTDIR}/.${SHORT}.sh <<EOF
 #!/bin/bash
 #$ -cwd
 #$ -m e
-#$ -l mem_free=10G,h_vmem=40G,h_fsize=40G
+#$ -l mem_free=20G,h_vmem=45G,h_fsize=40G
 #$ -N ${SHORT}
 #$ -pe local ${CORES}
 
