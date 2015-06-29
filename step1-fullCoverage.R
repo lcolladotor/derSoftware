@@ -46,6 +46,8 @@ if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
 } else if(opt$datadir == '/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout') {
     files <- rawFiles(datadir=opt$datadir, samplepatt='sample')
     files <- files[match(paste0('sample', 1:30), names(files))]
+} else if (opt$datadir == '/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tophat') {
+    files <- rawFiles(datadir = opt$datadir, sampleppatt = )
 } else {
     load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
     files <- pdSpan$wig

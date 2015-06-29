@@ -7,7 +7,7 @@
 # sh step1-fullCoverage.sh snyder
 # sh step1-fullCoverage.sh hippo
 # sh step1-fullCoverage.sh simulation
-
+# sh step1-fullCoverage.sh gtex
 
 # Define variables
 EXPERIMENT=$1
@@ -39,8 +39,12 @@ elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
     DATADIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout
     CUTOFF=0
+elif [[ "${EXPERIMENT}" == "gtex" ]]
+then
+    DATADIR=/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tophat
+    CUTOFF=0
 else
-    echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
+    echo "Specify a valid experiment: stem, brainspan, snyder, hippo, simulation or gtex"
 fi
 
 
