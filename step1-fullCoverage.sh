@@ -68,6 +68,7 @@ mkdir -p ${WDIR}/logs
 # Load the data, save the coverage without filtering, then save each file separately
 cd ${WDIR}
 module load R/3.1.x
+module load samtools/1.1
 Rscript ${ROOTDIR}/step1-fullCoverage.R -d "${DATADIR}" -p "out$" -c "${CUTOFF}" -m ${CORES}
 
 ## Move log files into the logs directory
