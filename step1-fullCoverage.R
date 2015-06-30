@@ -58,6 +58,7 @@ if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
     if(file.exists('/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')) {
         load('/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')
     } else {
+        ## Taken from /home/epi/ajaffe/Lieber/lieber_functions_aj.R
         getTotalMapped = function(bamFile, mc.cores=1, returnM = TRUE) {
         	thecall = paste("samtools idxstats", bamFile)
         	tmp = parallel::mclapply(thecall, function(x) {
@@ -78,6 +79,8 @@ if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
         mappedInfo <- data.frame(sample = names(files), file = files,
             totalMapped = libSize$totalMapped, mitoMapped = libSize$mitoMapped)
         rownames(mappedInfo) <- NULL
+        ## Display the info
+        print(mappedInfo)
         save(mappedInfo, file = '/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')
     }
     totalMapped <- mappedInfo$totalMapped
