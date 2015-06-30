@@ -6,6 +6,7 @@
 # sh step6-regionMatrix.sh snyder
 # sh step6-regionMatrix.sh hippo
 # sh step6-regionMatrix.sh simulation
+# sh step6-regionMatrix.sh gtex
 
 # Define variables
 EXPERIMENT=$1
@@ -38,6 +39,10 @@ elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
     CUTOFF=5
     RLENGTH=100
+elif [[ "${EXPERIMENT}" == "gtex" ]]
+then
+    CUTOFF=5
+    RLENGTH=76
 else
     echo "Specify a valid experiment: stem, brainspan, snyder, hippo or simulation"
 fi
@@ -64,8 +69,8 @@ mkdir -p ${WDIR}/logs
 
 # Load coverage & get region matrix
 cd ${WDIR}
-module load R/3.2.x
-R -e "library(derfinder); message(Sys.time()); timeinfo <- NULL; timeinfo <- c(timeinfo, list(Sys.time())); load('${MAINDIR}/CoverageInfo/fullCov.Rdata'); timeinfo <- c(timeinfo, list(Sys.time())); proc.time(); message(Sys.time()); if('${EXPERIMENT}' == 'simulation') fullCov <- fullCov[c(22)]; regionMat <- regionMatrix(fullCov, maxClusterGap = 3000L, L = ${RLENGTH}, mc.cores = ${ncore}, cutoff = ${CUTOFF}, returnBP = FALSE); timeinfo <- c(timeinfo, list(Sys.time())); save(regionMat, file='regionMat-cut${CUTOFF}.Rdata'); timeinfo <- c(timeinfo, list(Sys.time())); save(timeinfo, file='timeinfo-${cores}.Rdata'); proc.time(); message(Sys.time()); options(width = 90); devtools::session_info()"
+module load R/3.1.x
+R -e "library(derfinder); message(Sys.time()); timeinfo <- NULL; timeinfo <- c(timeinfo, list(Sys.time())); load('${MAINDIR}/CoverageInfo/fullCov.Rdata'); timeinfo <- c(timeinfo, list(Sys.time())); proc.time(); message(Sys.time()); if('${EXPERIMENT}' == 'simulation') fullCov <- fullCov[c(22)]; regionMat <- regionMatrix(fullCov, maxClusterGap = 3000L, L = ${RLENGTH}, mc.cores = ${ncore}, cutoff = ${CUTOFF}, returnBP = FALSE); timeinfo <- c(timeinfo, list(Sys.time())); save(regionMat, file='regionMat-cut${CUTOFF}.Rdata'); timeinfo <- c(timeinfo, list(Sys.time())); save(timeinfo, file='timeinfo-${cores}.Rdata'); proc.time(); message(Sys.time()); options(width = 120); devtools::session_info()"
 
 ## Move log files into the logs directory
 mv ${ROOTDIR}/${sname}.* ${WDIR}/logs/

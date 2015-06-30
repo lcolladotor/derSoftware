@@ -29,6 +29,11 @@ if (!is.null(opt$help)) {
 ## Default value for fileStyle
 if (is.null(opt$fileStyle)) opt$fileStyle <- 'UCSC'
 
+## Normalize filtered coverage
+totalMapped <- NULL
+targetSize <- 80e6
+
+
 ## Identify the data directories
 if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
     files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern)
@@ -47,7 +52,35 @@ if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
     files <- rawFiles(datadir=opt$datadir, samplepatt='sample')
     files <- files[match(paste0('sample', 1:30), names(files))]
 } else if (opt$datadir == '/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tophat') {
-    files <- rawFiles(datadir = opt$datadir, sampleppatt = )
+    files <- rawFiles(datadir = opt$datadir, samplepatt = 'SRR')
+    load('/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/gtexPd.Rdata')
+    
+    if(file.exists('/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')) {
+        load('/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')
+    } else {
+        getTotalMapped = function(bamFile, mc.cores=1, returnM = TRUE) {
+        	thecall = paste("samtools idxstats", bamFile)
+        	tmp = parallel::mclapply(thecall, function(x) {
+        		cat(".")
+        		xx = system(x,intern=TRUE)
+        		xx = do.call("rbind", strsplit(xx, "\t"))
+        		d = data.frame(chr=xx[,1], L=xx[,2], mapped = xx[,3],
+        			stringsAsFactors=FALSE)
+        		d
+        	},mc.cores=mc.cores)
+
+        	out = list(totalMapped = sapply(tmp, function(x) sum(as.numeric(x$mapped[x$chr %in% paste0("chr", c(1:22,"X","Y"))]))),
+        		mitoMapped = sapply(tmp, function(x) as.numeric(x$mapped[x$chr=="chrM"])))
+        	return(out)
+        }
+
+        libSize <- getTotalMapped(files, mc.cores = opt$mcores)
+        mappedInfo <- data.frame(sample = names(files), file = files,
+            totalMapped = libSize$totalMapped, mitoMapped = libSize$mitoMapped)
+        rownames(mappedInfo) <- NULL
+        save(mappedInfo, file = '/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')
+    }
+    totalMapped <- mappedInfo$totalMapped
 } else {
     load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
     files <- pdSpan$wig
@@ -64,12 +97,13 @@ message(paste(Sys.time(), 'Saving the full (unfiltered) coverage data'))
 save(fullCov, file='fullCov.Rdata')
 
 ## Filter the data and save it by chr
-myFilt <- function(chr, rawData, cutoff) {
+myFilt <- function(chr, rawData, cutoff, totalMapped = NULL, targetSize = 80e6) {
     library('derfinder')
     message(paste(Sys.time(), 'Filtering chromosome', chr))
     
 	## Filter the data
-	res <- filterData(data = rawData, cutoff = cutoff, index = NULL)
+	res <- filterData(data = rawData, cutoff = cutoff, index = NULL,
+        totalMapped = totalMapped, targetSize = targetSize)
 	
 	## Save it in a unified name format
 	varname <- paste0(chr, 'CovInfo')
@@ -84,9 +118,9 @@ myFilt <- function(chr, rawData, cutoff) {
 }
 
 message(paste(Sys.time(), 'Filtering and saving the data with cutoff', opt$cutoff))
-filteredCov <- bpmapply(myFilt, names(fullCov), fullCov, BPPARAM = SnowParam(opt$mcores, outfile = Sys.getenv('SGE_STDERR_PATH')), MoreArgs = list(cutoff = opt$cutoff))
+filteredCov <- bpmapply(myFilt, names(fullCov), fullCov, BPPARAM = SnowParam(opt$mcores, outfile = Sys.getenv('SGE_STDERR_PATH')), MoreArgs = list(cutoff = opt$cutoff, totalMapped = totalMapped, targetSize = targetSize))
 
 ## Done!
 proc.time()
-options(width = 90)
+options(width = 120)
 session_info()
