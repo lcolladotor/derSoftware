@@ -48,15 +48,15 @@ if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
 } else if(opt$datadir == '/dcs01/ajaffe/Hippo/TopHat') {
     files <- rawFiles(datadir=opt$datadir, samplepatt=opt$pattern)
     names(files) <- gsub('_out', '', names(files))
-} else if(opt$datadir == '/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout') {
+} else if(opt$datadir == '/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/thout') {
     files <- rawFiles(datadir=opt$datadir, samplepatt='sample')
     files <- files[match(paste0('sample', 1:30), names(files))]
 } else if (opt$datadir == '/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/tophat') {
     files <- rawFiles(datadir = opt$datadir, samplepatt = 'SRR')
     load('/dcl01/lieber/ajaffe/PublicData/SRA_GTEX/gtexPd.Rdata')
     
-    if(file.exists('/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')) {
-        load('/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')
+    if(file.exists('/dcl01/lieber/ajaffe/derRuns/derSoftware/gtex/mappedInfo.Rdata')) {
+        load('/dcl01/lieber/ajaffe/derRuns/derSoftware/gtex/mappedInfo.Rdata')
     } else {
         ## Taken from /home/epi/ajaffe/Lieber/lieber_functions_aj.R
         getTotalMapped = function(bamFile, mc.cores=1, returnM = TRUE) {
@@ -81,7 +81,7 @@ if(opt$datadir == '/dcs01/ajaffe/UCSC_Epigenome/RNAseq/TopHat') {
         rownames(mappedInfo) <- NULL
         ## Display the info
         print(mappedInfo)
-        save(mappedInfo, file = '/dcs01/ajaffe/Brain/derRuns/derSoftware/gtex/mappedInfo.Rdata')
+        save(mappedInfo, file = '/dcl01/lieber/ajaffe/derRuns/derSoftware/gtex/mappedInfo.Rdata')
     }
     totalMapped <- mappedInfo$totalMapped
 } else {

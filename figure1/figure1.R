@@ -11,7 +11,7 @@ library('GenomeInfoDb')
 library("GenomicFeatures")
 
 ## Define paths
-mainPath <- '/dcs01/ajaffe/Brain/derRuns/derSoftware/'
+mainPath <- '/dcl01/lieber/ajaffe/derRuns/derSoftware/'
 covPath <- file.path(mainPath, 'brainspan/CoverageInfo/')
 resPath <- file.path(mainPath, 'brainspan/derAnalysis/run4-v1.0.10')
 dataPath <- '/nexsan2/disk3/ajaffe/BrainSpan/RNAseq/bigwig/'

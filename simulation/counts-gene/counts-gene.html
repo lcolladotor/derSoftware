@@ -978,12 +978,12 @@ save(tx_inc, gene_comp, gene_inc, gene_rand, file = 'gene_sets.Rdata')</code></p
 
 
 <h1 id="count">Count</h1>
-<p>The following code finds the BAM files and produces the gene count matrices using <code>summarizeOverlaps()</code>. For more information, check <a href="/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout">RNA-Seq workflow: gene-level exploratory analysis and differential expression</a>.</p>
+<p>The following code finds the BAM files and produces the gene count matrices using <code>summarizeOverlaps()</code>. For more information, check <a href="/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/thout">RNA-Seq workflow: gene-level exploratory analysis and differential expression</a>.</p>
 <div class="row">
 <button class="source R toggle btn btn-xs btn-primary">
 <span class="glyphicon glyphicon-chevron-down"></span> R source
 </button><pre style=""><code class="source r">## Make bamFileList
-files <- files <- rawFiles(datadir ='/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout',
+files <- files <- rawFiles(datadir ='/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/thout',
     samplepatt = "sample", fileterm = "accepted_hits.bam")
 bai <- paste0(files, ".bai")
 bList <- BamFileList(files, bai)

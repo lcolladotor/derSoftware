@@ -33,9 +33,9 @@ if(test) {
 
 ## Test values
 if(test){
-	opt$oridir <- "/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/dercount"
+	opt$oridir <- "/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/dercount"
 	opt$samplepatt <- "sample"
-	opt$dbfile <- "/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/dertable/chr22/chr22.db"
+	opt$dbfile <- "/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/dertable/chr22/chr22.db"
 	opt$tablename <- "chr22"
     opt$group <- "AB"
 	opt$verbose <- TRUE
@@ -117,7 +117,7 @@ if(opt$verbose) message(paste(Sys.time(), "Getting the flags"))
 #exons = getAnnotation("hg19","knownGene")
 
 ## Copied from /home/bst/student/afrazee/hg19-exons-GFversion.rda
-load("/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/deranalysis-original/hg19-exons-GFversion.rda")
+load("/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/deranalysis-original/hg19-exons-GFversion.rda")
 
 ## Manually filter out unused chrs
 exons <- subset(hg19.exons, chr == opt$tablename)

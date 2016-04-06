@@ -21,8 +21,8 @@ getF = function(fit, fit0, theData) {
 
 # load data
 load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
-load("/dcs01/ajaffe/Brain/derRuns/derSoftware/brainspan/regionMatrix/regionMat-cut0.25.Rdata")
-load("/dcs01/ajaffe/Brain/derRuns/derSoftware/brainspan/derAnalysis/run4-v1.0.10/models.Rdata")
+load("/dcl01/lieber/ajaffe/derRuns/derSoftware/brainspan/regionMatrix/regionMat-cut0.25.Rdata")
+load("/dcl01/lieber/ajaffe/derRuns/derSoftware/brainspan/derAnalysis/run4-v1.0.10/models.Rdata")
 load("rdas/summarized_BrainSpan_DERs.rda") # single base
 sigSpan$annotation = ss(sigSpan$annotation, " ")
 
@@ -59,7 +59,7 @@ fullRegionMat = fullRegionMat[keepIndex,]
 sum(width(fullRegionGR))/1e6
 
 ##### lower cutoff
-load("/dcs01/ajaffe/Brain/derRuns/derSoftware/brainspan/regionMatrix/regionMat-cut0.1.Rdata")
+load("/dcl01/lieber/ajaffe/derRuns/derSoftware/brainspan/regionMatrix/regionMat-cut0.1.Rdata")
 regList1 = lapply(regionMat, function(x) x$regions)
 fullRegionGR1 = unlist(GRangesList(regList1))
 fullRegionMat1 = do.call("rbind",

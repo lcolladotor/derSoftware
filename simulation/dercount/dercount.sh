@@ -8,13 +8,13 @@
 # /dcs01/stanley/work/brain_rna/dercount/dercount.sh
 
 # Directories
-MAINDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation
+MAINDIR=/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation
 WDIR=${MAINDIR}/dercount
 DATADIR=${MAINDIR}/thout
 
 # A clone of https://github.com/alyssafrazee/derfinder
 # More specifically from https://github.com/lcolladotor/derfinder-original
-SDIR=/dcs01/ajaffe/Brain/derRuns/derfinder-original
+SDIR=/dcl01/lieber/ajaffe/derRuns/derfinder-original
 
 # Define variables
 SHORT='derC-sim'

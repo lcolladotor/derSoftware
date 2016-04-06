@@ -7,7 +7,7 @@
 # /dcs01/stanley/work/brain_rna/deranalysis/deranalysis.sh
 
 # Directories
-MAINDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation
+MAINDIR=/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation
 WDIR=${MAINDIR}/deranalysis-original
 DATADIR=${MAINDIR}/dertable
 
@@ -43,7 +43,7 @@ cp ${DATADIR}/${chr}/${chr}.db \${TMPDIR}/
 # run derfinder-analysis.R
 cd ${WDIR}/${chr}
 module load R/2.15.x
-Rscript ${WDIR}/derfinder-analysis.R -o "/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/dercount" -s "sample" -d "\${TMPDIR}/${chr}.db" -t ${chr} -c "${group}" -v TRUE
+Rscript ${WDIR}/derfinder-analysis.R -o "/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/dercount" -s "sample" -d "\${TMPDIR}/${chr}.db" -t ${chr} -c "${group}" -v TRUE
 
 # Move log files into the logs directory
 mv ${WDIR}/${SHORT}.${group}.${chr}.* ${WDIR}/${chr}/logs/

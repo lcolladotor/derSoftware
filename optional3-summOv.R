@@ -6,7 +6,7 @@ library("derfinder")
 library("GenomicRanges")
 
 ## Load pre-computed exonic parts from Ensembl annotation
-# load("/dcs01/ajaffe/Brain/derRuns/derMisc/ensemblExons/exonicParts.Rdata")
+# load("/dcl01/lieber/ajaffe/derRuns/derMisc/ensemblExons/exonicParts.Rdata")
 
 ## For comparability, use the exons from genomic state 
 load("/home/epi/ajaffe/Lieber/Projects/RNAseq/derannotator/rdas/GenomicState.Hsapiens.ensembl.GRCh37.p11.rda")

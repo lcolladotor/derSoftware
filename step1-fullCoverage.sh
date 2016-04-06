@@ -15,7 +15,7 @@ SHORT="fullCov-${EXPERIMENT}"
 CORES=10
 
 # Directories
-ROOTDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware
+ROOTDIR=/dcl01/lieber/ajaffe/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/CoverageInfo
 
@@ -37,7 +37,7 @@ then
     CUTOFF=3
 elif [[ "${EXPERIMENT}" == "simulation" ]]
 then
-    DATADIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation/thout
+    DATADIR=/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation/thout
     CUTOFF=0
 elif [[ "${EXPERIMENT}" == "gtex" ]]
 then

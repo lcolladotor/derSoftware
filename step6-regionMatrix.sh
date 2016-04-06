@@ -15,7 +15,7 @@ ncore=5
 cores="${ncore}cores"
 
 # Directories
-ROOTDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware
+ROOTDIR=/dcl01/lieber/ajaffe/derRuns/derSoftware
 MAINDIR=${ROOTDIR}/${EXPERIMENT}
 WDIR=${MAINDIR}/regionMatrix
 

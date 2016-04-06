@@ -10,7 +10,7 @@
 # /dcs01/stanley/work/brain_rna/dertable/dertable.sh
 
 # Directories
-MAINDIR=/dcs01/ajaffe/Brain/derRuns/derSoftware/simulation
+MAINDIR=/dcl01/lieber/ajaffe/derRuns/derSoftware/simulation
 WDIR=${MAINDIR}/dertable
 DATADIR=${MAINDIR}/dercount
 

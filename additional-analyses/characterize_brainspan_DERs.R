@@ -10,7 +10,7 @@ library(GenomicRanges)
 
 # load("/home/epi/ajaffe/Lieber/Projects/Grants/Coverage_R01/brainspan/brainspan_phenotype.rda")
 
-path = "/dcs01/ajaffe/Brain/derRuns/derSoftware/brainspan/derAnalysis/run4-v1.0.10/"
+path = "/dcl01/lieber/ajaffe/derRuns/derSoftware/brainspan/derAnalysis/run4-v1.0.10/"
 
 # load in DERs from the prep file
 # load(paste0(path,"fullRegions.Rdata"))
@@ -18,7 +18,7 @@ load(paste0(path,"groupInfo.Rdata"))
 load(paste0(path,"fullAnnotatedRegions.Rdata"))
 
 # # load coverage
-# load("/dcs01/ajaffe/Brain/derRuns/derSoftware/brainspan/CoverageInfo/fullCov.Rdata")
+# load("/dcl01/lieber/ajaffe/derRuns/derSoftware/brainspan/CoverageInfo/fullCov.Rdata")
 
 #####################
 ### significant
@@ -165,7 +165,7 @@ dev.off()
 ##########
 
 ## load libd data
-xx=load("/dcs01/ajaffe/Brain/derRuns/libd_n36/derCoverageInfo/fullCov.Rdata")
+xx=load("/dcl01/lieber/ajaffe/derRuns/libd_n36/derCoverageInfo/fullCov.Rdata")
 names(fullCov) = paste0("chr", names(fullCov))
 
 coverListLibd = getRegionCoverage(fullCov,sigSpan,mc.cores=4)
